@@ -1,37 +1,55 @@
 const express = require('express')
+const cors = require('cors')
 const app = express()
-const port = 3000
+const port = 8000
+app.use(cors());
 
 const stories = {
   1: {
-    name: 'Excellent story'
+    id: 1,
+    name: 'Excellent story',
+    author: 10
   },
   2: {
-    name: 'Simple story'
+    id: 2,
+    name: 'Simple story',
+    author: 12
   },
   3: {
-    name: 'Boring story'
+    id: 3,
+    name: 'Boring story',
+    author: 10
   },
   4: {
-    name: 'Good story'
+    id: 4,
+    name: 'Good story',
+    author: null
   },
   5: {
-    name: 'Usual story'
+    id: 5,
+    name: 'Usual story',
+    author: null
   },
   6: {
-    name: 'Great story'
+    id: 6,
+    name: 'Great story',
+    author: 12
   }
 }
 
 const authors = {
   10: {
+    id: 10,
     name: 'John Doe',
+    age: 30,
     stories: [
       1, 3
     ]
   },
   12: {
+    id: 12,
     name: 'Jane Doe',
+    age: 29,
     stories: [
       2, 6
     ]
