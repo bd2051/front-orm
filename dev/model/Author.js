@@ -1,16 +1,12 @@
 import BaseModel from "../../src/model/BaseModel";
+import PrimaryKey from "../../src/fields/PrimaryKey";
+import StringField from "../../src/fields/StringField";
 
-export class Author extends BaseModel{
+export default class Author extends BaseModel{
   constructor() {
     super();
-    this.id = {
-      type: 'primaryKey'
-    }
-    this.name = {
-      type: String
-    }
-    this.age = {
-      type: Number
-    }
+    this.id = new PrimaryKey()
+    this.name = new StringField()
+    this.age = new StringField()
   }
 }

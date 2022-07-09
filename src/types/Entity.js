@@ -5,15 +5,7 @@ export default class Entity extends BaseType{
     if (typeof result[model.getPk()] === 'undefined') {
       throw new Error('Invalid result. Missing primary key')
     }
-    em.storage[model.getName()][result[model.getPk()]] = result
-    return new Proxy(model,{
-      async get(target, prop, receiver) {
-        if (typeof em.storage[model.getName()][result[model.getPk()]] !== 'undefined') {
-          return Reflect.get(em.storage[model.getName()][result[model.getPk()]], prop, receiver)
-        }
-        this.em.storage[model.getName()][result[model.getPk()]] = await target.findByPk(model.getPk())
-        return Reflect.get(em.storage[model.getName()][result[model.getPk()]], prop, receiver)
-      }
-    })
+    em.storage[model.getName()][result[model.getPk()]] = model.validateFields(result).convertFields(result)
+    return this.getResultProxy(model, em.storage[model.getName()][result[model.getPk()]])
   }
 }

@@ -1,9 +1,14 @@
-import {Author} from "./Author";
-import {FormEntity, FormString} from "../../src";
+import BaseModel from "../../src/model/BaseModel";
+import PrimaryKey from "../../src/fields/PrimaryKey";
+import StringField from "../../src/fields/StringField";
+import EntityField from "../../src/fields/EntityField";
+import Author from "./Author";
 
-export class Story {
-  constructor() {
-    this.name = new FormString()
-    this.author = new FormEntity(Author)
+export default class Story extends BaseModel{
+    constructor() {
+      super();
+      this.id = new PrimaryKey()
+      this.name = new StringField()
+      this.author = new EntityField(this, (new Author()).getName())
   }
 }
