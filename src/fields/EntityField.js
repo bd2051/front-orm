@@ -1,13 +1,12 @@
 import BaseField from "./BaseField";
 
 export default class EntityField extends BaseField{
-  constructor(model, targetModelName) {
+  constructor(targetModelName) {
     super();
-    this.model = model
     this.targetModelName = targetModelName
   }
   get targetModel() {
-    return this.model.em.models[this.targetModelName]
+    return this.em.models[this.targetModelName]
   }
   validate(value) {
     return this.targetModel[this.targetModel.getPk()].validate(value)

@@ -9,6 +9,6 @@ export default class Story extends BaseModel{
       super();
       this.id = new PrimaryKey()
       this.name = new StringField()
-      this.author = new EntityField(this, (new Author()).getName())
+      this.author = new EntityField(Author.name)
   }
 }
