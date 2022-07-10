@@ -18,18 +18,9 @@ export default class EntityField extends BaseField{
     }
     let storageModel = this.em.storage[this.targetModel.getName()]
     const model = this.targetModel
-    return new Proxy(model,{
-      async get(target, prop, receiver) {
-        if (prop === 'then') {
-          return Reflect.get(target, prop, receiver);
-        }
-        if (typeof storageModel[value] !== 'undefined') {
-          return Reflect.get(storageModel[value], prop, receiver)
-        }
-        const result = await target.getRepository().methodsCb.findByPk(value)
+    return this.em._createProxy(model, storageModel[value], async () => {
+        const result = await model.getRepository().methodsCb.findByPk(value)
         storageModel[value] = model.validateFields(result).convertFields(result)
-        return Reflect.get(storageModel[value], prop, receiver)
-      }
     })
   }
 }

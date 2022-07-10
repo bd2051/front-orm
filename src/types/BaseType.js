@@ -14,18 +14,9 @@ export default class BaseType {
     throw new Error('add convertResult method')
   }
   getResultProxy(model, storageModel, value) {
-    return new Proxy(model,{
-      async get(target, prop, receiver) {
-        if (prop === 'then') {
-          return Reflect.get(target, prop, receiver);
-        }
-        if (typeof storageModel[value] !== 'undefined') {
-          return Reflect.get(storageModel[value], prop, receiver)
-        }
-        const result = await target.getRepository().methodsCb.findByPk(value)
-        storageModel[value] = model.validateFields(result).convertFields(result)
-        return Reflect.get(storageModel[value], prop, receiver)
-      }
+    return this.em._createProxy(model, storageModel[value], async () => {
+      const result = await model.getRepository().methodsCb.findByPk(value)
+      storageModel[value] = model.validateFields(result).convertFields(result)
     })
   }
 }

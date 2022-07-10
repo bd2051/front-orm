@@ -19,7 +19,7 @@ export default class Repository {
     })
   }
 
-  sortJsonStringify(obj)
+  _sortJsonStringify(obj)
   {
       const allKeys = new Set();
       JSON.stringify(obj, (key) => allKeys.add(key));
@@ -27,22 +27,12 @@ export default class Repository {
   }
 
   async _methodsHandler(values, methodRepository, methodName) {
-    const cache = this.em.cache
-    const uuid = getUuidByString(methodName + this.sortJsonStringify(values))
-    if (!cache[uuid]) {
-      cache[uuid] = await methodRepository.find(values, this.model)
+    const uuid = getUuidByString(methodName + this._sortJsonStringify(values))
+    if (!this.em.cache[uuid]) {
+      this.em.cache[uuid] = await methodRepository.find(values, this.model)
     }
-    return new Proxy(cache[uuid],{
-      async get(target, prop, receiver) {
-        if (prop === 'then') {
-          return Reflect.get(target, prop, receiver);
-        }
-        if (typeof cache[uuid] !== 'undefined') {
-          return Reflect.get(cache[uuid], prop, receiver)
-        }
-        cache[uuid] = await methodRepository.find(values, this.model)
-        return Reflect.get(cache[uuid], prop, receiver)
-      }
+    return this.em._createProxy(this.em.cache[uuid], this.em.cache[uuid], async () => {
+      this.em.cache[uuid] = await methodRepository.find(values, this.model)
     })
   }
 }
