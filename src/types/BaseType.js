@@ -1,12 +1,16 @@
 export default class BaseType {
   constructor(findCb) {
+    this.em = null
     this.findCb = findCb
-    this.find = async (values, em, model, repository) => {
+    this.find = async (values, model) => {
       const result = await findCb(values)
-      return this.convertResult(result, em, model, repository)
+      return this.convertResult(result, model)
     }
   }
-  convertResult(result, em, model, repository) {
+  setEntityManager(em) {
+    this.em = em
+  }
+  convertResult(result, model) {
     throw new Error('add convertResult method')
   }
   getResultProxy(model, storageModel, value) {
@@ -19,7 +23,6 @@ export default class BaseType {
           return Reflect.get(storageModel[value], prop, receiver)
         }
         const result = await target.getRepository().methodsCb.findByPk(value)
-        console.log(model)
         storageModel[value] = model.validateFields(result).convertFields(result)
         return Reflect.get(storageModel[value], prop, receiver)
       }

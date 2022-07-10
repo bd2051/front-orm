@@ -1,4 +1,5 @@
 import PrimaryKey from "../fields/PrimaryKey";
+import BaseField from "../fields/BaseField";
 
 export default class BaseModel {
   constructor() {
@@ -19,6 +20,9 @@ export default class BaseModel {
   }
   setEntityManager(em) {
     this.em = em
+    Object.keys(this).filter(key => this[key] instanceof BaseField).forEach((key) => {
+      this[key].setEntityManager(em)
+    })
   }
   getRepository() {
     return this.em.repositories[this.getName()]

@@ -13,6 +13,7 @@ export default class Repository {
       if (!repositories[methodName] instanceof BaseType) {
         throw new Error('invalid type')
       }
+      repositories[methodName].setEntityManager(em)
       this[methodName] = (values) => this._methodsHandler(values, repositories[methodName], methodName)
       this.methodsCb[methodName] = repositories[methodName].findCb
     })
@@ -29,7 +30,7 @@ export default class Repository {
     const cache = this.em.cache
     const uuid = getUuidByString(methodName + this.sortJsonStringify(values))
     if (!cache[uuid]) {
-      cache[uuid] = await methodRepository.find(values, this.em, this.model, this)
+      cache[uuid] = await methodRepository.find(values, this.model)
     }
     return new Proxy(cache[uuid],{
       async get(target, prop, receiver) {
@@ -39,7 +40,7 @@ export default class Repository {
         if (typeof cache[uuid] !== 'undefined') {
           return Reflect.get(cache[uuid], prop, receiver)
         }
-        cache[uuid] = await methodRepository.find(values, this.em, this.model, this)
+        cache[uuid] = await methodRepository.find(values, this.model)
         return Reflect.get(cache[uuid], prop, receiver)
       }
     })
