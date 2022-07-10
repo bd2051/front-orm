@@ -9,17 +9,19 @@ export default class BaseType {
   convertResult(result, em, model, repository) {
     throw new Error('add convertResult method')
   }
-  getResultProxy(model, storageTarget) {
+  getResultProxy(model, storageModel, value) {
     return new Proxy(model,{
       async get(target, prop, receiver) {
         if (prop === 'then') {
           return Reflect.get(target, prop, receiver);
         }
-        if (typeof storageTarget !== 'undefined') {
-          return Reflect.get(storageTarget, prop, receiver)
+        if (typeof storageModel[value] !== 'undefined') {
+          return Reflect.get(storageModel[value], prop, receiver)
         }
-        storageTarget = await target.getRepository().methodsCb.findByPk(model.getPk())
-        return Reflect.get(storageTarget, prop, receiver)
+        const result = await target.getRepository().methodsCb.findByPk(value)
+        console.log(model)
+        storageModel[value] = model.validateFields(result).convertFields(result)
+        return Reflect.get(storageModel[value], prop, receiver)
       }
     })
   }

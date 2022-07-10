@@ -26,7 +26,8 @@ export default class EntityField extends BaseField{
         if (typeof storageModel[value] !== 'undefined') {
           return Reflect.get(storageModel[value], prop, receiver)
         }
-        storageModel[value] = await target.getRepository().methodsCb.findByPk(value)
+        const result = await target.getRepository().methodsCb.findByPk(value)
+        storageModel[value] = model.validateFields(result).convertFields(result)
         return Reflect.get(storageModel[value], prop, receiver)
       }
     })
