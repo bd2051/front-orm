@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack-dev-server --history-api-fallback --progress",
     "build": "webpack",
-    "mock": "node mock/mock-serve .js",
+    "mock": "node mock/mock-server.js",
     "tsc:w": "tsc -w"
   },
   "keywords": [],
