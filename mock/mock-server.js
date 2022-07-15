@@ -1,8 +1,12 @@
 const express = require('express')
+const bodyParser = require('body-parser');
 const cors = require('cors')
 const app = express()
 const port = 8000
-app.use(cors());
+app.use(cors())
+
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
 
 const stories = {
   1: {
@@ -37,6 +41,8 @@ const stories = {
   }
 }
 
+let storyLastId = 6
+
 const authors = {
   10: {
     id: 10,
@@ -70,6 +76,15 @@ app.get('/api/stories', (req, res) => {
 
 app.get('/api/stories/:id', (req, res) => {
   res.json(stories[req.params.id])
+})
+
+app.post('/api/stories', (req, res) => {
+  storyLastId += 1
+  stories[storyLastId] = {
+    id: storyLastId,
+    ...req.body
+  }
+  res.json({success: true})
 })
 
 app.listen(port, () => {
