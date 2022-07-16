@@ -31,14 +31,18 @@ export default class Story extends BaseModel {
       return data
     })
   }
-  update(values: object) {
+  async update(oldItem: any, values: object) {
     fetch(
         `http://localhost:8000/api/stories`,{
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json;charset=utf-8'
           },
-          body: JSON.stringify(values)
+          body: JSON.stringify({
+              ...oldItem,
+              author: await (await oldItem.author).id,
+              ...values,
+          })
         }
     ).then(response => response.json())
     .then((data) => {

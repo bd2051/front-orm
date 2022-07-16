@@ -66,8 +66,16 @@ export default class EntityManager {
       if (typeof model === 'undefined') {
         throw new Error('Logic error')
       }
+      const storageModel = this.storage[modelName]
+      if (typeof storageModel === 'undefined') {
+        throw new Error('Logic error')
+      }
       Object.entries(updateListModel).forEach(async ([pk, item]) => {
-        await model.update(item)
+        const storage = storageModel[pk]
+        if (typeof storage === 'undefined') {
+          throw new Error('Logic error')
+        }
+        await model.update(storage, item)
         delete updateListModel[pk]
       })
     })
@@ -87,17 +95,14 @@ export default class EntityManager {
     if (typeof createListModel === 'undefined') {
       throw new Error('The model does not exist')
     }
-    const createList = createListModel[pk]
     const updateListModel: List | undefined = this.updateList[model.getName()]
     if (typeof updateListModel === 'undefined') {
       throw new Error('The model does not exist')
     }
-    const updateList = updateListModel[pk]
     const storageModel = this.storage[model.getName()]
     if (typeof storageModel === 'undefined') {
       throw new Error('The model does not exist')
     }
-    const storage = storageModel[pk]
     return new Proxy(proxyTarget, {
       async get(target, prop: string, receiver) {
         if (prop === 'revert') {
@@ -109,6 +114,10 @@ export default class EntityManager {
         if (PROPERTY_EXCEPTIONS.includes(prop)) {
           return Reflect.get(target, prop, receiver);
         }
+
+        const createList = createListModel[pk]
+        const updateList = updateListModel[pk]
+        const storage = storageModel[pk]
         if (typeof createList !== 'undefined') {
           return Reflect.get(updateList, prop, receiver)
         }
@@ -123,9 +132,10 @@ export default class EntityManager {
       },
       set(target: object, prop: string, value: any, receiver: any): boolean {
         if (prop in target) {
+          const updateList = updateListModel[pk]
           if (typeof updateList === 'undefined') {
             updateListModel[pk] = {
-              prop: value
+              [prop]: value
             }
           } else {
             updateList[prop] = value
