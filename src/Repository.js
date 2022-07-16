@@ -40,7 +40,7 @@ export default class Repository {
             if (typeof cacheUuid === 'undefined') {
                 throw new Error('Invalid methodRepository');
             }
-            return this.em._createProxy(cacheUuid, this.em.cache[uuid], () => __awaiter(this, void 0, void 0, function* () {
+            return this.em._createCacheProxy(cacheUuid, this.em.cache[uuid], () => __awaiter(this, void 0, void 0, function* () {
                 cache[uuid] = yield methodRepository.find(values, this.model);
             }));
         });

@@ -10,5 +10,31 @@ export default class Story extends BaseModel {
         this.name = new StringField(em);
         this.author = new EntityField(em, Author.name);
     }
+    create(values) {
+        fetch(`http://localhost:8000/api/stories`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(values)
+        }).then(response => response.json())
+            .then((data) => {
+            console.log(data);
+            return data;
+        });
+    }
+    update(values) {
+        fetch(`http://localhost:8000/api/stories`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(values)
+        }).then(response => response.json())
+            .then((data) => {
+            console.log(data);
+            return data;
+        });
+    }
 }
 //# sourceMappingURL=Story.js.map

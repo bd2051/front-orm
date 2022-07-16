@@ -50,5 +50,11 @@ export default class BaseModel {
             return acc;
         }, {});
     }
+    create(values) {
+        console.log(values);
+    }
+    update(values) {
+        console.log(values);
+    }
 }
 //# sourceMappingURL=BaseModel.js.map

@@ -33,7 +33,7 @@ export default class EntityField extends BaseField {
         }
         const model = this.targetModel;
         const findByPk = model.getRepository().methodsCb.findByPk;
-        return this.em._createProxy(model, storageModel[value], () => __awaiter(this, void 0, void 0, function* () {
+        return this.em._createProxy(model, model, value, () => __awaiter(this, void 0, void 0, function* () {
             const result = yield findByPk(value);
             if (typeof storageModel === 'undefined') {
                 throw new Error('Logic error');

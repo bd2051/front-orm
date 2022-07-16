@@ -19,15 +19,44 @@ export default class EntityManager {
         this.repositories = {};
         this.storage = {};
         this.updateList = {};
+        this.createList = {};
         this.cache = {};
     }
     setModel(model, repositories) {
         this.storage[model.getName()] = {};
         this.updateList[model.getName()] = {};
+        this.createList[model.getName()] = {};
         this.models[model.getName()] = model;
         this.repositories[model.getName()] = new Repository(this, model, repositories);
     }
+    flush() {
+        Object.entries(this.updateList).forEach(([modelName, updateListModel]) => {
+            const model = this.models[modelName];
+            if (typeof model === 'undefined') {
+                throw new Error('Logic error');
+            }
+            Object.entries(updateListModel).forEach(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
+                yield model.update(item);
+                delete updateListModel[pk];
+            }));
+        });
+        Object.entries(this.createList).forEach(([modelName, createListModel]) => {
+            const model = this.models[modelName];
+            if (typeof model === 'undefined') {
+                throw new Error('Logic error');
+            }
+            Object.entries(createListModel).forEach(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
+                yield model.create(item);
+                delete createListModel[pk];
+            }));
+        });
+    }
     _createProxy(proxyTarget, model, pk, cb) {
+        const createListModel = this.updateList[model.getName()];
+        if (typeof createListModel === 'undefined') {
+            throw new Error('The model does not exist');
+        }
+        const createList = createListModel[pk];
         const updateListModel = this.updateList[model.getName()];
         if (typeof updateListModel === 'undefined') {
             throw new Error('The model does not exist');
@@ -41,8 +70,15 @@ export default class EntityManager {
         return new Proxy(proxyTarget, {
             get(target, prop, receiver) {
                 return __awaiter(this, void 0, void 0, function* () {
+                    if (prop === 'revert') {
+                    }
+                    if (prop === 'clear') {
+                    }
                     if (PROPERTY_EXCEPTIONS.includes(prop)) {
                         return Reflect.get(target, prop, receiver);
+                    }
+                    if (typeof createList !== 'undefined') {
+                        return Reflect.get(updateList, prop, receiver);
                     }
                     if (typeof updateList !== 'undefined') {
                         return Reflect.get(updateList, prop, receiver);
@@ -69,6 +105,22 @@ export default class EntityManager {
                     Reflect.set(target, prop, value, receiver);
                 }
                 return true;
+            }
+        });
+    }
+    _createCacheProxy(proxyTarget, storage, cb) {
+        return new Proxy(proxyTarget, {
+            get(target, prop, receiver) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    if (PROPERTY_EXCEPTIONS.includes(prop)) {
+                        return Reflect.get(target, prop, receiver);
+                    }
+                    if (typeof storage !== 'undefined') {
+                        return Reflect.get(storage, prop, receiver);
+                    }
+                    storage = yield cb();
+                    return Reflect.get(storage, prop, receiver);
+                });
             }
         });
     }

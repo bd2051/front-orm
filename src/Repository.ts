@@ -51,7 +51,7 @@ export default class Repository {
     if  (typeof cacheUuid === 'undefined') {
       throw new Error('Invalid methodRepository')
     }
-    return this.em._createProxy(cacheUuid, this.em.cache[uuid], async () => {
+    return this.em._createCacheProxy(cacheUuid, this.em.cache[uuid], async () => {
       cache[uuid] = await methodRepository.find(values, this.model)
     })
   }

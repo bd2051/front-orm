@@ -29,11 +29,7 @@ export default class BaseType {
         return new Proxy({}, {});
     }
     getResultProxy(model, storageModel, value) {
-        const storage = storageModel[value];
-        if (typeof storage === 'undefined') {
-            throw new Error('Invalid storage value');
-        }
-        return this.em._createProxy(model, storage, () => __awaiter(this, void 0, void 0, function* () {
+        return this.em._createProxy(model, model, value, () => __awaiter(this, void 0, void 0, function* () {
             const result = yield model.getRepository().methodsCb.findByPk(value);
             storageModel[value] = model.validateFields(result).convertFields(result);
         }));

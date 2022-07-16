@@ -9,7 +9,7 @@ interface Fields {
   [key: string]: any
 }
 
-export default class BaseModel {
+export default class BaseModel implements ModelInterface {
   [key: string]: BaseField | EntityManager | string | null | ((v: any) => any)
   pk: string | null
   em: EntityManager
@@ -64,5 +64,13 @@ export default class BaseModel {
       }
       return acc
     }, {})
+  }
+  create(values: object) {
+    // добавление нового объекта и его валидация
+    console.log(values)
+  }
+  update(values: object) {
+    // бновление объекта и его валидация
+    console.log(values)
   }
 }
