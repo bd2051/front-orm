@@ -41,6 +41,13 @@ export default class Repository {
       return JSON.stringify(obj, Array.from(allKeys).sort());
   }
 
+  create(values: any) {
+    const uuid = getUuidByString(Date.now().toString())
+    const model = this.model
+    this.em.createList[uuid] = model.validateFields(values).convertFields(values)
+    return this.em._createProxy(model, model, uuid, async () => {})
+  }
+
   async _methodsHandler(values: any, methodRepository: BaseType, methodName: string) {
     const uuid = getUuidByString(methodName + this._sortJsonStringify(values))
     const cache = this.em.cache
