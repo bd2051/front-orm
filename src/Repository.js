@@ -29,6 +29,12 @@ export default class Repository {
         JSON.stringify(obj, (key) => allKeys.add(key));
         return JSON.stringify(obj, Array.from(allKeys).sort());
     }
+    create(values) {
+        const uuid = getUuidByString(Date.now().toString());
+        const model = this.model;
+        this.em.createList[uuid] = model.validateFields(values).convertFields(values);
+        return this.em._createProxy(model, model, uuid, () => __awaiter(this, void 0, void 0, function* () { }));
+    }
     _methodsHandler(values, methodRepository, methodName) {
         return __awaiter(this, void 0, void 0, function* () {
             const uuid = getUuidByString(methodName + this._sortJsonStringify(values));
