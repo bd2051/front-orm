@@ -53,11 +53,13 @@ export default class Repository {
             let item = storageModel[pk];
             if (typeof item === 'undefined') {
                 item = yield model.getRepository().methodsCb.findByPk(pk);
+                storageModel[pk] = item;
             }
             deleteListModel[pk] = item;
             return this.em._createProxy(model, model, pk, () => __awaiter(this, void 0, void 0, function* () {
                 const result = yield model.getRepository().methodsCb.findByPk(pk);
                 storageModel[pk] = result;
+                return result;
             }));
         });
     }

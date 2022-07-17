@@ -79,7 +79,7 @@ app.get('/api/stories/:id', (req, res) => {
 })
 
 app.delete('/api/stories/:id', (req, res) => {
-  delete stories[req.body.id]
+  delete stories[req.params.id]
   res.json({success: true})
 })
 

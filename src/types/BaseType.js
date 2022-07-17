@@ -32,6 +32,7 @@ export default class BaseType {
         return this.em._createProxy(model, model, value, () => __awaiter(this, void 0, void 0, function* () {
             const result = yield model.getRepository().methodsCb.findByPk(value);
             storageModel[value] = result;
+            return result;
         }));
     }
 }
