@@ -33,7 +33,7 @@ export default class BaseType {
   getResultProxy(model: BaseModel, storageModel: Storage, value: number | string) {
     return this.em._createProxy(model, model, value, async () => {
       const result = await model.getRepository().methodsCb.findByPk(value)
-      storageModel[value] = model.validateFields(result).convertFields(result)
+      storageModel[value] = result
     })
   }
 }

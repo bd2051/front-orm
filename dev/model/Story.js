@@ -39,7 +39,7 @@ export default class Story extends BaseModel {
                 headers: {
                     'Content-Type': 'application/json;charset=utf-8'
                 },
-                body: JSON.stringify(Object.assign(Object.assign(Object.assign({}, oldItem), { author: yield (yield oldItem.author).id }), values))
+                body: JSON.stringify(Object.assign(Object.assign({}, oldItem), values))
             }).then(response => response.json())
                 .then((data) => {
                 console.log(data);

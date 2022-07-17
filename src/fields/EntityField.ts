@@ -5,10 +5,16 @@ import EntityManager from "../EntityManager";
 
 export default class EntityField extends BaseField implements FieldInterface {
   targetModelName: string
+  convertValueToPk: (value: any) => number|string
 
-  constructor(em: EntityManager, targetModelName: string) {
+  constructor(
+      em: EntityManager,
+      targetModelName: string,
+      convertValueToPk: (value: any) => number|string = (value) => value,
+  ) {
     super(em);
     this.targetModelName = targetModelName
+    this.convertValueToPk = convertValueToPk
   }
   get targetModel(): BaseModel {
     if (!(this.em.models[this.targetModelName] instanceof BaseModel)) {
@@ -23,19 +29,20 @@ export default class EntityField extends BaseField implements FieldInterface {
     if (value === null) {
       return null
     }
+    const pk = this.convertValueToPk(value)
     let storageModel = this.em.storage[this.targetModel.getName()]
     if (typeof storageModel === 'undefined') {
       throw new Error('Invalid target in Entity field')
     }
     const model = this.targetModel
     const findByPk = model.getRepository().methodsCb.findByPk
-    return this.em._createProxy(model, model, value, async () => {
-        const result = await findByPk(value)
+    return this.em._createProxy(model, model, pk, async () => {
+        const result = await findByPk(pk)
         if (typeof storageModel === 'undefined') {
           throw new Error('Logic error')
         }
-        storageModel[value] = model.validateFields(result).convertFields(result)
-        return storageModel[value]
+        storageModel[pk] = result
+        return storageModel[pk]
     })
   }
 }

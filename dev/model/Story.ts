@@ -40,7 +40,6 @@ export default class Story extends BaseModel {
           },
           body: JSON.stringify({
               ...oldItem,
-              author: await (await oldItem.author).id,
               ...values,
           })
         }

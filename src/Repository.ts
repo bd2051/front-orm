@@ -44,7 +44,11 @@ export default class Repository {
   create(values: any) {
     const uuid = getUuidByString(Date.now().toString())
     const model = this.model
-    this.em.createList[uuid] = model.validateFields(values).convertFields(values)
+    const createListModel = this.em.createList[model.getName()]
+    if (typeof createListModel === 'undefined') {
+      throw new Error('Logic error')
+    }
+    createListModel[uuid] = model.validateFields(values).convertFields(values)
     return this.em._createProxy(model, model, uuid, async () => {})
   }
 

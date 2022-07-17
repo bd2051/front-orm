@@ -9,7 +9,7 @@ export default class Entity extends BaseType {
         if (typeof storageModel === 'undefined') {
             throw new Error('Invalid storageModel');
         }
-        storageModel[pkValue] = model.validateFields(result).convertFields(result);
+        storageModel[pkValue] = result;
         return this.getResultProxy(model, storageModel, pkValue);
     }
 }

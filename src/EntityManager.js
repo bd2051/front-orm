@@ -60,7 +60,7 @@ export default class EntityManager {
         });
     }
     _createProxy(proxyTarget, model, pk, cb) {
-        const createListModel = this.updateList[model.getName()];
+        const createListModel = this.createList[model.getName()];
         if (typeof createListModel === 'undefined') {
             throw new Error('The model does not exist');
         }
@@ -86,16 +86,20 @@ export default class EntityManager {
                     const updateList = updateListModel[pk];
                     const storage = storageModel[pk];
                     if (typeof createList !== 'undefined') {
-                        return Reflect.get(updateList, prop, receiver);
+                        const convertedCreateList = model.validateFields(createList).convertFields(createList);
+                        return Reflect.get(convertedCreateList, prop, receiver);
                     }
                     if (typeof updateList !== 'undefined') {
-                        return Reflect.get(updateList, prop, receiver);
+                        const convertedUpdateList = model.validateFields(updateList).convertFields(updateList);
+                        return Reflect.get(convertedUpdateList, prop, receiver);
                     }
                     if (typeof storage !== 'undefined') {
-                        return Reflect.get(storage, prop, receiver);
+                        const convertedStorage = model.validateFields(storage).convertFields(storage);
+                        return Reflect.get(convertedStorage, prop, receiver);
                     }
                     storageModel[pk] = yield cb();
-                    return Reflect.get(storageModel[pk], prop, receiver);
+                    const convertedStorage = model.validateFields(storageModel[pk]).convertFields(storageModel[pk]);
+                    return Reflect.get(convertedStorage, prop, receiver);
                 });
             },
             set(target, prop, value, receiver) {
