@@ -12,7 +12,7 @@ export default class Collection extends BaseType {
             throw new Error('Invalid storageModel');
         }
         result.forEach((item) => {
-            storageModel[item[model.getPk()]] = model.validateFields(item).convertFields(item);
+            storageModel[item[model.getPk()]] = item;
         });
         return result.map(item => this.getResultProxy(model, storageModel, item[model.getPk()]));
     }

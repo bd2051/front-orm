@@ -20,12 +20,14 @@ export default class EntityManager {
         this.storage = {};
         this.updateList = {};
         this.createList = {};
+        this.deleteList = {};
         this.cache = {};
     }
     setModel(model, repositories) {
         this.storage[model.getName()] = {};
         this.updateList[model.getName()] = {};
         this.createList[model.getName()] = {};
+        this.deleteList[model.getName()] = {};
         this.models[model.getName()] = model;
         this.repositories[model.getName()] = new Repository(this, model, repositories);
     }
@@ -44,7 +46,7 @@ export default class EntityManager {
                 if (typeof storage === 'undefined') {
                     throw new Error('Logic error');
                 }
-                yield model.update(storage, item);
+                yield model.update(item, storage);
                 delete updateListModel[pk];
             }));
         });
@@ -56,6 +58,16 @@ export default class EntityManager {
             Object.entries(createListModel).forEach(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
                 yield model.create(item);
                 delete createListModel[pk];
+            }));
+        });
+        Object.entries(this.deleteList).forEach(([modelName, deleteListModel]) => {
+            const model = this.models[modelName];
+            if (typeof model === 'undefined') {
+                throw new Error('Logic error');
+            }
+            Object.entries(deleteListModel).forEach(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
+                yield model.delete(pk, item);
+                delete deleteListModel[pk];
             }));
         });
     }

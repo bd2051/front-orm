@@ -48,8 +48,29 @@ export default class Repository {
     if (typeof createListModel === 'undefined') {
       throw new Error('Logic error')
     }
-    createListModel[uuid] = model.validateFields(values).convertFields(values)
+    createListModel[uuid] = values
     return this.em._createProxy(model, model, uuid, async () => {})
+  }
+
+  async delete(pk: number|string) {
+    const model = this.model
+    const deleteListModel = this.em.deleteList[model.getName()]
+    if (typeof deleteListModel === 'undefined') {
+      throw new Error('Logic error')
+    }
+    const storageModel = this.em.storage[model.getName()]
+    if (typeof storageModel === 'undefined') {
+      throw new Error('Logic error')
+    }
+    let item = storageModel[pk]
+    if (typeof item === 'undefined') {
+      item = await model.getRepository().methodsCb.findByPk(pk)
+    }
+    deleteListModel[pk] = item
+    return this.em._createProxy(model, model, pk, async () => {
+      const result = await model.getRepository().methodsCb.findByPk(pk)
+      storageModel[pk] = result
+    })
   }
 
   async _methodsHandler(values: any, methodRepository: BaseType, methodName: string) {

@@ -31,7 +31,7 @@ export default class Story extends BaseModel {
       return data
     })
   }
-  async update(oldItem: any, values: object) {
+  async update(values: object, oldItem: any) {
     fetch(
         `http://localhost:8000/api/stories`,{
           method: 'PUT',
@@ -42,6 +42,17 @@ export default class Story extends BaseModel {
               ...oldItem,
               ...values,
           })
+        }
+    ).then(response => response.json())
+    .then((data) => {
+      console.log(data)
+      return data
+    })
+  }
+  async delete(pk: string|number) {
+    fetch(
+        `http://localhost:8000/api/stories/${pk}`,{
+          method: 'DELETE',
         }
     ).then(response => response.json())
     .then((data) => {

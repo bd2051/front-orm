@@ -78,6 +78,11 @@ app.get('/api/stories/:id', (req, res) => {
   res.json(stories[req.params.id])
 })
 
+app.delete('/api/stories/:id', (req, res) => {
+  delete stories[req.body.id]
+  res.json({success: true})
+})
+
 app.post('/api/stories', (req, res) => {
   storyLastId += 1
   stories[storyLastId] = {

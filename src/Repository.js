@@ -36,8 +36,30 @@ export default class Repository {
         if (typeof createListModel === 'undefined') {
             throw new Error('Logic error');
         }
-        createListModel[uuid] = model.validateFields(values).convertFields(values);
+        createListModel[uuid] = values;
         return this.em._createProxy(model, model, uuid, () => __awaiter(this, void 0, void 0, function* () { }));
+    }
+    delete(pk) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const model = this.model;
+            const deleteListModel = this.em.deleteList[model.getName()];
+            if (typeof deleteListModel === 'undefined') {
+                throw new Error('Logic error');
+            }
+            const storageModel = this.em.storage[model.getName()];
+            if (typeof storageModel === 'undefined') {
+                throw new Error('Logic error');
+            }
+            let item = storageModel[pk];
+            if (typeof item === 'undefined') {
+                item = yield model.getRepository().methodsCb.findByPk(pk);
+            }
+            deleteListModel[pk] = item;
+            return this.em._createProxy(model, model, pk, () => __awaiter(this, void 0, void 0, function* () {
+                const result = yield model.getRepository().methodsCb.findByPk(pk);
+                storageModel[pk] = result;
+            }));
+        });
     }
     _methodsHandler(values, methodRepository, methodName) {
         return __awaiter(this, void 0, void 0, function* () {

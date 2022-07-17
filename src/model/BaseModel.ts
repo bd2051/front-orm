@@ -1,5 +1,3 @@
-// import PrimaryKey from "../fields/PrimaryKey";
-// import BaseField from "../fields/BaseField";
 import EntityManager from "../EntityManager";
 import BaseField from "../fields/BaseField";
 import PrimaryKey from "../fields/PrimaryKey";
@@ -69,8 +67,12 @@ export default class BaseModel implements ModelInterface {
     // добавление нового объекта и его валидация
     console.log(values)
   }
-  update(oldItem: object, values: object) {
+  update(values: object, oldItem: object) {
     // бновление объекта и его валидация
     console.log(oldItem, values)
+  }
+  delete(pk: number|string, oldItem: object) {
+    // бновление объекта и его валидация
+    console.log(oldItem, pk)
   }
 }

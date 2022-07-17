@@ -32,7 +32,7 @@ export default class Story extends BaseModel {
             return data;
         });
     }
-    update(oldItem, values) {
+    update(values, oldItem) {
         return __awaiter(this, void 0, void 0, function* () {
             fetch(`http://localhost:8000/api/stories`, {
                 method: 'PUT',
@@ -40,6 +40,17 @@ export default class Story extends BaseModel {
                     'Content-Type': 'application/json;charset=utf-8'
                 },
                 body: JSON.stringify(Object.assign(Object.assign({}, oldItem), values))
+            }).then(response => response.json())
+                .then((data) => {
+                console.log(data);
+                return data;
+            });
+        });
+    }
+    delete(pk) {
+        return __awaiter(this, void 0, void 0, function* () {
+            fetch(`http://localhost:8000/api/stories/${pk}`, {
+                method: 'DELETE',
             }).then(response => response.json())
                 .then((data) => {
                 console.log(data);

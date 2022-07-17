@@ -53,8 +53,11 @@ export default class BaseModel {
     create(values) {
         console.log(values);
     }
-    update(oldItem, values) {
+    update(values, oldItem) {
         console.log(oldItem, values);
+    }
+    delete(pk, oldItem) {
+        console.log(oldItem, pk);
     }
 }
 //# sourceMappingURL=BaseModel.js.map
