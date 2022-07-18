@@ -5,5 +5,11 @@ export default class BaseField {
     convert(value) {
         return value;
     }
+    validate(value) {
+        if (!value) {
+            throw new Error('Logic error');
+        }
+        return this;
+    }
 }
 //# sourceMappingURL=BaseField.js.map

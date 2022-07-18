@@ -9,4 +9,10 @@ export default class BaseField {
   convert(value: any): any {
     return value
   }
+  validate(value: any): any {
+    if (!value) {
+      throw new Error('Logic error')
+    }
+    return this
+  }
 }

@@ -22,6 +22,26 @@ export default class EntityManager {
         this.createList = {};
         this.deleteList = {};
         this.cache = {};
+        this.hooks = {
+            create: () => {
+                throw new Error('Set create hook');
+            },
+            update: () => {
+                throw new Error('Set update hook');
+            },
+            delete: () => {
+                throw new Error('Set delete hook');
+            },
+            refresh: () => {
+                throw new Error('Set refresh hook');
+            },
+            cancelRefresh: () => {
+                throw new Error('Set cancelRefresh hook');
+            },
+        };
+    }
+    setHooks(hooks) {
+        this.hooks = hooks;
     }
     setModel(model, repositories) {
         this.storage[model.getName()] = {};

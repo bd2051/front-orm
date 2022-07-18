@@ -52,10 +52,14 @@ export default class BaseModel implements ModelInterface {
     return repository
   }
   validateFields(data: Fields) {
-    console.log(data)
-    // if (!Object.keys(data).every(key => this[key].validate(data[key]))) {
-    //   throw new Error('invalid fields')
-    // } TODO
+    if (!Object.entries(data).every(([key, item]) => {
+      const field = this[key]
+      if (field instanceof BaseField) {
+        return field.validate(item)
+      }
+    })) {
+      throw new Error('invalid fields')
+    }
     return this
   }
   convertFields(data: any) {
@@ -68,9 +72,7 @@ export default class BaseModel implements ModelInterface {
     }, {})
   }
   create(values: object) {
-    // добавление нового объекта и его валидация
-    // this.em.create(this, values)
-    console.log(values)
+    return this.em.hooks.create(values)
   }
   cancelCreate(pk: number|string) {
     const createListModel = this.em.createList[this.getName()]
@@ -80,8 +82,7 @@ export default class BaseModel implements ModelInterface {
     delete createListModel[pk]
   }
   update(values: object, oldItem: object) {
-    // бновление объекта и его валидация
-    console.log(oldItem, values)
+    return this.em.hooks.update(values, oldItem)
   }
   cancelUpdate(pk: number|string) {
     const updateListModel = this.em.updateList[this.getName()]
@@ -91,8 +92,7 @@ export default class BaseModel implements ModelInterface {
     delete updateListModel[pk]
   }
   delete(pk: number|string, oldItem: object) {
-    // бновление объекта и его валидация
-    console.log(oldItem, pk)
+    return this.em.hooks.delete(pk, oldItem)
   }
   cancelDelete(pk: number|string) {
     const deleteListModel = this.em.deleteList[this.getName()]
@@ -102,11 +102,9 @@ export default class BaseModel implements ModelInterface {
     delete deleteListModel[pk]
   }
   refresh(storageModel: StorageModel, pk: number|string) {
-    // бновление объекта и его валидация
-    console.log(storageModel, pk)
+    return this.em.hooks.refresh(storageModel, pk)
   }
   cancelRefresh(storageModel: StorageModel, pk: number|string) {
-    // бновление объекта и его валидация
-    console.log(storageModel, pk)
+    return this.em.hooks.cancelRefresh(storageModel, pk)
   }
 }

@@ -12,6 +12,7 @@ import StringField from "../../src/fields/StringField";
 import EntityField from "../../src/fields/EntityField";
 import Author from "./Author";
 import BaseModel from "../../src/model/BaseModel";
+const intervalMap = {};
 export default class Story extends BaseModel {
     constructor(em) {
         super(em);
@@ -60,12 +61,18 @@ export default class Story extends BaseModel {
     }
     refresh(storageModel, pk) {
         return __awaiter(this, void 0, void 0, function* () {
-            setInterval(() => {
+            intervalMap[pk] = setInterval(() => {
                 fetch(`http://localhost:8000/api/stories/${pk}`).then(response => response.json())
                     .then((data) => {
                     storageModel[pk] = data;
                 });
             }, 1000);
+        });
+    }
+    cancelRefresh(storageModel, pk) {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log(storageModel);
+            clearInterval(intervalMap[pk]);
         });
     }
 }

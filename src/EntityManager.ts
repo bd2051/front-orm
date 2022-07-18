@@ -2,6 +2,10 @@ import Repository from "./Repository.js";
 import BaseModel from "./model/BaseModel";
 import BaseType from "./types/BaseType";
 
+interface StorageModel {
+  [key: number|string]: any
+}
+
 interface Models {
   [key: string]: BaseModel
 }
@@ -31,6 +35,14 @@ interface List {
   [key: string]: any
 }
 
+interface Hooks {
+  create: (values: object) => any
+  update: (values: object, oldItem: object) => any
+  delete: (pk: number|string, oldItem: object) => any
+  refresh: (storageModel: StorageModel, pk: number|string) => any
+  cancelRefresh: (storageModel: StorageModel, pk: number|string) => any
+}
+
 const PROPERTY_EXCEPTIONS = [
   'then',
   'catch',
@@ -45,6 +57,7 @@ export default class EntityManager {
   createList: Storage
   deleteList: Storage
   cache: Cache
+  hooks: Hooks
 
   constructor() {
     this.models = {}
@@ -54,6 +67,26 @@ export default class EntityManager {
     this.createList = {}
     this.deleteList = {}
     this.cache = {}
+    this.hooks = {
+      create: () => {
+        throw new Error('Set create hook')
+      },
+      update: () => {
+        throw new Error('Set update hook')
+      },
+      delete: () => {
+        throw new Error('Set delete hook')
+      },
+      refresh: () => {
+        throw new Error('Set refresh hook')
+      },
+      cancelRefresh: () => {
+        throw new Error('Set cancelRefresh hook')
+      },
+    }
+  }
+  setHooks(hooks: Hooks) {
+    this.hooks = hooks
   }
   setModel(model: BaseModel, repositories: RepositoryInit) {
     this.storage[model.getName()] = {}

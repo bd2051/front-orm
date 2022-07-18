@@ -38,7 +38,14 @@ export default class BaseModel {
         return repository;
     }
     validateFields(data) {
-        console.log(data);
+        if (!Object.entries(data).every(([key, item]) => {
+            const field = this[key];
+            if (field instanceof BaseField) {
+                return field.validate(item);
+            }
+        })) {
+            throw new Error('invalid fields');
+        }
         return this;
     }
     convertFields(data) {
@@ -51,16 +58,40 @@ export default class BaseModel {
         }, {});
     }
     create(values) {
-        console.log(values);
+        return this.em.hooks.create(values);
+    }
+    cancelCreate(pk) {
+        const createListModel = this.em.createList[this.getName()];
+        if (typeof createListModel === 'undefined') {
+            throw new Error('Logic error');
+        }
+        delete createListModel[pk];
     }
     update(values, oldItem) {
-        console.log(oldItem, values);
+        return this.em.hooks.update(values, oldItem);
+    }
+    cancelUpdate(pk) {
+        const updateListModel = this.em.updateList[this.getName()];
+        if (typeof updateListModel === 'undefined') {
+            throw new Error('Logic error');
+        }
+        delete updateListModel[pk];
     }
     delete(pk, oldItem) {
-        console.log(oldItem, pk);
+        return this.em.hooks.delete(pk, oldItem);
+    }
+    cancelDelete(pk) {
+        const deleteListModel = this.em.deleteList[this.getName()];
+        if (typeof deleteListModel === 'undefined') {
+            throw new Error('Logic error');
+        }
+        delete deleteListModel[pk];
     }
     refresh(storageModel, pk) {
-        console.log(storageModel, pk);
+        return this.em.hooks.refresh(storageModel, pk);
+    }
+    cancelRefresh(storageModel, pk) {
+        return this.em.hooks.cancelRefresh(storageModel, pk);
     }
 }
 //# sourceMappingURL=BaseModel.js.map
