@@ -116,6 +116,7 @@ export default class EntityManager {
     if (typeof storageModel === 'undefined') {
       throw new Error('The model does not exist')
     }
+    model.refresh(storageModel, pk)
     return new Proxy(proxyTarget, {
       async get(target, prop: string, receiver) {
         if (prop === 'revert') {

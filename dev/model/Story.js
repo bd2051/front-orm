@@ -58,5 +58,15 @@ export default class Story extends BaseModel {
             });
         });
     }
+    refresh(storageModel, pk) {
+        return __awaiter(this, void 0, void 0, function* () {
+            setInterval(() => {
+                fetch(`http://localhost:8000/api/stories/${pk}`).then(response => response.json())
+                    .then((data) => {
+                    storageModel[pk] = data;
+                });
+            }, 1000);
+        });
+    }
 }
 //# sourceMappingURL=Story.js.map

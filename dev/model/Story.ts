@@ -60,4 +60,14 @@ export default class Story extends BaseModel {
       return data
     })
   }
+  async refresh(storageModel: any, pk: string|number) {
+    setInterval(() => {
+        fetch(
+        `http://localhost:8000/api/stories/${pk}`
+      ).then(response => response.json())
+      .then((data) => {
+        storageModel[pk] = data
+      })
+    }, 1000)
+  }
 }

@@ -84,6 +84,7 @@ export default class EntityManager {
         if (typeof storageModel === 'undefined') {
             throw new Error('The model does not exist');
         }
+        model.refresh(storageModel, pk);
         return new Proxy(proxyTarget, {
             get(target, prop, receiver) {
                 return __awaiter(this, void 0, void 0, function* () {

@@ -7,6 +7,10 @@ interface Fields {
   [key: string]: any
 }
 
+interface StorageModel {
+  [key: number|string]: any
+}
+
 export default class BaseModel implements ModelInterface {
   [key: string]: BaseField | EntityManager | string | null | ((v: any, o?: any) => any)
   pk: string | null
@@ -65,6 +69,7 @@ export default class BaseModel implements ModelInterface {
   }
   create(values: object) {
     // добавление нового объекта и его валидация
+    // this.em.create(this, values)
     console.log(values)
   }
   update(values: object, oldItem: object) {
@@ -74,5 +79,9 @@ export default class BaseModel implements ModelInterface {
   delete(pk: number|string, oldItem: object) {
     // бновление объекта и его валидация
     console.log(oldItem, pk)
+  }
+  refresh(storageModel: StorageModel, pk: number|string) {
+    // бновление объекта и его валидация
+    console.log(storageModel, pk)
   }
 }

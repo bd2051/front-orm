@@ -59,5 +59,8 @@ export default class BaseModel {
     delete(pk, oldItem) {
         console.log(oldItem, pk);
     }
+    refresh(storageModel, pk) {
+        console.log(storageModel, pk);
+    }
 }
 //# sourceMappingURL=BaseModel.js.map
