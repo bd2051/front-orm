@@ -72,15 +72,40 @@ export default class BaseModel implements ModelInterface {
     // this.em.create(this, values)
     console.log(values)
   }
+  cancelCreate(pk: number|string) {
+    const createListModel = this.em.createList[this.getName()]
+    if (typeof createListModel === 'undefined') {
+      throw new Error('Logic error')
+    }
+    delete createListModel[pk]
+  }
   update(values: object, oldItem: object) {
     // бновление объекта и его валидация
     console.log(oldItem, values)
+  }
+  cancelUpdate(pk: number|string) {
+    const updateListModel = this.em.updateList[this.getName()]
+    if (typeof updateListModel === 'undefined') {
+      throw new Error('Logic error')
+    }
+    delete updateListModel[pk]
   }
   delete(pk: number|string, oldItem: object) {
     // бновление объекта и его валидация
     console.log(oldItem, pk)
   }
+  cancelDelete(pk: number|string) {
+    const deleteListModel = this.em.deleteList[this.getName()]
+    if (typeof deleteListModel === 'undefined') {
+      throw new Error('Logic error')
+    }
+    delete deleteListModel[pk]
+  }
   refresh(storageModel: StorageModel, pk: number|string) {
+    // бновление объекта и его валидация
+    console.log(storageModel, pk)
+  }
+  cancelRefresh(storageModel: StorageModel, pk: number|string) {
     // бновление объекта и его валидация
     console.log(storageModel, pk)
   }

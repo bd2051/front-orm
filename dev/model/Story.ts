@@ -5,6 +5,11 @@ import Author from "./Author";
 import BaseModel from "../../src/model/BaseModel";
 import EntityManager from "../../src/EntityManager";
 
+interface IntervalMap {
+  [key: number|string]: any
+}
+const intervalMap: IntervalMap = {}
+
 export default class Story extends BaseModel {
   id: PrimaryKey
   name: StringField
@@ -61,7 +66,7 @@ export default class Story extends BaseModel {
     })
   }
   async refresh(storageModel: any, pk: string|number) {
-    setInterval(() => {
+    intervalMap[pk] = setInterval(() => {
         fetch(
         `http://localhost:8000/api/stories/${pk}`
       ).then(response => response.json())
@@ -69,5 +74,9 @@ export default class Story extends BaseModel {
         storageModel[pk] = data
       })
     }, 1000)
+  }
+  async cancelRefresh(storageModel: any, pk: string|number) {
+    console.log(storageModel)
+    clearInterval(intervalMap[pk])
   }
 }
