@@ -108,9 +108,17 @@ export default class EntityManager {
         return new Proxy(proxyTarget, {
             get(target, prop, receiver) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    if (prop === 'revert') {
+                    if (prop === 'cancelUpdate') {
+                        return () => model.cancelUpdate(pk);
                     }
-                    if (prop === 'clear') {
+                    if (prop === 'cancelCreate') {
+                        return () => model.cancelCreate(pk);
+                    }
+                    if (prop === 'cancelDelete') {
+                        return () => model.cancelDelete(pk);
+                    }
+                    if (prop === 'cancelRefresh') {
+                        return () => model.cancelRefresh(storageModel, pk);
                     }
                     if (PROPERTY_EXCEPTIONS.includes(prop)) {
                         return Reflect.get(target, prop, receiver);
