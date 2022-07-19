@@ -10,7 +10,7 @@ export default class Collection extends BaseType{
     if (!Array.isArray(result)) {
       throw new Error('Invalid result. The result must be array')
     }
-    if (result.some(item => !item[model.getPk()])) {
+    if (result.some(item => !item[model.getPkName()])) {
       throw new Error('Invalid result. Missing primary key')
     }
     const storageModel = this.em.storage[model.getName()]
@@ -18,8 +18,8 @@ export default class Collection extends BaseType{
       throw new Error('Invalid storageModel')
     }
     result.forEach((item) => {
-      storageModel[item[model.getPk()]] = item
+      storageModel[item[model.getPkName()]] = item
     })
-    return result.map(item => this.getResultProxy(model, storageModel, item[model.getPk()]))
+    return result.map(item => this.getResultProxy(model, storageModel, item[model.getPkName()]))
   }
 }

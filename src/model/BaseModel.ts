@@ -13,27 +13,27 @@ interface StorageModel {
 
 export default class BaseModel implements ModelInterface {
   [key: string]: BaseField | EntityManager | string | null | ((v: any, o?: any) => any)
-  pk: string | null
+  pkName: string | null
   em: EntityManager
 
   constructor(em: EntityManager) {
-    this.pk = null
+    this.pkName = null
     this.em = em
   }
-  getPk(): string {
-    if (this.pk === null) {
-      const pk = Object.keys(this).find((key) => this[key] instanceof PrimaryKey)
-      if (typeof pk !== 'string') {
+  getPkName(): string {
+    if (this.pkName === null) {
+      const pkName = Object.keys(this).find((key) => this[key] instanceof PrimaryKey)
+      if (typeof pkName !== 'string') {
         throw new Error('Add PrimaryKey')
       }
-      this.pk = pk
+      this.pkName = pkName
     }
-    return this.pk
+    return this.pkName
   }
   getPkField(): PrimaryKey {
-    const pk: keyof this = this.getPk()
+    const pkName: keyof this = this.getPkName()
     let pkFields: PrimaryKey
-    const temp = this[pk]
+    const temp = this[pkName]
     if (temp instanceof PrimaryKey) {
       pkFields = temp
     } else {
@@ -45,11 +45,7 @@ export default class BaseModel implements ModelInterface {
     return this.constructor.name
   }
   getRepository(): Repository {
-    const repository = this.em.repositories[this.getName()]
-    if (typeof repository === 'undefined') {
-      throw new Error('Logic error')
-    }
-    return repository
+    return this.em.getRepository(this.getName())
   }
   validateFields(data: Fields) {
     if (!Object.entries(data).every(([key, item]) => {
@@ -75,30 +71,21 @@ export default class BaseModel implements ModelInterface {
     return this.em.hooks.create(values)
   }
   cancelCreate(pk: number|string) {
-    const createListModel = this.em.createList[this.getName()]
-    if (typeof createListModel === 'undefined') {
-      throw new Error('Logic error')
-    }
+    const createListModel = this.em.getCreateListModel(this.getName())
     delete createListModel[pk]
   }
   update(values: object, oldItem: object) {
     return this.em.hooks.update(values, oldItem)
   }
   cancelUpdate(pk: number|string) {
-    const updateListModel = this.em.updateList[this.getName()]
-    if (typeof updateListModel === 'undefined') {
-      throw new Error('Logic error')
-    }
+    const updateListModel = this.em.getUpdateListModel(this.getName())
     delete updateListModel[pk]
   }
   delete(pk: number|string, oldItem: object) {
     return this.em.hooks.delete(pk, oldItem)
   }
   cancelDelete(pk: number|string) {
-    const deleteListModel = this.em.deleteList[this.getName()]
-    if (typeof deleteListModel === 'undefined') {
-      throw new Error('Logic error')
-    }
+    const deleteListModel = this.em.getDeleteListModel(this.getName())
     delete deleteListModel[pk]
   }
   refresh(storageModel: StorageModel, pk: number|string) {

@@ -7,7 +7,7 @@ interface Result {
 
 export default class Entity extends BaseType {
   convertResult(result: Result, model: BaseModel) {
-    const pkValue = result[model.getPk()]
+    const pkValue = result[model.getPkName()]
     if (typeof pkValue === 'undefined') {
       throw new Error('Invalid result. Missing primary key')
     }
