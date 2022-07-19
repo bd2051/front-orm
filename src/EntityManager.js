@@ -51,16 +51,52 @@ export default class EntityManager {
         this.models[model.getName()] = model;
         this.repositories[model.getName()] = new Repository(this, model, repositories);
     }
+    getModel(modelName) {
+        const model = this.models[modelName];
+        if (typeof model === 'undefined') {
+            throw new Error('The model does not exist');
+        }
+        return model;
+    }
+    getRepository(modelName) {
+        const repository = this.repositories[modelName];
+        if (typeof repository === 'undefined') {
+            throw new Error('The model does not exist');
+        }
+        return repository;
+    }
+    getStorageModel(modelName) {
+        const storageModel = this.storage[modelName];
+        if (typeof storageModel === 'undefined') {
+            throw new Error('The model does not exist');
+        }
+        return storageModel;
+    }
+    getCreateListModel(modelName) {
+        const createListModel = this.createList[modelName];
+        if (typeof createListModel === 'undefined') {
+            throw new Error('The model does not exist');
+        }
+        return createListModel;
+    }
+    getUpdateListModel(modelName) {
+        const updateListModel = this.updateList[modelName];
+        if (typeof updateListModel === 'undefined') {
+            throw new Error('The model does not exist');
+        }
+        return updateListModel;
+    }
+    getDeleteListModel(modelName) {
+        const deleteListModel = this.deleteList[modelName];
+        if (typeof deleteListModel === 'undefined') {
+            throw new Error('The model does not exist');
+        }
+        return deleteListModel;
+    }
     flush() {
         Object.entries(this.updateList).forEach(([modelName, updateListModel]) => {
-            const model = this.models[modelName];
-            if (typeof model === 'undefined') {
-                throw new Error('Logic error');
-            }
-            const storageModel = this.storage[modelName];
-            if (typeof storageModel === 'undefined') {
-                throw new Error('Logic error');
-            }
+            const model = this.getModel(modelName);
+            const storageModel = this.getStorageModel(modelName);
             Object.entries(updateListModel).forEach(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
                 const storage = storageModel[pk];
                 if (typeof storage === 'undefined') {
@@ -71,20 +107,14 @@ export default class EntityManager {
             }));
         });
         Object.entries(this.createList).forEach(([modelName, createListModel]) => {
-            const model = this.models[modelName];
-            if (typeof model === 'undefined') {
-                throw new Error('Logic error');
-            }
+            const model = this.getModel(modelName);
             Object.entries(createListModel).forEach(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
                 yield model.create(item);
                 delete createListModel[pk];
             }));
         });
         Object.entries(this.deleteList).forEach(([modelName, deleteListModel]) => {
-            const model = this.models[modelName];
-            if (typeof model === 'undefined') {
-                throw new Error('Logic error');
-            }
+            const model = this.getModel(modelName);
             Object.entries(deleteListModel).forEach(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
                 yield model.delete(pk, item);
                 delete deleteListModel[pk];
@@ -92,18 +122,9 @@ export default class EntityManager {
         });
     }
     _createProxy(proxyTarget, model, pk, cb) {
-        const createListModel = this.createList[model.getName()];
-        if (typeof createListModel === 'undefined') {
-            throw new Error('The model does not exist');
-        }
-        const updateListModel = this.updateList[model.getName()];
-        if (typeof updateListModel === 'undefined') {
-            throw new Error('The model does not exist');
-        }
-        const storageModel = this.storage[model.getName()];
-        if (typeof storageModel === 'undefined') {
-            throw new Error('The model does not exist');
-        }
+        const createListModel = this.getCreateListModel(model.getName());
+        const updateListModel = this.getUpdateListModel(model.getName());
+        const storageModel = this.getStorageModel(model.getName());
         model.refresh(storageModel, pk);
         return new Proxy(proxyTarget, {
             get(target, prop, receiver) {

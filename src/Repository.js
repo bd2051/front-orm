@@ -32,24 +32,15 @@ export default class Repository {
     create(values) {
         const uuid = getUuidByString(Date.now().toString());
         const model = this.model;
-        const createListModel = this.em.createList[model.getName()];
-        if (typeof createListModel === 'undefined') {
-            throw new Error('Logic error');
-        }
+        const createListModel = this.em.getCreateListModel(model.getName());
         createListModel[uuid] = values;
         return this.em._createProxy(model, model, uuid, () => __awaiter(this, void 0, void 0, function* () { }));
     }
     delete(pk) {
         return __awaiter(this, void 0, void 0, function* () {
             const model = this.model;
-            const deleteListModel = this.em.deleteList[model.getName()];
-            if (typeof deleteListModel === 'undefined') {
-                throw new Error('Logic error');
-            }
-            const storageModel = this.em.storage[model.getName()];
-            if (typeof storageModel === 'undefined') {
-                throw new Error('Logic error');
-            }
+            const deleteListModel = this.em.getDeleteListModel(model.getName());
+            const storageModel = this.em.getStorageModel(model.getName());
             let item = storageModel[pk];
             if (typeof item === 'undefined') {
                 item = yield model.getRepository().methodsCb.findByPk(pk);

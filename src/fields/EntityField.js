@@ -8,7 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import BaseField from "./BaseField";
-import BaseModel from "../model/BaseModel";
 export default class EntityField extends BaseField {
     constructor(em, targetModelName, convertValueToPk = (value) => value) {
         super(em);
@@ -16,10 +15,7 @@ export default class EntityField extends BaseField {
         this.convertValueToPk = convertValueToPk;
     }
     get targetModel() {
-        if (!(this.em.models[this.targetModelName] instanceof BaseModel)) {
-            throw new Error('Invalid target in Entity field');
-        }
-        return this.em.models[this.targetModelName];
+        return this.em.getModel(this.targetModelName);
     }
     validate(value) {
         return this.targetModel.getPkField().validate(value);
@@ -29,18 +25,11 @@ export default class EntityField extends BaseField {
             return null;
         }
         const pk = this.convertValueToPk(value);
-        let storageModel = this.em.storage[this.targetModel.getName()];
-        if (typeof storageModel === 'undefined') {
-            throw new Error('Invalid target in Entity field');
-        }
+        let storageModel = this.em.getStorageModel(this.targetModel.getName());
         const model = this.targetModel;
         const findByPk = model.getRepository().methodsCb.findByPk;
         return this.em._createProxy(model, model, pk, () => __awaiter(this, void 0, void 0, function* () {
-            const result = yield findByPk(pk);
-            if (typeof storageModel === 'undefined') {
-                throw new Error('Logic error');
-            }
-            storageModel[pk] = result;
+            storageModel[pk] = yield findByPk(pk);
             return storageModel[pk];
         }));
     }

@@ -2,23 +2,23 @@ import BaseField from "../fields/BaseField";
 import PrimaryKey from "../fields/PrimaryKey";
 export default class BaseModel {
     constructor(em) {
-        this.pk = null;
+        this.pkName = null;
         this.em = em;
     }
-    getPk() {
-        if (this.pk === null) {
-            const pk = Object.keys(this).find((key) => this[key] instanceof PrimaryKey);
-            if (typeof pk !== 'string') {
+    getPkName() {
+        if (this.pkName === null) {
+            const pkName = Object.keys(this).find((key) => this[key] instanceof PrimaryKey);
+            if (typeof pkName !== 'string') {
                 throw new Error('Add PrimaryKey');
             }
-            this.pk = pk;
+            this.pkName = pkName;
         }
-        return this.pk;
+        return this.pkName;
     }
     getPkField() {
-        const pk = this.getPk();
+        const pkName = this.getPkName();
         let pkFields;
-        const temp = this[pk];
+        const temp = this[pkName];
         if (temp instanceof PrimaryKey) {
             pkFields = temp;
         }
@@ -31,11 +31,7 @@ export default class BaseModel {
         return this.constructor.name;
     }
     getRepository() {
-        const repository = this.em.repositories[this.getName()];
-        if (typeof repository === 'undefined') {
-            throw new Error('Logic error');
-        }
-        return repository;
+        return this.em.getRepository(this.getName());
     }
     validateFields(data) {
         if (!Object.entries(data).every(([key, item]) => {
@@ -61,30 +57,21 @@ export default class BaseModel {
         return this.em.hooks.create(values);
     }
     cancelCreate(pk) {
-        const createListModel = this.em.createList[this.getName()];
-        if (typeof createListModel === 'undefined') {
-            throw new Error('Logic error');
-        }
+        const createListModel = this.em.getCreateListModel(this.getName());
         delete createListModel[pk];
     }
     update(values, oldItem) {
         return this.em.hooks.update(values, oldItem);
     }
     cancelUpdate(pk) {
-        const updateListModel = this.em.updateList[this.getName()];
-        if (typeof updateListModel === 'undefined') {
-            throw new Error('Logic error');
-        }
+        const updateListModel = this.em.getUpdateListModel(this.getName());
         delete updateListModel[pk];
     }
     delete(pk, oldItem) {
         return this.em.hooks.delete(pk, oldItem);
     }
     cancelDelete(pk) {
-        const deleteListModel = this.em.deleteList[this.getName()];
-        if (typeof deleteListModel === 'undefined') {
-            throw new Error('Logic error');
-        }
+        const deleteListModel = this.em.getDeleteListModel(this.getName());
         delete deleteListModel[pk];
     }
     refresh(storageModel, pk) {
