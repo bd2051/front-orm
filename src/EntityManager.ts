@@ -1,6 +1,7 @@
 import Repository from "./Repository.js";
 import BaseModel from "./model/BaseModel";
 import BaseType from "./types/BaseType";
+import Entity from "./types/Entity";
 
 interface StorageModel {
   [key: number|string]: any
@@ -11,7 +12,7 @@ interface Models {
 }
 
 interface RepositoryInit {
-  findByPk: BaseType
+  findByPk: Entity
   [key: string]: BaseType
 }
 
@@ -138,33 +139,34 @@ export default class EntityManager {
     }
     return deleteListModel
   }
-  flush() {
-    Object.entries(this.updateList).forEach(([modelName, updateListModel]) => {
+  async flush() {
+    await Promise.all(Object.keys(this.updateList).map(async (modelName) => {
       const model = this.getModel(modelName)
       const storageModel = this.getStorageModel(modelName)
-      Object.entries(updateListModel).forEach(async ([pk, item]) => {
+      const updateListModel = this.getUpdateListModel(modelName)
+      await Promise.all(Object.entries(updateListModel).map(async ([pk, item]) => {
         const storage = storageModel[pk]
         if (typeof storage === 'undefined') {
           throw new Error('Logic error')
         }
         await model.update(item, storage)
         delete updateListModel[pk]
-      })
-    })
-    Object.entries(this.createList).forEach(([modelName, createListModel]) => {
+      }))
+    }))
+    await Promise.all(Object.entries(this.createList).map(async ([modelName, createListModel]) => {
       const model = this.getModel(modelName)
-      Object.entries(createListModel).forEach(async ([pk, item]) => {
+      await Promise.all(Object.entries(createListModel).map(async ([pk, item]) => {
         await model.create(item)
         delete createListModel[pk]
-      })
-    })
-    Object.entries(this.deleteList).forEach(([modelName, deleteListModel]) => {
+      }))
+    }))
+    await Promise.all(Object.entries(this.deleteList).map(async ([modelName, deleteListModel]) => {
       const model = this.getModel(modelName)
-      Object.entries(deleteListModel).forEach(async ([pk, item]) => {
+      await Promise.all(Object.entries(deleteListModel).map(async ([pk, item]) => {
         await model.delete(pk, item)
         delete deleteListModel[pk]
-      })
-    })
+      }))
+    }))
   }
   _createProxy(proxyTarget: object, model: BaseModel, pk: string|number, cb: () => object) {
     const createListModel = this.getCreateListModel(model.getName())
@@ -189,16 +191,19 @@ export default class EntityManager {
           return Reflect.get(target, prop, receiver);
         }
 
-        const createList = createListModel[pk]
-        const updateList = updateListModel[pk]
+        const createdEntity = createListModel[pk]
+        const updatedEntity = updateListModel[pk]
         const storage = storageModel[pk]
-        if (typeof createList !== 'undefined') {
-          const convertedCreateList = model.validateFields(createList).convertFields(createList)
-          return Reflect.get(convertedCreateList, prop, receiver)
+        if (typeof createdEntity !== 'undefined') {
+          const convertedCreatedEntity = model.validateFields(createdEntity).convertFields(createdEntity)
+          return Reflect.get(convertedCreatedEntity, prop, receiver)
         }
-        if (typeof updateList !== 'undefined') {
-          const convertedUpdateList = model.validateFields(updateList).convertFields(updateList)
-          return Reflect.get(convertedUpdateList, prop, receiver)
+        if (typeof updatedEntity !== 'undefined') {
+          const updatedProp = updatedEntity[prop]
+          if (typeof updatedProp !== 'undefined') {
+            const convertedUpdatedEntity = model.validateFields(updatedEntity).convertFields(updatedEntity)
+            return Reflect.get(convertedUpdatedEntity, prop, receiver)
+          }
         }
         if (typeof storage !== 'undefined') {
           const convertedStorage = model.validateFields(storage).convertFields(storage)
@@ -225,17 +230,19 @@ export default class EntityManager {
       }
     })
   }
-  _createCacheProxy(proxyTarget: object, storage: object | undefined, cb: () => object) {
+  _createCacheProxy(proxyTarget: object, uuid: string, cb: () => object) {
+    const cache = this.cache
     return new Proxy(proxyTarget, {
       async get(target, prop: string, receiver) {
         if (PROPERTY_EXCEPTIONS.includes(prop)) {
           return Reflect.get(target, prop, receiver);
         }
-        if (typeof storage !== 'undefined') {
-          return Reflect.get(storage, prop, receiver)
+        const cacheEntity = cache[uuid]
+        if (typeof cacheEntity !== 'undefined') {
+          return Reflect.get(cacheEntity, prop, receiver)
         }
-        storage = await cb()
-        return Reflect.get(storage, prop, receiver)
+        cache[uuid] = await cb()
+        return Reflect.get(cache[uuid]!, prop, receiver)
       }
     })
   }

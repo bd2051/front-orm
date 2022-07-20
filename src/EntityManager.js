@@ -94,31 +94,34 @@ export default class EntityManager {
         return deleteListModel;
     }
     flush() {
-        Object.entries(this.updateList).forEach(([modelName, updateListModel]) => {
-            const model = this.getModel(modelName);
-            const storageModel = this.getStorageModel(modelName);
-            Object.entries(updateListModel).forEach(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
-                const storage = storageModel[pk];
-                if (typeof storage === 'undefined') {
-                    throw new Error('Logic error');
-                }
-                yield model.update(item, storage);
-                delete updateListModel[pk];
-            }));
-        });
-        Object.entries(this.createList).forEach(([modelName, createListModel]) => {
-            const model = this.getModel(modelName);
-            Object.entries(createListModel).forEach(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
-                yield model.create(item);
-                delete createListModel[pk];
-            }));
-        });
-        Object.entries(this.deleteList).forEach(([modelName, deleteListModel]) => {
-            const model = this.getModel(modelName);
-            Object.entries(deleteListModel).forEach(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
-                yield model.delete(pk, item);
-                delete deleteListModel[pk];
-            }));
+        return __awaiter(this, void 0, void 0, function* () {
+            yield Promise.all(Object.keys(this.updateList).map((modelName) => __awaiter(this, void 0, void 0, function* () {
+                const model = this.getModel(modelName);
+                const storageModel = this.getStorageModel(modelName);
+                const updateListModel = this.getUpdateListModel(modelName);
+                yield Promise.all(Object.entries(updateListModel).map(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
+                    const storage = storageModel[pk];
+                    if (typeof storage === 'undefined') {
+                        throw new Error('Logic error');
+                    }
+                    yield model.update(item, storage);
+                    delete updateListModel[pk];
+                })));
+            })));
+            yield Promise.all(Object.entries(this.createList).map(([modelName, createListModel]) => __awaiter(this, void 0, void 0, function* () {
+                const model = this.getModel(modelName);
+                yield Promise.all(Object.entries(createListModel).map(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
+                    yield model.create(item);
+                    delete createListModel[pk];
+                })));
+            })));
+            yield Promise.all(Object.entries(this.deleteList).map(([modelName, deleteListModel]) => __awaiter(this, void 0, void 0, function* () {
+                const model = this.getModel(modelName);
+                yield Promise.all(Object.entries(deleteListModel).map(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
+                    yield model.delete(pk, item);
+                    delete deleteListModel[pk];
+                })));
+            })));
         });
     }
     _createProxy(proxyTarget, model, pk, cb) {
@@ -144,16 +147,19 @@ export default class EntityManager {
                     if (PROPERTY_EXCEPTIONS.includes(prop)) {
                         return Reflect.get(target, prop, receiver);
                     }
-                    const createList = createListModel[pk];
-                    const updateList = updateListModel[pk];
+                    const createdEntity = createListModel[pk];
+                    const updatedEntity = updateListModel[pk];
                     const storage = storageModel[pk];
-                    if (typeof createList !== 'undefined') {
-                        const convertedCreateList = model.validateFields(createList).convertFields(createList);
-                        return Reflect.get(convertedCreateList, prop, receiver);
+                    if (typeof createdEntity !== 'undefined') {
+                        const convertedCreatedEntity = model.validateFields(createdEntity).convertFields(createdEntity);
+                        return Reflect.get(convertedCreatedEntity, prop, receiver);
                     }
-                    if (typeof updateList !== 'undefined') {
-                        const convertedUpdateList = model.validateFields(updateList).convertFields(updateList);
-                        return Reflect.get(convertedUpdateList, prop, receiver);
+                    if (typeof updatedEntity !== 'undefined') {
+                        const updatedProp = updatedEntity[prop];
+                        if (typeof updatedProp !== 'undefined') {
+                            const convertedUpdatedEntity = model.validateFields(updatedEntity).convertFields(updatedEntity);
+                            return Reflect.get(convertedUpdatedEntity, prop, receiver);
+                        }
                     }
                     if (typeof storage !== 'undefined') {
                         const convertedStorage = model.validateFields(storage).convertFields(storage);
@@ -183,18 +189,20 @@ export default class EntityManager {
             }
         });
     }
-    _createCacheProxy(proxyTarget, storage, cb) {
+    _createCacheProxy(proxyTarget, uuid, cb) {
+        const cache = this.cache;
         return new Proxy(proxyTarget, {
             get(target, prop, receiver) {
                 return __awaiter(this, void 0, void 0, function* () {
                     if (PROPERTY_EXCEPTIONS.includes(prop)) {
                         return Reflect.get(target, prop, receiver);
                     }
-                    if (typeof storage !== 'undefined') {
-                        return Reflect.get(storage, prop, receiver);
+                    const cacheEntity = cache[uuid];
+                    if (typeof cacheEntity !== 'undefined') {
+                        return Reflect.get(cacheEntity, prop, receiver);
                     }
-                    storage = yield cb();
-                    return Reflect.get(storage, prop, receiver);
+                    cache[uuid] = yield cb();
+                    return Reflect.get(cache[uuid], prop, receiver);
                 });
             }
         });
