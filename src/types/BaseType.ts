@@ -8,7 +8,7 @@ interface Storage {
 export default class BaseType {
   em: EntityManager
   findCb: (values: any) => object
-  find: (values: any, model: BaseModel) => Promise<object>
+  find: (values: any, model: BaseModel) => Promise<any>
 
   constructor(em: EntityManager, findCb: (values: any) => object) {
     this.em = em

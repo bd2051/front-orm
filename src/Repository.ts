@@ -22,10 +22,7 @@ export default class Repository {
     this.model = model
     this.em = em
     this.methodsCb = {
-      findByPk: (value) => ({value})
-    }
-    if (!Object.keys(repositories).includes('findByPk')) {
-      throw new Error('The repository must have a method findByPk')
+      findByPk: (value) => value // TODO em.hooks
     }
     Object.entries(repositories).forEach(([methodName, repository]) => {
       repository.setEntityManager(em)
@@ -49,7 +46,7 @@ export default class Repository {
     return this.em._createProxy(model, model, uuid, async () => {})
   }
 
-  async delete(pk: number|string) {
+  async delete(pk: number|string): Promise<any> {
     const model = this.model
     const deleteListModel = this.em.getDeleteListModel(model.getName())
     const storageModel = this.em.getStorageModel(model.getName())
@@ -72,11 +69,7 @@ export default class Repository {
     if (typeof cache[uuid] === 'undefined') {
       cache[uuid] = await methodRepository.find(values, this.model)
     }
-    const cacheUuid = cache[uuid]
-    if  (typeof cacheUuid === 'undefined') {
-      throw new Error('Invalid methodRepository')
-    }
-    return this.em._createCacheProxy(cacheUuid, uuid, async () => {
+    return this.em._createCacheProxy(cache[uuid]!, uuid, async () => {
       cache[uuid] = await methodRepository.find(values, this.model)
       return cache[uuid]
     })

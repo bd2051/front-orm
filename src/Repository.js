@@ -13,11 +13,8 @@ export default class Repository {
         this.model = model;
         this.em = em;
         this.methodsCb = {
-            findByPk: (value) => ({ value })
+            findByPk: (value) => value
         };
-        if (!Object.keys(repositories).includes('findByPk')) {
-            throw new Error('The repository must have a method findByPk');
-        }
         Object.entries(repositories).forEach(([methodName, repository]) => {
             repository.setEntityManager(em);
             this[methodName] = (values) => this._methodsHandler(values, repository, methodName);
@@ -61,11 +58,7 @@ export default class Repository {
             if (typeof cache[uuid] === 'undefined') {
                 cache[uuid] = yield methodRepository.find(values, this.model);
             }
-            const cacheUuid = cache[uuid];
-            if (typeof cacheUuid === 'undefined') {
-                throw new Error('Invalid methodRepository');
-            }
-            return this.em._createCacheProxy(cacheUuid, uuid, () => __awaiter(this, void 0, void 0, function* () {
+            return this.em._createCacheProxy(cache[uuid], uuid, () => __awaiter(this, void 0, void 0, function* () {
                 cache[uuid] = yield methodRepository.find(values, this.model);
                 return cache[uuid];
             }));
