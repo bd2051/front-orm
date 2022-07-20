@@ -39,6 +39,7 @@ export default class BaseModel {
             if (field instanceof BaseField) {
                 return field.validate(item);
             }
+            return true;
         })) {
             throw new Error('invalid fields');
         }

@@ -53,6 +53,7 @@ export default class BaseModel implements ModelInterface {
       if (field instanceof BaseField) {
         return field.validate(item)
       }
+      return true
     })) {
       throw new Error('invalid fields')
     }

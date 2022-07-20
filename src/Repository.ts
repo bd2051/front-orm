@@ -38,7 +38,7 @@ export default class Repository {
       return JSON.stringify(obj, Array.from(allKeys).sort());
   }
 
-  create(values: any) {
+  async create(values: any) {
     const uuid = getUuidByString(Date.now().toString())
     const model = this.model
     const createListModel = this.em.getCreateListModel(model.getName())

@@ -69,11 +69,13 @@ class Story extends BaseModel {
     expect(findByPk('value')).to.be.equal('value')
   }
 
-  @test 'test create' () {
+  @test 'test create' (done) {
     this.SUT.create({
       name: 'Test Story'
-    })
-    assert.equal(Object.values(this.em.getCreateListModel('Story'))[0]['name'], 'Test Story')
+    }).then(() => {
+      assert.equal(Object.values(this.em.getCreateListModel('Story'))[0]['name'], 'Test Story')
+      done()
+    }).catch(done)
   }
 
   @test 'test delete' (done) {
