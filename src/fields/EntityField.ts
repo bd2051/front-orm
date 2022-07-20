@@ -20,6 +20,9 @@ export default class EntityField extends BaseField implements FieldInterface {
     return this.em.getModel(this.targetModelName)
   }
   validate(value: any) {
+    if (value === null) {
+      return true
+    }
     return this.targetModel.getPkField().validate(value)
   }
   convert(value: any) {

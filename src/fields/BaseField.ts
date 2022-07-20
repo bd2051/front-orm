@@ -9,10 +9,7 @@ export default class BaseField {
   convert(value: any): any {
     return value
   }
-  validate(value: any): any {
-    if (!value) {
-      throw new Error('Logic error')
-    }
-    return this
+  validate(value: any): boolean {
+    return !(typeof value === 'undefined')
   }
 }

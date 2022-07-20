@@ -10,9 +10,6 @@ export default class PrimaryKey extends BaseField implements FieldInterface {
     this.type = type
   }
   validate(value: string | number | null) {
-    if (value !== null) {
-      return true
-    }
     return typeof value === this.type
   }
 }

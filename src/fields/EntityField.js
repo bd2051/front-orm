@@ -18,6 +18,9 @@ export default class EntityField extends BaseField {
         return this.em.getModel(this.targetModelName);
     }
     validate(value) {
+        if (value === null) {
+            return true;
+        }
         return this.targetModel.getPkField().validate(value);
     }
     convert(value) {

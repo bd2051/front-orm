@@ -5,9 +5,6 @@ export default class PrimaryKey extends BaseField {
         this.type = type;
     }
     validate(value) {
-        if (value !== null) {
-            return true;
-        }
         return typeof value === this.type;
     }
 }

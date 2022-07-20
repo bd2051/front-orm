@@ -6,10 +6,7 @@ export default class BaseField {
         return value;
     }
     validate(value) {
-        if (!value) {
-            throw new Error('Logic error');
-        }
-        return this;
+        return !(typeof value === 'undefined');
     }
 }
 //# sourceMappingURL=BaseField.js.map

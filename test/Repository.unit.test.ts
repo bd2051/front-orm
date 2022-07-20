@@ -27,7 +27,7 @@ class Story extends BaseModel {
   protected em: EntityManager
 
 
-  constructor() {
+  before() {
     this.em = new EntityManager()
     this.em.setHooks({
       create() {},
