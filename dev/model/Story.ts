@@ -1,9 +1,5 @@
-import PrimaryKey from "../../src/fields/PrimaryKey";
-import StringField from "../../src/fields/StringField";
-import EntityField from "../../src/fields/EntityField";
+import {BaseModel, EntityField, EntityManager, PrimaryKey, StringField} from "../../src"
 import Author from "./Author";
-import BaseModel from "../../src/model/BaseModel";
-import EntityManager from "../../src/EntityManager";
 
 interface IntervalMap {
   [key: number|string]: any

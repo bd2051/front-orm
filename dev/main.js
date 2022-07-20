@@ -1,8 +1,6 @@
-import EntityManager from "../src/EntityManager";
 import Author from "./model/Author";
-import Entity from "../src/types/Entity";
-import Collection from "../src/types/Collection";
 import Story from "./model/Story";
+import { Collection, Entity, EntityManager } from "../src";
 console.log('start');
 window.em = new EntityManager();
 window.em.setModel(new Author(window.em), {

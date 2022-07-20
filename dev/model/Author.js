@@ -1,7 +1,4 @@
-import PrimaryKey from "../../src/fields/PrimaryKey";
-import StringField from "../../src/fields/StringField";
-import BaseModel from "../../src/model/BaseModel";
-import NumberField from "../../src/fields/NumberField";
+import { BaseModel, NumberField, PrimaryKey, StringField } from "../../src";
 export default class Author extends BaseModel {
     constructor(em) {
         super(em);

@@ -1,8 +1,4 @@
-import PrimaryKey from "../../src/fields/PrimaryKey";
-import StringField from "../../src/fields/StringField";
-import BaseModel from "../../src/model/BaseModel";
-import EntityManager from "../../src/EntityManager";
-import NumberField from "../../src/fields/NumberField";
+import {BaseModel, EntityManager, NumberField, PrimaryKey, StringField} from "../../src";
 
 export default class Author extends BaseModel {
   id: PrimaryKey

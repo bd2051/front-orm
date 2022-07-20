@@ -1,11 +1,7 @@
 import { suite, test } from '@testdeck/mocha';
 import * as _chai from 'chai';
 import {assert, expect} from 'chai';
-import EntityManager from '../src/EntityManager';
-import BaseModel from "../src/model/BaseModel";
-import PrimaryKey from "../src/fields/PrimaryKey";
-import StringField from "../src/fields/StringField";
-import Entity from "../src/types/Entity";
+import {BaseModel, Entity, EntityManager, PrimaryKey, StringField} from "../src";
 
 _chai.should();
 

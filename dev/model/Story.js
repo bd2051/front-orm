@@ -7,11 +7,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import PrimaryKey from "../../src/fields/PrimaryKey";
-import StringField from "../../src/fields/StringField";
-import EntityField from "../../src/fields/EntityField";
+import { BaseModel, EntityField, PrimaryKey, StringField } from "../../src";
 import Author from "./Author";
-import BaseModel from "../../src/model/BaseModel";
 const intervalMap = {};
 export default class Story extends BaseModel {
     constructor(em) {

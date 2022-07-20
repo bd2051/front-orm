@@ -11,7 +11,7 @@ interface StorageModel {
   [key: number|string]: any
 }
 
-export default class BaseModel implements ModelInterface {
+export default class BaseModel {
   [key: string]: BaseField | EntityManager | string | null | ((v: any, o?: any) => any)
   pkName: string | null
   em: EntityManager
