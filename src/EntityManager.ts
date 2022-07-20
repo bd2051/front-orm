@@ -168,7 +168,7 @@ export default class EntityManager {
       }))
     }))
   }
-  _createProxy(proxyTarget: object, model: BaseModel, pk: string|number, cb: () => object) {
+  _createProxy(proxyTarget: object, model: BaseModel, pk: string|number, cb: () => object): any {
     const createListModel = this.getCreateListModel(model.getName())
     const updateListModel = this.getUpdateListModel(model.getName())
     const storageModel = this.getStorageModel(model.getName())

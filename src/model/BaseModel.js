@@ -22,9 +22,6 @@ export default class BaseModel {
         if (temp instanceof PrimaryKey) {
             pkFields = temp;
         }
-        else {
-            throw new Error('Logic error');
-        }
         return pkFields;
     }
     getName() {

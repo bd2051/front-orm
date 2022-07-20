@@ -21,13 +21,8 @@ export default class BaseType {
   setEntityManager(em: EntityManager) {
     this.em = em
   }
-  convertResult(result: object, model: BaseModel): object {
-      if (typeof result === 'undefined') {
-        throw new Error('add convertResult method')
-      }
-      if (typeof model === 'undefined') {
-        throw new Error('add convertResult method')
-      }
+  convertResult(result: object, model: BaseModel): any {
+        console.warn(result, model, 'add convertResult method')
       return new Proxy({}, {})
   }
   getResultProxy(model: BaseModel, storageModel: Storage, value: number | string) {

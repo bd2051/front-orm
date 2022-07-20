@@ -36,10 +36,8 @@ export default class BaseModel {
     const temp = this[pkName]
     if (temp instanceof PrimaryKey) {
       pkFields = temp
-    } else {
-      throw new Error('Logic error')
     }
-    return pkFields
+    return pkFields!
   }
   getName() {
     return this.constructor.name

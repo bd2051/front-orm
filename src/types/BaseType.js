@@ -20,12 +20,7 @@ export default class BaseType {
         this.em = em;
     }
     convertResult(result, model) {
-        if (typeof result === 'undefined') {
-            throw new Error('add convertResult method');
-        }
-        if (typeof model === 'undefined') {
-            throw new Error('add convertResult method');
-        }
+        console.warn(result, model, 'add convertResult method');
         return new Proxy({}, {});
     }
     getResultProxy(model, storageModel, value) {

@@ -1,6 +1,6 @@
 import EntityManager from "./EntityManager";
 import BaseField from "./fields/BaseField";
-import NumberField from "./fields/BooleanField";
+import NumberField from "./fields/NumberField";
 import BooleanField from "./fields/BooleanField";
 import EntityField from "./fields/EntityField";
 import PrimaryKey from "./fields/PrimaryKey";
