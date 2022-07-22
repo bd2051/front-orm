@@ -25,9 +25,6 @@ module.exports = {
           {
             loader: 'awesome-typescript-loader',
             options: {
-              query: {
-                declaration: false,
-              }
             },
           }
         ]
