@@ -5,7 +5,7 @@
   "scripts": {
     "test": "nyc ./node_modules/.bin/_mocha 'test/**/*.test.ts'",
     "dev": "webpack-dev-server --history-api-fallback --progress",
-    "build": "webpack",
+    "build": "webpack --config webpack.config.prod.js",
     "mock": "node mock/mock-server.js",
     "tsc:w": "tsc -w"
   },
