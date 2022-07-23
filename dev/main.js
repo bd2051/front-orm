@@ -49,4 +49,3 @@ window.em.setModel(new Story(window.em), {
         });
     })
 });
-//# sourceMappingURL=main.js.map

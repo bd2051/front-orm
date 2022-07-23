@@ -7,4 +7,3 @@ export default class Author extends BaseModel {
         this.age = new NumberField(em);
     }
 }
-//# sourceMappingURL=Author.js.map

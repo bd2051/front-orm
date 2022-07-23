@@ -49,26 +49,26 @@ class Story extends BaseModel {
 
   @test 'convert' (done) {
     expect(this.SUT.convert(null)).to.be.equal(null)
-    const test = async () => {
-      return this.SUT.convert({id: 1})
-    }
-    test().then(async (proxy) => {
-      const name = await proxy.name
+    const proxy = this.SUT.convert({id: 1})
+    const name = proxy.name
+    assert.equal(name, null)
+    setTimeout(() => {
+      const name = proxy.name
       assert.equal(name, 'story')
       done()
-    }).catch(done)
+    }, 200)
   }
 
   @test 'convert default' (done) {
     const defaultSUT = new EntityField(this.em, 'Story')
     expect(defaultSUT.convert(null)).to.be.equal(null)
-    const test = async () => {
-      return defaultSUT.convert(1)
-    }
-    test().then(async (proxy) => {
-      const name = await proxy.name
+    const proxy = defaultSUT.convert( 1)
+    const name = proxy.name
+    assert.equal(name, null)
+    setTimeout(() => {
+      const name = proxy.name
       assert.equal(name, 'story')
       done()
-    }).catch(done)
+    }, 200)
   }
 }

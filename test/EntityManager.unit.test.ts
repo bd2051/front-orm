@@ -47,7 +47,7 @@ class Story extends BaseModel {
     const createResult = this.SUT.hooks.create({result: 'testCreate'})
     const updateResult = this.SUT.hooks.update({result: 'testUpdate'}, {result: ' oldItem'})
     const deleteResult = this.SUT.hooks.delete('testPk', {result: ' testCreate'})
-    const refreshResult = this.SUT.hooks.refresh({result: 'testCreate'}, ' testPk')
+    const refreshResult = this.SUT.hooks.refresh({result: 'testCreate'}, ' testPk', () => {})
     const cancelRefreshResult = this.SUT.hooks.cancelRefresh({result: 'testCreate'}, ' testPk')
     expect(createResult).to.be.equal('testCreate')
     expect(updateResult).to.be.equal('testUpdate oldItem')
@@ -60,7 +60,7 @@ class Story extends BaseModel {
     assert.throw(() => this.SUT.hooks.create({e: 'error'}))
     assert.throw(() => this.SUT.hooks.update({e: 'error'}, {e: 'error'}))
     assert.throw(() => this.SUT.hooks.delete('err', {e: 'error'}))
-    assert.throw(() => this.SUT.hooks.refresh({}, 'err'))
+    assert.throw(() => this.SUT.hooks.refresh({}, 'err', () => {}))
     assert.throw(() => this.SUT.hooks.cancelRefresh({}, 'err'))
   }
 
@@ -204,14 +204,12 @@ class Story extends BaseModel {
       let proxy;
       try {
         const pk = 1
-        proxy = await this.SUT._createProxy(
-          this.SUT.getModel('Story'),
+        proxy = this.SUT._createProxy(
           this.SUT.getModel('Story'),
           pk,
-          () => {
-            const result = this.SUT.getRepository('Story').methodsCb.findByPk(pk)
-            this.SUT.getStorageModel('Story')[pk]  = result
-            return result
+          (done) => {
+            this.SUT.getStorageModel('Story')[pk] = this.SUT.getRepository('Story').methodsCb.findByPk(pk)
+            done()
           }
         )
       } catch (e) {
@@ -220,42 +218,46 @@ class Story extends BaseModel {
       return proxy
     }
 
-    test().then(async (proxy) => {
-      let name = await proxy.name
-      assert.equal(name, 'story')
-      assert.exists(this.SUT.getStorageModel('Story')[1])
-      assert.equal(this.SUT.getStorageModel('Story')[1]!['name'], 'story')
-      proxy.name = 'New story'
-      name = await proxy.name
-      assert.equal(name, 'New story')
-      assert.exists(this.SUT.getUpdateListModel('Story')[1])
-      assert.equal(this.SUT.getStorageModel('Story')[1]!['name'], 'story')
-      assert.equal(this.SUT.getUpdateListModel('Story')[1]!['name'], 'New story')
-      proxy.name = 'Last story'
-      name = await proxy.name
-      assert.equal(name, 'Last story')
-      let id = await proxy.id
-      assert.equal(id, 1)
-      const cancelUpdate = await proxy.cancelUpdate
-      cancelUpdate()
-      name = await proxy.name
-      assert.equal(name, 'story')
-      proxy.author = 'Author unknown'
+    test().then((proxy) => {
+      let name = proxy.name
+      assert.equal(name, null)
+      setTimeout(() => {
+        let name = proxy.name
+        assert.equal(name, 'story')
+        assert.exists(this.SUT.getStorageModel('Story')[1])
+        assert.equal(this.SUT.getStorageModel('Story')[1]!['name'], 'story')
+        proxy.name = 'New story'
+        name = proxy.name
+        assert.equal(name, 'New story')
+        assert.exists(this.SUT.getUpdateListModel('Story')[1])
+        assert.equal(this.SUT.getStorageModel('Story')[1]!['name'], 'story')
+        assert.equal(this.SUT.getUpdateListModel('Story')[1]!['name'], 'New story')
+        proxy.name = 'Last story'
+        name = proxy.name
+        assert.equal(name, 'Last story')
+        let id = proxy.id
+        assert.equal(id, 1)
+        const cancelUpdate = proxy.cancelUpdate
+        cancelUpdate()
+        name = proxy.name
+        assert.equal(name, 'story')
+        proxy.author = 'Author unknown'
 
-      this.SUT.getCreateListModel('Story')[1] = {
-        id: 1,
-        name: 'creating'
-      }
-      name = await proxy.name
-      assert.equal(name, 'creating')
-      await proxy.cancelCreate.then(cb => cb())
-      name = await proxy.name
-      assert.equal(name, 'story')
+        this.SUT.getCreateListModel('Story')[1] = {
+          id: 1,
+          name: 'creating'
+        }
+        name = proxy.name
+        assert.equal(name, 'creating')
+        proxy.cancelCreate()
+        name = proxy.name
+        assert.equal(name, 'story')
 
-      proxy.cancelDelete.then(cb => cb())
-      proxy.cancelRefresh.then(cb => cb())
+        proxy.cancelDelete()
+        proxy.cancelRefresh()
 
-      done()
+        done()
+      }, 0)
     }).catch((e) => {
       done(e)
     })

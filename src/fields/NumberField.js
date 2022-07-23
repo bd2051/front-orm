@@ -4,4 +4,3 @@ export default class NumberField extends BaseField {
         return typeof value === 'number';
     }
 }
-//# sourceMappingURL=NumberField.js.map

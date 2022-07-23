@@ -2,6 +2,7 @@ import Repository from "./Repository.js";
 import BaseModel from "./model/BaseModel";
 import BaseType from "./types/BaseType";
 import Entity from "./types/Entity";
+import getUuidByString from "uuid-by-string";
 
 interface StorageModel {
   [key: number|string]: any
@@ -21,7 +22,7 @@ interface Repositories {
 }
 
 interface FirstLevelStorage {
-  [key: string|number]: object
+  [key: string|number]: any
 }
 
 interface Storage {
@@ -36,11 +37,24 @@ interface List {
   [key: string]: any
 }
 
+interface WorkingField {
+  type: 'storage' | 'updated' | 'pending'
+  value: any
+}
+
+interface WorkingModel {
+  [key: string]: WorkingField
+}
+
+interface WorkingModelList {
+  [key: string]: WorkingModel
+}
+
 interface Hooks {
   create: (values: object) => any
   update: (values: object, oldItem: object) => any
   delete: (pk: number|string, oldItem: object) => any
-  refresh: (storageModel: StorageModel, pk: number|string) => any
+  refresh: (storageModel: StorageModel, pk: number|string, done: () => void) => any
   cancelRefresh: (storageModel: StorageModel, pk: number|string) => any
 }
 
@@ -57,8 +71,10 @@ export default class EntityManager {
   updateList: Storage
   createList: Storage
   deleteList: Storage
+  workingModels: WorkingModelList
   cache: Cache
   hooks: Hooks
+  pending: any
 
   constructor() {
     this.models = {}
@@ -67,7 +83,9 @@ export default class EntityManager {
     this.updateList = {}
     this.createList = {}
     this.deleteList = {}
+    this.workingModels = {}
     this.cache = {}
+    this.pending = null
     this.hooks = {
       create: () => {
         throw new Error('Set create hook')
@@ -168,13 +186,33 @@ export default class EntityManager {
       }))
     }))
   }
-  _createProxy(proxyTarget: object, model: BaseModel, pk: string|number, cb: () => object): any {
+  _createProxy(model: BaseModel, pk: string|number, cb: (done: () => void) => void): any {
     const createListModel = this.getCreateListModel(model.getName())
     const updateListModel = this.getUpdateListModel(model.getName())
     const storageModel = this.getStorageModel(model.getName())
-    model.refresh(storageModel, pk)
-    return new Proxy(proxyTarget, {
-      async get(target, prop: string, receiver) {
+    const uuid = getUuidByString(`${model.getName()}_${pk}`)
+    if (typeof this.workingModels[uuid] === 'undefined') {
+      this.workingModels[uuid] = model.getWorkingModel(pk)
+    }
+    const proxyTarget = this.workingModels[uuid]
+    const done = () => {
+      const storageEntity = storageModel[pk]
+      if (typeof storageEntity === 'undefined') {
+        throw new Error('Logic error')
+      }
+      Object.entries(proxyTarget!).forEach(([key, value]) => {
+        if (value.type === 'storage') {
+          proxyTarget![key] = {
+            type: 'storage',
+            value: storageEntity[key]
+          }
+        }
+      })
+    }
+    model.refresh(storageModel, pk, done)
+    const em = this
+    return new Proxy(proxyTarget!, {
+      get(target, prop: string, receiver) {
         if (prop === 'cancelUpdate') {
           return () => model.cancelUpdate(pk)
         }
@@ -209,11 +247,15 @@ export default class EntityManager {
           const convertedStorage = model.validateFields(storage).convertFields(storage)
           return Reflect.get(convertedStorage, prop, receiver)
         }
-        storageModel[pk] = await cb()
-        const convertedStorage = model.validateFields(storageModel[pk]!).convertFields(storageModel[pk]!)
-        return Reflect.get(convertedStorage, prop, receiver)
+        cb(done)
+        console.log(storageModel)
+        proxyTarget![prop] = {
+          type: 'pending',
+          value: em.pending
+        }
+        return em.pending
       },
-      set(target: object, prop: string, value: any, receiver: any): boolean {
+      set(target: WorkingModel, prop: string, value: any, receiver: any): boolean {
         if (prop in target) {
           const updateList = updateListModel[pk]
           if (typeof updateList === 'undefined') {
@@ -223,6 +265,7 @@ export default class EntityManager {
           } else {
             updateList[prop] = value
           }
+          target[prop]!.type = 'updated'
         } else {
           Reflect.set(target, prop, value, receiver)
         }

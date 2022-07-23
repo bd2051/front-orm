@@ -74,13 +74,17 @@ class Story extends BaseModel {
   }
 
   @test 'test delete' (done) {
-    this.SUT.delete(1).then(async (proxy) => {
+    this.SUT.delete(1).then((proxy) => {
       assert.equal(this.em.getDeleteListModel('Story')[1]['name'], 'story')
       delete this.em.getStorageModel('Story')[1]
       assert.isUndefined(this.em.getStorageModel('Story')[1])
-      const name = await proxy.name
-      assert.equal(name, 'story')
-      done()
+      const name = proxy.name
+      assert.equal(name, null)
+      setTimeout(() => {
+        const name = proxy.name
+        assert.equal(name, 'story')
+        done()
+      }, 200)
     }).catch(done)
   }
 }

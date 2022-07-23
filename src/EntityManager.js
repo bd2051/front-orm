@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import Repository from "./Repository.js";
+import getUuidByString from "uuid-by-string";
 const PROPERTY_EXCEPTIONS = [
     'then',
     'catch',
@@ -21,7 +22,9 @@ export default class EntityManager {
         this.updateList = {};
         this.createList = {};
         this.deleteList = {};
+        this.workingModels = {};
         this.cache = {};
+        this.pending = null;
         this.hooks = {
             create: () => {
                 throw new Error('Set create hook');
@@ -124,51 +127,73 @@ export default class EntityManager {
             })));
         });
     }
-    _createProxy(proxyTarget, model, pk, cb) {
+    _createProxy(model, pk, cb) {
         const createListModel = this.getCreateListModel(model.getName());
         const updateListModel = this.getUpdateListModel(model.getName());
         const storageModel = this.getStorageModel(model.getName());
-        model.refresh(storageModel, pk);
+        const uuid = getUuidByString(`${model.getName()}_${pk}`);
+        if (typeof this.workingModels[uuid] === 'undefined') {
+            this.workingModels[uuid] = model.getWorkingModel(pk);
+        }
+        const proxyTarget = this.workingModels[uuid];
+        const done = () => {
+            const storageEntity = storageModel[pk];
+            if (typeof storageEntity === 'undefined') {
+                throw new Error('Logic error');
+            }
+            Object.entries(proxyTarget).forEach(([key, value]) => {
+                if (value.type === 'storage') {
+                    proxyTarget[key] = {
+                        type: 'storage',
+                        value: storageEntity[key]
+                    };
+                }
+            });
+        };
+        model.refresh(storageModel, pk, done);
+        const em = this;
         return new Proxy(proxyTarget, {
             get(target, prop, receiver) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    if (prop === 'cancelUpdate') {
-                        return () => model.cancelUpdate(pk);
+                if (prop === 'cancelUpdate') {
+                    return () => model.cancelUpdate(pk);
+                }
+                if (prop === 'cancelCreate') {
+                    return () => model.cancelCreate(pk);
+                }
+                if (prop === 'cancelDelete') {
+                    return () => model.cancelDelete(pk);
+                }
+                if (prop === 'cancelRefresh') {
+                    return () => model.cancelRefresh(storageModel, pk);
+                }
+                if (PROPERTY_EXCEPTIONS.includes(prop)) {
+                    return Reflect.get(target, prop, receiver);
+                }
+                const createdEntity = createListModel[pk];
+                const updatedEntity = updateListModel[pk];
+                const storage = storageModel[pk];
+                if (typeof createdEntity !== 'undefined') {
+                    const convertedCreatedEntity = model.validateFields(createdEntity).convertFields(createdEntity);
+                    return Reflect.get(convertedCreatedEntity, prop, receiver);
+                }
+                if (typeof updatedEntity !== 'undefined') {
+                    const updatedProp = updatedEntity[prop];
+                    if (typeof updatedProp !== 'undefined') {
+                        const convertedUpdatedEntity = model.validateFields(updatedEntity).convertFields(updatedEntity);
+                        return Reflect.get(convertedUpdatedEntity, prop, receiver);
                     }
-                    if (prop === 'cancelCreate') {
-                        return () => model.cancelCreate(pk);
-                    }
-                    if (prop === 'cancelDelete') {
-                        return () => model.cancelDelete(pk);
-                    }
-                    if (prop === 'cancelRefresh') {
-                        return () => model.cancelRefresh(storageModel, pk);
-                    }
-                    if (PROPERTY_EXCEPTIONS.includes(prop)) {
-                        return Reflect.get(target, prop, receiver);
-                    }
-                    const createdEntity = createListModel[pk];
-                    const updatedEntity = updateListModel[pk];
-                    const storage = storageModel[pk];
-                    if (typeof createdEntity !== 'undefined') {
-                        const convertedCreatedEntity = model.validateFields(createdEntity).convertFields(createdEntity);
-                        return Reflect.get(convertedCreatedEntity, prop, receiver);
-                    }
-                    if (typeof updatedEntity !== 'undefined') {
-                        const updatedProp = updatedEntity[prop];
-                        if (typeof updatedProp !== 'undefined') {
-                            const convertedUpdatedEntity = model.validateFields(updatedEntity).convertFields(updatedEntity);
-                            return Reflect.get(convertedUpdatedEntity, prop, receiver);
-                        }
-                    }
-                    if (typeof storage !== 'undefined') {
-                        const convertedStorage = model.validateFields(storage).convertFields(storage);
-                        return Reflect.get(convertedStorage, prop, receiver);
-                    }
-                    storageModel[pk] = yield cb();
-                    const convertedStorage = model.validateFields(storageModel[pk]).convertFields(storageModel[pk]);
+                }
+                if (typeof storage !== 'undefined') {
+                    const convertedStorage = model.validateFields(storage).convertFields(storage);
                     return Reflect.get(convertedStorage, prop, receiver);
-                });
+                }
+                cb(done);
+                console.log(storageModel);
+                proxyTarget[prop] = {
+                    type: 'pending',
+                    value: em.pending
+                };
+                return em.pending;
             },
             set(target, prop, value, receiver) {
                 if (prop in target) {
@@ -181,6 +206,7 @@ export default class EntityManager {
                     else {
                         updateList[prop] = value;
                     }
+                    target[prop].type = 'updated';
                 }
                 else {
                     Reflect.set(target, prop, value, receiver);
@@ -208,4 +234,3 @@ export default class EntityManager {
         });
     }
 }
-//# sourceMappingURL=EntityManager.js.map

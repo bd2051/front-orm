@@ -8,4 +8,3 @@ export default class PrimaryKey extends BaseField {
         return typeof value === this.type;
     }
 }
-//# sourceMappingURL=PrimaryKey.js.map

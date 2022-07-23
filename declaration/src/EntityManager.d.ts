@@ -16,7 +16,7 @@ interface Repositories {
     [key: string]: Repository;
 }
 interface FirstLevelStorage {
-    [key: string | number]: object;
+    [key: string | number]: any;
 }
 interface Storage {
     [key: string]: FirstLevelStorage;
@@ -27,11 +27,21 @@ interface Cache {
 interface List {
     [key: string]: any;
 }
+interface WorkingField {
+    type: 'storage' | 'updated' | 'pending';
+    value: any;
+}
+interface WorkingModel {
+    [key: string]: WorkingField;
+}
+interface WorkingModelList {
+    [key: string]: WorkingModel;
+}
 interface Hooks {
     create: (values: object) => any;
     update: (values: object, oldItem: object) => any;
     delete: (pk: number | string, oldItem: object) => any;
-    refresh: (storageModel: StorageModel, pk: number | string) => any;
+    refresh: (storageModel: StorageModel, pk: number | string, done: () => void) => any;
     cancelRefresh: (storageModel: StorageModel, pk: number | string) => any;
 }
 export default class EntityManager {
@@ -41,8 +51,10 @@ export default class EntityManager {
     updateList: Storage;
     createList: Storage;
     deleteList: Storage;
+    workingModels: WorkingModelList;
     cache: Cache;
     hooks: Hooks;
+    pending: any;
     constructor();
     setHooks(hooks: Hooks): void;
     setModel(model: BaseModel, repositories: RepositoryInit): void;
@@ -53,7 +65,7 @@ export default class EntityManager {
     getUpdateListModel(modelName: string): List;
     getDeleteListModel(modelName: string): List;
     flush(): Promise<void>;
-    _createProxy(proxyTarget: object, model: BaseModel, pk: string | number, cb: () => object): any;
+    _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void): any;
     _createCacheProxy(proxyTarget: object, uuid: string, cb: () => object): object;
 }
 export {};

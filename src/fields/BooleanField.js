@@ -4,4 +4,3 @@ export default class BooleanField extends BaseField {
         return typeof value === 'boolean';
     }
 }
-//# sourceMappingURL=BooleanField.js.map

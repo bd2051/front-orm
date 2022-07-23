@@ -31,10 +31,9 @@ export default class EntityField extends BaseField {
         let storageModel = this.em.getStorageModel(this.targetModel.getName());
         const model = this.targetModel;
         const findByPk = model.getRepository().methodsCb.findByPk;
-        return this.em._createProxy(model, model, pk, () => __awaiter(this, void 0, void 0, function* () {
+        return this.em._createProxy(model, pk, (done) => __awaiter(this, void 0, void 0, function* () {
             storageModel[pk] = yield findByPk(pk);
-            return storageModel[pk];
+            done();
         }));
     }
 }
-//# sourceMappingURL=EntityField.js.map

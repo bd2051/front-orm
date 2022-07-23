@@ -43,7 +43,7 @@ export default class Repository {
     const model = this.model
     const createListModel = this.em.getCreateListModel(model.getName())
     createListModel[uuid] = values
-    return this.em._createProxy(model, model, uuid, async () => {})
+    return this.em._createProxy(model, uuid, async () => {})
   }
 
   async delete(pk: number|string): Promise<any> {
@@ -56,10 +56,9 @@ export default class Repository {
       storageModel[pk] = item
     }
     deleteListModel[pk] = item
-    return this.em._createProxy(model, model, pk, async () => {
-      const result = await model.getRepository().methodsCb.findByPk(pk)
-      storageModel[pk] = result
-      return result
+    return this.em._createProxy(model, pk, async (done) => {
+      storageModel[pk] = await model.getRepository().methodsCb.findByPk(pk)
+      done()
     })
   }
 

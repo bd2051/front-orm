@@ -4,4 +4,3 @@ export default class StringField extends BaseField {
         return typeof value === 'string';
     }
 }
-//# sourceMappingURL=StringField.js.map

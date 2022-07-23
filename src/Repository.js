@@ -13,7 +13,7 @@ export default class Repository {
         this.model = model;
         this.em = em;
         this.methodsCb = {
-            findByPk: (value) => value
+            findByPk: (value) => value // TODO em.hooks
         };
         Object.entries(repositories).forEach(([methodName, repository]) => {
             repository.setEntityManager(em);
@@ -32,7 +32,7 @@ export default class Repository {
             const model = this.model;
             const createListModel = this.em.getCreateListModel(model.getName());
             createListModel[uuid] = values;
-            return this.em._createProxy(model, model, uuid, () => __awaiter(this, void 0, void 0, function* () { }));
+            return this.em._createProxy(model, uuid, () => __awaiter(this, void 0, void 0, function* () { }));
         });
     }
     delete(pk) {
@@ -46,10 +46,9 @@ export default class Repository {
                 storageModel[pk] = item;
             }
             deleteListModel[pk] = item;
-            return this.em._createProxy(model, model, pk, () => __awaiter(this, void 0, void 0, function* () {
-                const result = yield model.getRepository().methodsCb.findByPk(pk);
-                storageModel[pk] = result;
-                return result;
+            return this.em._createProxy(model, pk, (done) => __awaiter(this, void 0, void 0, function* () {
+                storageModel[pk] = yield model.getRepository().methodsCb.findByPk(pk);
+                done();
             }));
         });
     }
@@ -67,4 +66,3 @@ export default class Repository {
         });
     }
 }
-//# sourceMappingURL=Repository.js.map

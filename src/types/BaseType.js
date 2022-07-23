@@ -24,11 +24,9 @@ export default class BaseType {
         return new Proxy({}, {});
     }
     getResultProxy(model, storageModel, value) {
-        return this.em._createProxy(model, model, value, () => __awaiter(this, void 0, void 0, function* () {
-            const result = yield model.getRepository().methodsCb.findByPk(value);
-            storageModel[value] = result;
-            return result;
+        return this.em._createProxy(model, value, (done) => __awaiter(this, void 0, void 0, function* () {
+            storageModel[value] = yield model.getRepository().methodsCb.findByPk(value);
+            done();
         }));
     }
 }
-//# sourceMappingURL=BaseType.js.map

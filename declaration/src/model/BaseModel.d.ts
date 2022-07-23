@@ -9,7 +9,7 @@ interface StorageModel {
     [key: number | string]: any;
 }
 export default class BaseModel {
-    [key: string]: BaseField | EntityManager | string | null | ((v: any, o?: any) => any);
+    [key: string]: BaseField | EntityManager | string | null | ((v: any, o1?: any, o2?: any) => any);
     pkName: string | null;
     em: EntityManager;
     constructor(em: EntityManager);
@@ -25,7 +25,8 @@ export default class BaseModel {
     cancelUpdate(pk: number | string): void;
     delete(pk: number | string, oldItem: object): any;
     cancelDelete(pk: number | string): void;
-    refresh(storageModel: StorageModel, pk: number | string): any;
+    refresh(storageModel: StorageModel, pk: number | string, done: () => void): any;
     cancelRefresh(storageModel: StorageModel, pk: number | string): any;
+    getWorkingModel(pkValue?: number | string): Fields;
 }
 export {};

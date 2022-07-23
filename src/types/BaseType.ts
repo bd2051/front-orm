@@ -26,10 +26,9 @@ export default class BaseType {
       return new Proxy({}, {})
   }
   getResultProxy(model: BaseModel, storageModel: Storage, value: number | string) {
-    return this.em._createProxy(model, model, value, async () => {
-      const result = await model.getRepository().methodsCb.findByPk(value)
-      storageModel[value] = result
-      return result
+    return this.em._createProxy(model, value, async (done) => {
+      storageModel[value] = await model.getRepository().methodsCb.findByPk(value)
+      done()
     })
   }
 }

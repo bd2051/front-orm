@@ -17,4 +17,3 @@ export default class Collection extends BaseType {
         return result.map(item => this.getResultProxy(model, storageModel, item[model.getPkName()]));
     }
 }
-//# sourceMappingURL=Collection.js.map

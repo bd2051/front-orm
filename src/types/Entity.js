@@ -13,4 +13,3 @@ export default class Entity extends BaseType {
         return this.getResultProxy(model, storageModel, pkValue);
     }
 }
-//# sourceMappingURL=Entity.js.map

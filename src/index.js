@@ -11,4 +11,3 @@ import BaseType from "./types/BaseType";
 import Collection from "./types/Collection";
 import Entity from "./types/Entity";
 export { BaseField, BooleanField, EntityField, NumberField, PrimaryKey, StringField, BaseModel, BaseType, Collection, Entity, EntityManager, Repository };
-//# sourceMappingURL=index.js.map

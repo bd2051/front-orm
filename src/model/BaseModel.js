@@ -38,6 +38,7 @@ export default class BaseModel {
             }
             return true;
         })) {
+            console.log(data);
             throw new Error('invalid fields');
         }
         return this;
@@ -72,11 +73,28 @@ export default class BaseModel {
         const deleteListModel = this.em.getDeleteListModel(this.getName());
         delete deleteListModel[pk];
     }
-    refresh(storageModel, pk) {
-        return this.em.hooks.refresh(storageModel, pk);
+    refresh(storageModel, pk, done) {
+        return this.em.hooks.refresh(storageModel, pk, done);
     }
     cancelRefresh(storageModel, pk) {
         return this.em.hooks.cancelRefresh(storageModel, pk);
     }
+    getWorkingModel(pkValue) {
+        const workingModel = Object.entries(this)
+            .filter(([, value]) => value instanceof BaseField)
+            .reduce((acc, [key,]) => {
+            acc[key] = {
+                type: 'storage',
+                value: this.em.pending
+            };
+            return acc;
+        }, {});
+        if (typeof pkValue !== undefined) {
+            workingModel[this.getPkName()] = {
+                type: 'storage',
+                value: pkValue
+            };
+        }
+        return workingModel;
+    }
 }
-//# sourceMappingURL=BaseModel.js.map

@@ -9,4 +9,3 @@ export default class BaseField {
         return !(typeof value === 'undefined');
     }
 }
-//# sourceMappingURL=BaseField.js.map

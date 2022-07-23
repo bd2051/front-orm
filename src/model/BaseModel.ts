@@ -12,7 +12,7 @@ interface StorageModel {
 }
 
 export default class BaseModel {
-  [key: string]: BaseField | EntityManager | string | null | ((v: any, o?: any) => any)
+  [key: string]: BaseField | EntityManager | string | null | ((v: any, o1?: any, o2?: any) => any)
   pkName: string | null
   em: EntityManager
 
@@ -53,6 +53,7 @@ export default class BaseModel {
       }
       return true
     })) {
+      console.log(data)
       throw new Error('invalid fields')
     }
     return this
@@ -87,10 +88,28 @@ export default class BaseModel {
     const deleteListModel = this.em.getDeleteListModel(this.getName())
     delete deleteListModel[pk]
   }
-  refresh(storageModel: StorageModel, pk: number|string) {
-    return this.em.hooks.refresh(storageModel, pk)
+  refresh(storageModel: StorageModel, pk: number|string, done: () => void) {
+    return this.em.hooks.refresh(storageModel, pk, done)
   }
   cancelRefresh(storageModel: StorageModel, pk: number|string) {
     return this.em.hooks.cancelRefresh(storageModel, pk)
+  }
+  getWorkingModel(pkValue?: number|string) {
+    const workingModel = Object.entries(this)
+      .filter(([, value]) => value instanceof BaseField)
+      .reduce((acc: Fields, [key,]) => {
+        acc[key] = {
+          type: 'storage',
+          value: this.em.pending
+        }
+        return acc
+    }, {})
+    if (typeof pkValue !== undefined) {
+      workingModel[this.getPkName()] = {
+        type: 'storage',
+        value: pkValue
+      }
+    }
+    return workingModel
   }
 }
