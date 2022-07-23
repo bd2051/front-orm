@@ -166,9 +166,6 @@ export default class EntityManager {
                 if (prop === 'cancelRefresh') {
                     return () => model.cancelRefresh(storageModel, pk);
                 }
-                if (PROPERTY_EXCEPTIONS.includes(prop)) {
-                    return Reflect.get(target, prop, receiver);
-                }
                 const createdEntity = createListModel[pk];
                 const updatedEntity = updateListModel[pk];
                 const storage = storageModel[pk];
@@ -189,7 +186,7 @@ export default class EntityManager {
                 }
                 cb(done);
                 console.log(storageModel);
-                proxyTarget[prop] = {
+                target[prop] = {
                     type: 'pending',
                     value: em.pending
                 };
@@ -219,16 +216,18 @@ export default class EntityManager {
         const cache = this.cache;
         return new Proxy(proxyTarget, {
             get(target, prop, receiver) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    if (PROPERTY_EXCEPTIONS.includes(prop)) {
+                if (PROPERTY_EXCEPTIONS.includes(prop)) {
+                    if (target instanceof Promise) {
                         return Reflect.get(target, prop, receiver);
                     }
-                    const cacheEntity = cache[uuid];
-                    if (typeof cacheEntity !== 'undefined') {
-                        return Reflect.get(cacheEntity, prop, receiver);
-                    }
-                    cache[uuid] = yield cb();
-                    return Reflect.get(cache[uuid], prop, receiver);
+                    return new Promise((resolve => resolve(Reflect.get(cache[uuid], prop, receiver))));
+                }
+                const cacheEntity = cache[uuid];
+                if (typeof cacheEntity !== 'undefined') {
+                    return Reflect.get(cacheEntity, prop, receiver);
+                }
+                return new Promise((resolve) => {
+                    cb(() => resolve(Reflect.get(cache[uuid], prop, receiver)));
                 });
             }
         });

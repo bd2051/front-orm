@@ -59,9 +59,9 @@ export default class Repository {
             if (typeof cache[uuid] === 'undefined') {
                 cache[uuid] = yield methodRepository.find(values, this.model);
             }
-            return this.em._createCacheProxy(cache[uuid], uuid, () => __awaiter(this, void 0, void 0, function* () {
+            return this.em._createCacheProxy(cache[uuid], uuid, (done) => __awaiter(this, void 0, void 0, function* () {
                 cache[uuid] = yield methodRepository.find(values, this.model);
-                return cache[uuid];
+                done();
             }));
         });
     }

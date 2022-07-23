@@ -225,9 +225,6 @@ export default class EntityManager {
         if (prop === 'cancelRefresh') {
           return () => model.cancelRefresh(storageModel, pk)
         }
-        if (PROPERTY_EXCEPTIONS.includes(prop)) {
-          return Reflect.get(target, prop, receiver);
-        }
 
         const createdEntity = createListModel[pk]
         const updatedEntity = updateListModel[pk]
@@ -249,7 +246,7 @@ export default class EntityManager {
         }
         cb(done)
         console.log(storageModel)
-        proxyTarget![prop] = {
+        target[prop] = {
           type: 'pending',
           value: em.pending
         }
@@ -273,19 +270,23 @@ export default class EntityManager {
       }
     })
   }
-  _createCacheProxy(proxyTarget: object, uuid: string, cb: () => object) {
+  _createCacheProxy(proxyTarget: object, uuid: string, cb: (done: () => void) => void) {
     const cache = this.cache
     return new Proxy(proxyTarget, {
-      async get(target, prop: string, receiver) {
+      get(target, prop: string, receiver) {
         if (PROPERTY_EXCEPTIONS.includes(prop)) {
-          return Reflect.get(target, prop, receiver);
+          if (target instanceof Promise) {
+            return Reflect.get(target, prop, receiver);
+          }
+          return new Promise((resolve => resolve(Reflect.get(cache[uuid]!, prop, receiver))))
         }
         const cacheEntity = cache[uuid]
         if (typeof cacheEntity !== 'undefined') {
           return Reflect.get(cacheEntity, prop, receiver)
         }
-        cache[uuid] = await cb()
-        return Reflect.get(cache[uuid]!, prop, receiver)
+        return new Promise((resolve) => {
+          cb(() => resolve(Reflect.get(cache[uuid]!, prop, receiver)))
+        })
       }
     })
   }

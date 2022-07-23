@@ -66,6 +66,6 @@ export default class EntityManager {
     getDeleteListModel(modelName: string): List;
     flush(): Promise<void>;
     _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void): any;
-    _createCacheProxy(proxyTarget: object, uuid: string, cb: () => object): object;
+    _createCacheProxy(proxyTarget: object, uuid: string, cb: (done: () => void) => void): object;
 }
 export {};
