@@ -58,11 +58,11 @@ interface Hooks {
   cancelRefresh: (storageModel: StorageModel, pk: number|string) => any
 }
 
-const PROPERTY_EXCEPTIONS = [
-  'then',
-  'catch',
-  'finally'
-]
+// const PROPERTY_EXCEPTIONS = [
+//   'then',
+//   'catch',
+//   'finally'
+// ]
 
 export default class EntityManager {
   models: Models
@@ -266,26 +266,6 @@ export default class EntityManager {
           Reflect.set(target, prop, value, receiver)
         }
         return true
-      }
-    })
-  }
-  _createCacheProxy(proxyTarget: object, uuid: string, cb: (done: () => void) => void) {
-    const cache = this.cache
-    return new Proxy(proxyTarget, {
-      get(target, prop: string, receiver) {
-        if (PROPERTY_EXCEPTIONS.includes(prop)) {
-          if (target instanceof Promise) {
-            return Reflect.get(target, prop, receiver);
-          }
-          return new Promise((resolve => resolve(Reflect.get(cache[uuid]!, prop, receiver))))
-        }
-        const cacheEntity = cache[uuid]
-        if (typeof cacheEntity !== 'undefined') {
-          return Reflect.get(cacheEntity, prop, receiver)
-        }
-        return new Promise((resolve) => {
-          cb(() => resolve(Reflect.get(cache[uuid]!, prop, receiver)))
-        })
       }
     })
   }

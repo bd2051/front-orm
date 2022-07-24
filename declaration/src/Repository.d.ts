@@ -17,6 +17,6 @@ export default class Repository {
     _sortJsonStringify(obj: object): string;
     create(values: any): Promise<any>;
     delete(pk: number | string): Promise<any>;
-    _methodsHandler(values: any, methodRepository: BaseType, methodName: string): Promise<object>;
+    _methodsHandler(values: any, methodRepository: BaseType, methodName: string): Promise<object | undefined>;
 }
 export {};
