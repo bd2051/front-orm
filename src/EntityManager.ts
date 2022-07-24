@@ -1,8 +1,17 @@
-import Repository from "./Repository.js";
-import BaseModel from "./model/BaseModel";
-import BaseType from "./types/BaseType";
-import Entity from "./types/Entity";
 import getUuidByString from "uuid-by-string";
+import {
+  Repository,
+  BaseModel,
+  BaseType,
+  BaseField,
+  Entity,
+  BooleanField,
+  Collection,
+  EntityField,
+  NumberField,
+  PrimaryKey,
+  StringField
+} from "./index";
 
 interface StorageModel {
   [key: number|string]: any
@@ -50,6 +59,19 @@ interface WorkingModelList {
   [key: string]: WorkingModel
 }
 
+interface FieldsClass {
+  [key: string]: typeof BaseField | typeof EntityField
+}
+
+interface TypesClass {
+  [key: string]: typeof BaseType
+}
+
+interface Classes {
+  fields: FieldsClass
+  types: TypesClass
+}
+
 interface Hooks {
   create: (values: object) => any
   update: (values: object, oldItem: object) => any
@@ -57,12 +79,6 @@ interface Hooks {
   refresh: (storageModel: StorageModel, pk: number|string, done: () => void) => any
   cancelRefresh: (storageModel: StorageModel, pk: number|string) => any
 }
-
-// const PROPERTY_EXCEPTIONS = [
-//   'then',
-//   'catch',
-//   'finally'
-// ]
 
 export default class EntityManager {
   models: Models
@@ -75,6 +91,7 @@ export default class EntityManager {
   cache: Cache
   hooks: Hooks
   pending: any
+  defaultClasses: Classes
 
   constructor() {
     this.models = {}
@@ -102,6 +119,19 @@ export default class EntityManager {
       cancelRefresh: () => {
         throw new Error('Set cancelRefresh hook')
       },
+    }
+    this.defaultClasses = {
+      fields: {
+        BooleanField,
+        NumberField,
+        PrimaryKey,
+        StringField,
+        EntityField
+      },
+      types: {
+        Collection,
+        Entity
+      }
     }
   }
   setHooks(hooks: Hooks) {

@@ -1,7 +1,4 @@
-import Repository from "./Repository.js";
-import BaseModel from "./model/BaseModel";
-import BaseType from "./types/BaseType";
-import Entity from "./types/Entity";
+import { Repository, BaseModel, BaseType, BaseField, Entity, EntityField } from "./index";
 interface StorageModel {
     [key: number | string]: any;
 }
@@ -37,6 +34,16 @@ interface WorkingModel {
 interface WorkingModelList {
     [key: string]: WorkingModel;
 }
+interface FieldsClass {
+    [key: string]: typeof BaseField | typeof EntityField;
+}
+interface TypesClass {
+    [key: string]: typeof BaseType;
+}
+interface Classes {
+    fields: FieldsClass;
+    types: TypesClass;
+}
 interface Hooks {
     create: (values: object) => any;
     update: (values: object, oldItem: object) => any;
@@ -55,6 +62,7 @@ export default class EntityManager {
     cache: Cache;
     hooks: Hooks;
     pending: any;
+    defaultClasses: Classes;
     constructor();
     setHooks(hooks: Hooks): void;
     setModel(model: BaseModel, repositories: RepositoryInit): void;

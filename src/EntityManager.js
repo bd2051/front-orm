@@ -7,13 +7,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import Repository from "./Repository.js";
 import getUuidByString from "uuid-by-string";
-// const PROPERTY_EXCEPTIONS = [
-//   'then',
-//   'catch',
-//   'finally'
-// ]
+import { Repository, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField } from "./index";
 export default class EntityManager {
     constructor() {
         this.models = {};
@@ -41,6 +36,19 @@ export default class EntityManager {
             cancelRefresh: () => {
                 throw new Error('Set cancelRefresh hook');
             },
+        };
+        this.defaultClasses = {
+            fields: {
+                BooleanField,
+                NumberField,
+                PrimaryKey,
+                StringField,
+                EntityField
+            },
+            types: {
+                Collection,
+                Entity
+            }
         };
     }
     setHooks(hooks) {
