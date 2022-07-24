@@ -185,11 +185,9 @@ export default class EntityManager {
                     return Reflect.get(convertedStorage, prop, receiver);
                 }
                 cb(done);
-                console.log(storageModel);
-                target[prop] = {
-                    type: 'pending',
-                    value: em.pending
-                };
+                console.log(proxyTarget, target, prop);
+                target[prop].type = 'pending';
+                target[prop].value = em.pending;
                 return em.pending;
             },
             set(target, prop, value, receiver) {
@@ -204,6 +202,7 @@ export default class EntityManager {
                         updateList[prop] = value;
                     }
                     target[prop].type = 'updated';
+                    target[prop].value = value;
                 }
                 else {
                     Reflect.set(target, prop, value, receiver);

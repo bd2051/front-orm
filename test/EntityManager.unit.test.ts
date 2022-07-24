@@ -186,10 +186,12 @@ class Story extends BaseModel {
   @test 'create proxy' (done) {
     this.SUT.setModel(this.model, {
       findByPk: new Entity(this.SUT, (pk) => {
-        return {
-          id: pk,
-          name: 'story'
-        }
+        return new Promise((resolve) => {
+          setTimeout(() => resolve({
+            id: pk,
+            name: 'story'
+          }), 0)
+        })
       })
     })
     this.SUT.setHooks({
@@ -200,67 +202,61 @@ class Story extends BaseModel {
       cancelRefresh() {}
     })
 
-    const test = async () => {
-      let proxy;
-      try {
-        const pk = 1
-        proxy = this.SUT._createProxy(
-          this.SUT.getModel('Story'),
-          pk,
-          (done) => {
-            this.SUT.getStorageModel('Story')[pk] = this.SUT.getRepository('Story').methodsCb.findByPk(pk)
-            done()
-          }
-        )
-      } catch (e) {
-        done(e)
-      }
-      return proxy
+
+    let proxy;
+    try {
+      const pk = 1
+      proxy = this.SUT._createProxy(
+        this.SUT.getModel('Story'),
+        pk,
+        async (done) => {
+          this.SUT.getStorageModel('Story')[pk] = await this.SUT.getRepository('Story').methodsCb.findByPk(pk)
+          done()
+        }
+      )
+    } catch (e) {
+      done(e)
     }
 
-    test().then((proxy) => {
+    let name = proxy.name
+    assert.equal(name, null)
+    setTimeout(() => {
       let name = proxy.name
-      assert.equal(name, null)
-      setTimeout(() => {
-        let name = proxy.name
-        assert.equal(name, 'story')
-        assert.exists(this.SUT.getStorageModel('Story')[1])
-        assert.equal(this.SUT.getStorageModel('Story')[1]!['name'], 'story')
-        proxy.name = 'New story'
-        name = proxy.name
-        assert.equal(name, 'New story')
-        assert.exists(this.SUT.getUpdateListModel('Story')[1])
-        assert.equal(this.SUT.getStorageModel('Story')[1]!['name'], 'story')
-        assert.equal(this.SUT.getUpdateListModel('Story')[1]!['name'], 'New story')
-        proxy.name = 'Last story'
-        name = proxy.name
-        assert.equal(name, 'Last story')
-        let id = proxy.id
-        assert.equal(id, 1)
-        const cancelUpdate = proxy.cancelUpdate
-        cancelUpdate()
-        name = proxy.name
-        assert.equal(name, 'story')
-        proxy.author = 'Author unknown'
+      assert.equal(name, 'story')
+      assert.exists(this.SUT.getStorageModel('Story')[1])
+      assert.equal(this.SUT.getStorageModel('Story')[1]!['name'], 'story')
+      proxy.name = 'New story'
+      name = proxy.name
+      assert.equal(name, 'New story')
+      assert.exists(this.SUT.getUpdateListModel('Story')[1])
+      assert.equal(this.SUT.getStorageModel('Story')[1]!['name'], 'story')
+      assert.equal(this.SUT.getUpdateListModel('Story')[1]!['name'], 'New story')
+      proxy.name = 'Last story'
+      name = proxy.name
+      assert.equal(name, 'Last story')
+      let id = proxy.id
+      assert.equal(id, 1)
+      const cancelUpdate = proxy.cancelUpdate
+      cancelUpdate()
+      name = proxy.name
+      assert.equal(name, 'story')
+      proxy.author = 'Author unknown'
 
-        this.SUT.getCreateListModel('Story')[1] = {
-          id: 1,
-          name: 'creating'
-        }
-        name = proxy.name
-        assert.equal(name, 'creating')
-        proxy.cancelCreate()
-        name = proxy.name
-        assert.equal(name, 'story')
+      this.SUT.getCreateListModel('Story')[1] = {
+        id: 1,
+        name: 'creating'
+      }
+      name = proxy.name
+      assert.equal(name, 'creating')
+      proxy.cancelCreate()
+      name = proxy.name
+      assert.equal(name, 'story')
 
-        proxy.cancelDelete()
-        proxy.cancelRefresh()
+      proxy.cancelDelete()
+      proxy.cancelRefresh()
 
-        done()
-      }, 0)
-    }).catch((e) => {
-      done(e)
-    })
+      done()
+    }, 200)
   }
 
   @test 'create cache proxy' (done) {
