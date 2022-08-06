@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import getUuidByString from "uuid-by-string";
-import { Repository, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField } from "./index";
+import { Repository, BaseModel, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField } from "./index";
 export default class EntityManager {
     constructor() {
         this.models = {};
@@ -38,6 +38,10 @@ export default class EntityManager {
             },
         };
         this.defaultClasses = {
+            common: {
+                BaseModel,
+                Repository,
+            },
             fields: {
                 BooleanField,
                 NumberField,

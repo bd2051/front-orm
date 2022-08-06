@@ -53,31 +53,31 @@ export default class BaseModel {
         }, {});
     }
     create(values) {
-        return this.em.hooks.create(values);
+        return this.em.hooks.create(this, values);
     }
     cancelCreate(pk) {
         const createListModel = this.em.getCreateListModel(this.getName());
         delete createListModel[pk];
     }
     update(values, oldItem) {
-        return this.em.hooks.update(values, oldItem);
+        return this.em.hooks.update(this, values, oldItem);
     }
     cancelUpdate(pk) {
         const updateListModel = this.em.getUpdateListModel(this.getName());
         delete updateListModel[pk];
     }
     delete(pk, oldItem) {
-        return this.em.hooks.delete(pk, oldItem);
+        return this.em.hooks.delete(this, pk, oldItem);
     }
     cancelDelete(pk) {
         const deleteListModel = this.em.getDeleteListModel(this.getName());
         delete deleteListModel[pk];
     }
     refresh(storageModel, pk, done) {
-        return this.em.hooks.refresh(storageModel, pk, done);
+        return this.em.hooks.refresh(this, storageModel, pk, done);
     }
     cancelRefresh(storageModel, pk) {
-        return this.em.hooks.cancelRefresh(storageModel, pk);
+        return this.em.hooks.cancelRefresh(this, storageModel, pk);
     }
     getWorkingModel(pkValue) {
         const workingModel = Object.entries(this)

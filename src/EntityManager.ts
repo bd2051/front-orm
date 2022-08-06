@@ -59,6 +59,10 @@ interface WorkingModelList {
   [key: string]: WorkingModel
 }
 
+interface CommonClasses {
+  [key: string]: typeof BaseModel | typeof Repository
+}
+
 interface FieldsClass {
   [key: string]: typeof BaseField | typeof EntityField
 }
@@ -68,16 +72,17 @@ interface TypesClass {
 }
 
 interface Classes {
+  common: CommonClasses
   fields: FieldsClass
   types: TypesClass
 }
 
 interface Hooks {
-  create: (values: object) => any
-  update: (values: object, oldItem: object) => any
-  delete: (pk: number|string, oldItem: object) => any
-  refresh: (storageModel: StorageModel, pk: number|string, done: () => void) => any
-  cancelRefresh: (storageModel: StorageModel, pk: number|string) => any
+  create: (model: BaseModel, values: object) => any
+  update: (model: BaseModel, values: object, oldItem: object) => any
+  delete: (model: BaseModel, pk: number|string, oldItem: object) => any
+  refresh: (model: BaseModel, storageModel: StorageModel, pk: number|string, done: () => void) => any
+  cancelRefresh: (model: BaseModel, storageModel: StorageModel, pk: number|string) => any
 }
 
 export default class EntityManager {
@@ -121,6 +126,10 @@ export default class EntityManager {
       },
     }
     this.defaultClasses = {
+      common: {
+        BaseModel,
+        Repository,
+      },
       fields: {
         BooleanField,
         NumberField,
