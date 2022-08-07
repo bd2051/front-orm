@@ -242,11 +242,9 @@ export default class EntityManager {
         throw new Error('Logic error')
       }
       Object.entries(proxyTarget!).forEach(([key, value]) => {
-        if (value.type === 'storage') {
-          proxyTarget![key] = {
-            type: 'storage',
-            value: storageEntity[key]
-          }
+        if (value.type === 'storage' || value.type === 'pending') {
+          proxyTarget![key]!.type = 'storage'
+          proxyTarget![key]!.value = storageEntity[key]
         }
       })
     }
