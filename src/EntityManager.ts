@@ -10,7 +10,8 @@ import {
   EntityField,
   NumberField,
   PrimaryKey,
-  StringField
+  StringField,
+  CollectionField
 } from "./index";
 
 interface StorageModel {
@@ -135,7 +136,8 @@ export default class EntityManager {
         NumberField,
         PrimaryKey,
         StringField,
-        EntityField
+        EntityField,
+        CollectionField
       },
       types: {
         Collection,
