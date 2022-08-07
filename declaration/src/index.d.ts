@@ -11,4 +11,5 @@ import Repository from "./Repository";
 import BaseType from "./types/BaseType";
 import Collection from "./types/Collection";
 import Entity from "./types/Entity";
-export { BaseField, BooleanField, EntityField, FieldInterface, NumberField, PrimaryKey, StringField, BaseModel, BaseType, Collection, Entity, EntityManager, Repository };
+import CollectionField from "./fields/CollectionField";
+export { BaseField, BooleanField, EntityField, FieldInterface, NumberField, PrimaryKey, StringField, CollectionField, BaseModel, BaseType, Collection, Entity, EntityManager, Repository };

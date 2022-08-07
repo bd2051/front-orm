@@ -11,6 +11,7 @@ import Repository from "./Repository";
 import BaseType from "./types/BaseType";
 import Collection from "./types/Collection";
 import Entity from "./types/Entity";
+import CollectionField from "./fields/CollectionField";
 
 export {
   BaseField,
@@ -20,6 +21,7 @@ export {
   NumberField,
   PrimaryKey,
   StringField,
+  CollectionField,
   BaseModel,
   BaseType,
   Collection,
