@@ -104,7 +104,7 @@ export default class BaseModel {
         }
         return acc
     }, {})
-    if (typeof pkValue !== undefined) {
+    if (typeof pkValue !== 'undefined') {
       workingModel[this.getPkName()] = {
         type: 'storage',
         value: pkValue

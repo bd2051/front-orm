@@ -236,6 +236,11 @@ export default class EntityManager {
       this.workingModels[uuid] = model.getWorkingModel(pk)
     }
     const proxyTarget = this.workingModels[uuid]
+    if (typeof storageModel[pk] !== 'undefined') {
+      Object.keys(proxyTarget!).forEach((key) => {
+        proxyTarget![key]!.value = storageModel[pk][key]
+      })
+    }
     const done = () => {
       const storageEntity = storageModel[pk]
       if (typeof storageEntity === 'undefined') {
