@@ -44,7 +44,7 @@ class Story extends BaseModel {
 
   @test 'validate' () {
     expect(this.SUT.validate(null)).to.be.true
-    expect(this.SUT.validate(111)).to.be.true
+    expect(this.SUT.validate({id: 111})).to.be.true
   }
 
   @test 'convert' (done) {

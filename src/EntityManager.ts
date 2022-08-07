@@ -266,30 +266,33 @@ export default class EntityManager {
         if (prop === 'cancelRefresh') {
           return () => model.cancelRefresh(storageModel, pk)
         }
-
-        const createdEntity = createListModel[pk]
-        const updatedEntity = updateListModel[pk]
-        const storage = storageModel[pk]
-        if (typeof createdEntity !== 'undefined') {
-          const convertedCreatedEntity = model.validateFields(createdEntity).convertFields(createdEntity)
-          return Reflect.get(convertedCreatedEntity, prop, receiver)
-        }
-        if (typeof updatedEntity !== 'undefined') {
-          const updatedProp = updatedEntity[prop]
-          if (typeof updatedProp !== 'undefined') {
-            const convertedUpdatedEntity = model.validateFields(updatedEntity).convertFields(updatedEntity)
-            return Reflect.get(convertedUpdatedEntity, prop, receiver)
+        if (prop in target) {
+          const createdEntity = createListModel[pk]
+          const updatedEntity = updateListModel[pk]
+          const storage = storageModel[pk]
+          if (typeof createdEntity !== 'undefined') {
+            const convertedCreatedEntity = model.validateFields(createdEntity).convertFields(createdEntity)
+            return Reflect.get(convertedCreatedEntity, prop, receiver)
           }
+          if (typeof updatedEntity !== 'undefined') {
+            const updatedProp = updatedEntity[prop]
+            if (typeof updatedProp !== 'undefined') {
+              const convertedUpdatedEntity = model.validateFields(updatedEntity).convertFields(updatedEntity)
+              return Reflect.get(convertedUpdatedEntity, prop, receiver)
+            }
+          }
+          if (typeof storage !== 'undefined') {
+            const convertedStorage = model.validateFields(storage).convertFields(storage)
+            return Reflect.get(convertedStorage, prop, receiver)
+          }
+          cb(done)
+          console.log(proxyTarget, target, prop)
+          target[prop]!.type = 'pending'
+          target[prop]!.value = em.pending
+          return em.pending
+        } else {
+          Reflect.get(target, prop, receiver)
         }
-        if (typeof storage !== 'undefined') {
-          const convertedStorage = model.validateFields(storage).convertFields(storage)
-          return Reflect.get(convertedStorage, prop, receiver)
-        }
-        cb(done)
-        console.log(proxyTarget, target, prop)
-        target[prop]!.type = 'pending'
-        target[prop]!.value = em.pending
-        return em.pending
       },
       set(target: WorkingModel, prop: string, value: any, receiver: any): boolean {
         if (prop in target) {
