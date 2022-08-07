@@ -21,7 +21,7 @@ export default class EntityField extends BaseField {
         if (value === null) {
             return true;
         }
-        return this.targetModel.getPkField().validate(value);
+        return this.targetModel.getPkField().validate(this.convertValueToPk(value));
     }
     convert(value) {
         if (value === null) {
