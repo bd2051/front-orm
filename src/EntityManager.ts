@@ -227,7 +227,7 @@ export default class EntityManager {
       }))
     }))
   }
-  _createProxy(model: BaseModel, pk: string|number, cb: (done: () => void) => void): any {
+  _createProxy(model: BaseModel, pk: string|number, cb: (done: () => void) => void, hasRefresh: Boolean = true): any {
     const createListModel = this.getCreateListModel(model.getName())
     const updateListModel = this.getUpdateListModel(model.getName())
     const storageModel = this.getStorageModel(model.getName())
@@ -253,7 +253,9 @@ export default class EntityManager {
         }
       })
     }
-    model.refresh(storageModel, pk, done)
+    if (hasRefresh) {
+      model.refresh(storageModel, pk, done)
+    }
     const em = this
     return new Proxy(proxyTarget!, {
       get(target, prop: string, receiver) {

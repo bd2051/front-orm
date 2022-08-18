@@ -32,7 +32,7 @@ export default class Repository {
             const model = this.model;
             const createListModel = this.em.getCreateListModel(model.getName());
             createListModel[uuid] = values;
-            return this.em._createProxy(model, uuid, () => __awaiter(this, void 0, void 0, function* () { }));
+            return this.em._createProxy(model, uuid, () => __awaiter(this, void 0, void 0, function* () { }), false);
         });
     }
     delete(pk) {

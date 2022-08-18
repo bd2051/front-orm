@@ -43,7 +43,7 @@ export default class Repository {
     const model = this.model
     const createListModel = this.em.getCreateListModel(model.getName())
     createListModel[uuid] = values
-    return this.em._createProxy(model, uuid, async () => {})
+    return this.em._createProxy(model, uuid, async () => {}, false)
   }
 
   async delete(pk: number|string): Promise<any> {

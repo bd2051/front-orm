@@ -140,7 +140,7 @@ export default class EntityManager {
             })));
         });
     }
-    _createProxy(model, pk, cb) {
+    _createProxy(model, pk, cb, hasRefresh = true) {
         const createListModel = this.getCreateListModel(model.getName());
         const updateListModel = this.getUpdateListModel(model.getName());
         const storageModel = this.getStorageModel(model.getName());
@@ -166,7 +166,9 @@ export default class EntityManager {
                 }
             });
         };
-        model.refresh(storageModel, pk, done);
+        if (hasRefresh) {
+            model.refresh(storageModel, pk, done);
+        }
         const em = this;
         return new Proxy(proxyTarget, {
             get(target, prop, receiver) {

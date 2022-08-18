@@ -17,6 +17,24 @@ export default class Author extends BaseModel {
     this.age = new NumberField(em)
     this.stories = new CollectionField(em, 'Story')
   }
+  async update(values: object, oldItem: any) {
+    fetch(
+        `http://localhost:8000/api/authors`,{
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json;charset=utf-8'
+          },
+          body: JSON.stringify({
+              ...oldItem,
+              ...values,
+          })
+        }
+    ).then(response => response.json())
+    .then((data) => {
+      console.log(data)
+      return data
+    })
+  }
   refresh(storageModel: any, pk: string|number, done: () => void) {
     intervalMap[pk] = setInterval(() => {
         fetch(

@@ -97,6 +97,11 @@ app.put('/api/stories', (req, res) => {
   res.json({success: true})
 })
 
+app.put('/api/authors', (req, res) => {
+  authors[req.body.id] = req.body
+  res.json({success: true})
+})
+
 app.listen(port, () => {
   console.log(`Mock server listening on port ${port}`)
 })

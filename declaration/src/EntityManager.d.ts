@@ -77,6 +77,6 @@ export default class EntityManager {
     getUpdateListModel(modelName: string): List;
     getDeleteListModel(modelName: string): List;
     flush(): Promise<void>;
-    _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void): any;
+    _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void, hasRefresh?: Boolean): any;
 }
 export {};
