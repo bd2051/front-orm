@@ -1,7 +1,7 @@
 import { suite, test } from '@testdeck/mocha';
 import * as _chai from 'chai';
 import {assert, expect} from 'chai';
-import {BaseModel, Entity, EntityManager, PrimaryKey, StringField} from "../src";
+import {BaseModel, Entity, EntityManager, PrimaryKey, StringField} from "../../src";
 
 _chai.should();
 
@@ -38,30 +38,32 @@ class Story extends BaseModel {
 
   @test 'Set hooks' () {
     this.SUT.setHooks({
-      create(value) {return value['result']},
-      update(value, oldItem) {return value['result'] + oldItem['result']},
-      delete(pk, oldItem) {return pk + oldItem['result']},
-      refresh(value, pk) {return value['result'] + pk},
-      cancelRefresh(value, pk) {return value['result'] + pk}
+      create(baseModel, value) {return baseModel.getName() + value['result']},
+      update(baseModel, value, oldItem) {return baseModel.getName() + value['result'] + oldItem['result']},
+      delete(baseModel, pk, oldItem) {return baseModel.getName() + pk + oldItem['result']},
+      refresh(baseModel, value, pk) {return baseModel.getName() + value['result'] + pk},
+      cancelRefresh(baseModel, value, pk) {return baseModel.getName() + value['result'] + pk}
     })
-    const createResult = this.SUT.hooks.create({result: 'testCreate'})
-    const updateResult = this.SUT.hooks.update({result: 'testUpdate'}, {result: ' oldItem'})
-    const deleteResult = this.SUT.hooks.delete('testPk', {result: ' testCreate'})
-    const refreshResult = this.SUT.hooks.refresh({result: 'testCreate'}, ' testPk', () => {})
-    const cancelRefreshResult = this.SUT.hooks.cancelRefresh({result: 'testCreate'}, ' testPk')
-    expect(createResult).to.be.equal('testCreate')
-    expect(updateResult).to.be.equal('testUpdate oldItem')
-    expect(deleteResult).to.be.equal('testPk testCreate')
-    expect(refreshResult).to.be.equal('testCreate testPk')
-    expect(cancelRefreshResult).to.be.equal('testCreate testPk')
+    const baseModel = new BaseModel(this.SUT)
+    const createResult = this.SUT.hooks.create(baseModel, {result: 'testCreate'})
+    const updateResult = this.SUT.hooks.update(baseModel, {result: 'testUpdate'}, {result: ' oldItem'})
+    const deleteResult = this.SUT.hooks.delete(baseModel, 'testPk', {result: ' testCreate'})
+    const refreshResult = this.SUT.hooks.refresh(baseModel, {result: 'testCreate'}, ' testPk', () => {})
+    const cancelRefreshResult = this.SUT.hooks.cancelRefresh(baseModel, {result: 'testCreate'}, ' testPk')
+    expect(createResult).to.be.equal('BaseModeltestCreate')
+    expect(updateResult).to.be.equal('BaseModeltestUpdate oldItem')
+    expect(deleteResult).to.be.equal('BaseModeltestPk testCreate')
+    expect(refreshResult).to.be.equal('BaseModeltestCreate testPk')
+    expect(cancelRefreshResult).to.be.equal('BaseModeltestCreate testPk')
   }
 
   @test 'hooks Error' () {
-    assert.throw(() => this.SUT.hooks.create({e: 'error'}))
-    assert.throw(() => this.SUT.hooks.update({e: 'error'}, {e: 'error'}))
-    assert.throw(() => this.SUT.hooks.delete('err', {e: 'error'}))
-    assert.throw(() => this.SUT.hooks.refresh({}, 'err', () => {}))
-    assert.throw(() => this.SUT.hooks.cancelRefresh({}, 'err'))
+    const baseModel = new BaseModel(this.SUT)
+    assert.throw(() => this.SUT.hooks.create(baseModel, {e: 'error'}))
+    assert.throw(() => this.SUT.hooks.update(baseModel, {e: 'error'}, {e: 'error'}))
+    assert.throw(() => this.SUT.hooks.delete(baseModel, 'err', {e: 'error'}))
+    assert.throw(() => this.SUT.hooks.refresh(baseModel, {}, 'err', () => {}))
+    assert.throw(() => this.SUT.hooks.cancelRefresh(baseModel, {}, 'err'))
   }
 
   @test 'Set model' () {

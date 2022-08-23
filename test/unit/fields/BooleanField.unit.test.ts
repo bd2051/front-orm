@@ -1,7 +1,7 @@
 import { suite, test } from '@testdeck/mocha';
 import * as _chai from 'chai';
 import {assert, expect} from 'chai';
-import {BooleanField, EntityManager } from '../../src';
+import {BooleanField, EntityManager } from '../../../src';
 
 _chai.should();
 

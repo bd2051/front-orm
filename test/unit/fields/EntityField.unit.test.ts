@@ -1,7 +1,7 @@
 import { suite, test } from '@testdeck/mocha';
 import * as _chai from 'chai';
 import {assert, expect} from 'chai';
-import {EntityManager, EntityField, BaseModel, PrimaryKey, StringField, Entity} from '../../src';
+import {EntityManager, EntityField, BaseModel, PrimaryKey, StringField, Entity} from '../../../src';
 
 _chai.should();
 
@@ -48,8 +48,8 @@ class Story extends BaseModel {
   }
 
   @test 'convert' (done) {
-    expect(this.SUT.convert(null)).to.be.equal(null)
-    const proxy = this.SUT.convert({id: 1})
+    expect(this.SUT.convert({'q': null}, 'q')).to.be.equal(null)
+    const proxy = this.SUT.convert({q: {id: 1}}, 'q')
     const name = proxy.name
     assert.equal(name, null)
     setTimeout(() => {
@@ -61,8 +61,8 @@ class Story extends BaseModel {
 
   @test 'convert default' (done) {
     const defaultSUT = new EntityField(this.em, 'Story')
-    expect(defaultSUT.convert(null)).to.be.equal(null)
-    const proxy = defaultSUT.convert( 1)
+    expect(defaultSUT.convert({q: null}, 'q')).to.be.equal(null)
+    const proxy = defaultSUT.convert( {q: 1}, 'q')
     const name = proxy.name
     assert.equal(name, null)
     setTimeout(() => {
