@@ -4,3 +4,5 @@ declare global {
         em: EntityManager;
     }
 }
+declare const em: EntityManager;
+export default em;

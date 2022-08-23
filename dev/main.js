@@ -2,23 +2,23 @@ import Author from "./model/Author";
 import Story from "./model/Story";
 import { Collection, Entity, EntityManager } from "../src";
 console.log('start');
-window.em = new EntityManager();
-window.em.setModel(new Author(window.em), {
-    find: new Entity(window.em, (pk) => {
+const em = new EntityManager();
+em.setModel(new Author(em), {
+    find: new Entity(em, (pk) => {
         return fetch(`http://localhost:8000/api/authors/${pk}`).then(response => response.json())
             .then((data) => {
             console.log(data);
             return data;
         });
     }),
-    findByPk: new Entity(window.em, (pk) => {
+    findByPk: new Entity(em, (pk) => {
         return fetch(`http://localhost:8000/api/authors/${pk}`).then(response => response.json())
             .then((data) => {
             console.log(data);
             return data;
         });
     }),
-    findAll: new Collection(window.em, () => {
+    findAll: new Collection(em, () => {
         return fetch(`http://localhost:8000/api/authors`).then(response => response.json())
             .then((data) => {
             console.log(data);
@@ -26,22 +26,22 @@ window.em.setModel(new Author(window.em), {
         });
     })
 });
-window.em.setModel(new Story(window.em), {
-    find: new Entity(window.em, (pk) => {
+em.setModel(new Story(em), {
+    find: new Entity(em, (pk) => {
         return fetch(`http://localhost:8000/api/stories/${pk}`).then(response => response.json())
             .then((data) => {
             console.log(data);
             return data;
         });
     }),
-    findByPk: new Entity(window.em, (pk) => {
+    findByPk: new Entity(em, (pk) => {
         return fetch(`http://localhost:8000/api/stories/${pk}`).then(response => response.json())
             .then((data) => {
             console.log(data);
             return data;
         });
     }),
-    findAll: new Collection(window.em, () => {
+    findAll: new Collection(em, () => {
         return fetch(`http://localhost:8000/api/stories`).then(response => response.json())
             .then((data) => {
             console.log(data);
@@ -49,3 +49,11 @@ window.em.setModel(new Story(window.em), {
         });
     })
 });
+try {
+    if (window) {
+        window.em = em;
+    }
+}
+catch (e) {
+}
+export default em;

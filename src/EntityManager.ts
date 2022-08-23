@@ -326,12 +326,12 @@ export default class EntityManager {
     parentPk: number|string
   ): any {
     const updateListModel = this.getUpdateListModel(model.getName())
-    const storageModel = this.getStorageModel(model.getName())
+    const storageTargetModel = this.getStorageModel(targetModel.getName())
     const workingModels = this.workingModels
     return new Proxy(arrayTarget.map((pk) => {
       const findByPk = targetModel.getRepository().methodsCb.findByPk
       return this._createProxy(targetModel, pk, async (done) => {
-        storageModel[pk] = await findByPk(pk)
+        storageTargetModel[pk] = await findByPk(pk)
         done()
       })
     }), {

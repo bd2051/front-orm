@@ -235,12 +235,12 @@ export default class EntityManager {
     }
     _createArrayProxy(arrayTarget, model, targetModel, name, parentPk) {
         const updateListModel = this.getUpdateListModel(model.getName());
-        const storageModel = this.getStorageModel(model.getName());
+        const storageTargetModel = this.getStorageModel(targetModel.getName());
         const workingModels = this.workingModels;
         return new Proxy(arrayTarget.map((pk) => {
             const findByPk = targetModel.getRepository().methodsCb.findByPk;
             return this._createProxy(targetModel, pk, (done) => __awaiter(this, void 0, void 0, function* () {
-                storageModel[pk] = yield findByPk(pk);
+                storageTargetModel[pk] = yield findByPk(pk);
                 done();
             }));
         }), {
