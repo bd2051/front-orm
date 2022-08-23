@@ -23,7 +23,8 @@ export default class EntityField extends BaseField {
         }
         return this.targetModel.getPkField().validate(this.convertValueToPk(value));
     }
-    convert(value) {
+    convert(data, key) {
+        const value = data[key];
         if (value === null) {
             return null;
         }

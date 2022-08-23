@@ -6,15 +6,18 @@ import EntityManager from "../EntityManager";
 export default class CollectionField extends BaseField implements FieldInterface {
   targetModelName: string
   convertValueToPk: (value: any) => number|string
+  model: BaseModel
 
   constructor(
       em: EntityManager,
+      model: BaseModel,
       targetModelName: string,
       convertValueToPk: (value: any) => number|string = (value) => value,
   ) {
     super(em);
     this.targetModelName = targetModelName
     this.convertValueToPk = convertValueToPk
+    this.model = model
   }
   get targetModel(): BaseModel {
     return this.em.getModel(this.targetModelName)
@@ -25,19 +28,11 @@ export default class CollectionField extends BaseField implements FieldInterface
     }
     return value.every((element) => this.targetModel.getPkField().validate(this.convertValueToPk(element)))
   }
-  convert(value: any) {
+  convert(data: any, key: string) {
+    const value = data[key]
     if (!Array.isArray(value)) {
       return false
     }
-    return value.map((element) => {
-      const pk = this.convertValueToPk(element)
-      let storageModel = this.em.getStorageModel(this.targetModel.getName())
-      const model = this.targetModel
-      const findByPk = model.getRepository().methodsCb.findByPk
-      return this.em._createProxy(model, pk, async (done) => {
-        storageModel[pk] = await findByPk(pk)
-        done()
-      })
-    })
+    return this.em._createArrayProxy(value, this.model, this.targetModel, key, data[this.model.getPkName()])
   }
 }

@@ -62,7 +62,7 @@ export default class BaseModel {
     return Object.keys(data).reduce((acc: Fields, key) => {
       const field = this[key]
       if (field instanceof BaseField) {
-        acc[key] = field.convert(data[key])
+        acc[key] = field.convert(data, key)
       }
       return acc
     }, {})

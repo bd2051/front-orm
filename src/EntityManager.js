@@ -204,7 +204,6 @@ export default class EntityManager {
                         return Reflect.get(convertedStorage, prop, receiver);
                     }
                     cb(done);
-                    console.log(proxyTarget, target, prop);
                     target[prop].type = 'pending';
                     target[prop].value = em.pending;
                     return em.pending;
@@ -231,6 +230,38 @@ export default class EntityManager {
                     Reflect.set(target, prop, value, receiver);
                 }
                 return true;
+            }
+        });
+    }
+    _createArrayProxy(arrayTarget, model, targetModel, name, parentPk) {
+        const updateListModel = this.getUpdateListModel(model.getName());
+        const storageModel = this.getStorageModel(model.getName());
+        const workingModels = this.workingModels;
+        return new Proxy(arrayTarget.map((pk) => {
+            const findByPk = targetModel.getRepository().methodsCb.findByPk;
+            return this._createProxy(targetModel, pk, (done) => __awaiter(this, void 0, void 0, function* () {
+                storageModel[pk] = yield findByPk(pk);
+                done();
+            }));
+        }), {
+            get(target, prop, receiver) {
+                if (['push', 'pop', 'shift', 'unshift'].includes(prop)) {
+                    return (targetPk) => {
+                        const uuid = getUuidByString(`${model.getName()}_${parentPk}`);
+                        if (typeof workingModels[uuid] === 'undefined') {
+                            workingModels[uuid] = model.getWorkingModel(parentPk);
+                        }
+                        let updatedEntity = updateListModel[parentPk];
+                        if (typeof updatedEntity === 'undefined') {
+                            updateListModel[parentPk] = {
+                                [name]: arrayTarget
+                            };
+                            updatedEntity = updateListModel[parentPk];
+                        }
+                        return (updatedEntity[name][prop])(targetPk);
+                    };
+                }
+                return Reflect.get(target, prop, receiver);
             }
         });
     }

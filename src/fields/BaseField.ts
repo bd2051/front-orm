@@ -6,8 +6,8 @@ export default class BaseField {
   constructor(em: EntityManager) {
     this.em = em
   }
-  convert(value: any): any {
-    return value
+  convert(data: any, key: string): any {
+    return data[key]
   }
   validate(value: any): boolean {
     return !(typeof value === 'undefined')

@@ -65,7 +65,7 @@ interface CommonClasses {
 }
 
 interface FieldsClass {
-  [key: string]: typeof BaseField | typeof EntityField
+  [key: string]: typeof BaseField | typeof EntityField | typeof CollectionField
 }
 
 interface TypesClass {
@@ -282,6 +282,7 @@ export default class EntityManager {
           if (typeof updatedEntity !== 'undefined') {
             const updatedProp = updatedEntity[prop]
             if (typeof updatedProp !== 'undefined') {
+
               const convertedUpdatedEntity = model.validateFields(updatedEntity).convertFields(updatedEntity)
               return Reflect.get(convertedUpdatedEntity, prop, receiver)
             }
@@ -291,7 +292,6 @@ export default class EntityManager {
             return Reflect.get(convertedStorage, prop, receiver)
           }
           cb(done)
-          console.log(proxyTarget, target, prop)
           target[prop]!.type = 'pending'
           target[prop]!.value = em.pending
           return em.pending
@@ -315,6 +315,44 @@ export default class EntityManager {
           Reflect.set(target, prop, value, receiver)
         }
         return true
+      }
+    })
+  }
+  _createArrayProxy(
+    arrayTarget: Array<number|string>,
+    model: BaseModel,
+    targetModel: BaseModel,
+    name: string,
+    parentPk: number|string
+  ): any {
+    const updateListModel = this.getUpdateListModel(model.getName())
+    const storageModel = this.getStorageModel(model.getName())
+    const workingModels = this.workingModels
+    return new Proxy(arrayTarget.map((pk) => {
+      const findByPk = targetModel.getRepository().methodsCb.findByPk
+      return this._createProxy(targetModel, pk, async (done) => {
+        storageModel[pk] = await findByPk(pk)
+        done()
+      })
+    }), {
+      get(target: WorkingModel[], prop: string, receiver: any): any {
+        if (['push', 'pop', 'shift', 'unshift'].includes(prop)) {
+          return (targetPk: number|string) => {
+            const uuid = getUuidByString(`${model.getName()}_${parentPk}`)
+            if (typeof workingModels[uuid] === 'undefined') {
+              workingModels[uuid] = model.getWorkingModel(parentPk)
+            }
+            let updatedEntity = updateListModel[parentPk]
+            if (typeof updatedEntity === 'undefined') {
+              updateListModel[parentPk] = {
+                [name]: arrayTarget
+              }
+              updatedEntity = updateListModel[parentPk]
+            }
+            return (updatedEntity[name][prop])(targetPk)
+          }
+        }
+        return Reflect.get(target, prop, receiver)
       }
     })
   }

@@ -1,4 +1,4 @@
-import { Repository, BaseModel, BaseType, BaseField, Entity, EntityField } from "./index";
+import { Repository, BaseModel, BaseType, BaseField, Entity, EntityField, CollectionField } from "./index";
 interface StorageModel {
     [key: number | string]: any;
 }
@@ -38,7 +38,7 @@ interface CommonClasses {
     [key: string]: typeof BaseModel | typeof Repository;
 }
 interface FieldsClass {
-    [key: string]: typeof BaseField | typeof EntityField;
+    [key: string]: typeof BaseField | typeof EntityField | typeof CollectionField;
 }
 interface TypesClass {
     [key: string]: typeof BaseType;
@@ -78,5 +78,6 @@ export default class EntityManager {
     getDeleteListModel(modelName: string): List;
     flush(): Promise<void>;
     _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void, hasRefresh?: Boolean): any;
+    _createArrayProxy(arrayTarget: Array<number | string>, model: BaseModel, targetModel: BaseModel, name: string, parentPk: number | string): any;
 }
 export {};

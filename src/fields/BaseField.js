@@ -2,8 +2,8 @@ export default class BaseField {
     constructor(em) {
         this.em = em;
     }
-    convert(value) {
-        return value;
+    convert(data, key) {
+        return data[key];
     }
     validate(value) {
         return !(typeof value === 'undefined');

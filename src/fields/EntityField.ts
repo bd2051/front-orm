@@ -25,7 +25,8 @@ export default class EntityField extends BaseField implements FieldInterface {
     }
     return this.targetModel.getPkField().validate(this.convertValueToPk(value))
   }
-  convert(value: any) {
+  convert(data: any, key: string) {
+    const value = data[key]
     if (value === null) {
       return null
     }

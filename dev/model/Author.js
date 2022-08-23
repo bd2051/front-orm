@@ -15,7 +15,7 @@ export default class Author extends BaseModel {
         this.id = new PrimaryKey(em);
         this.name = new StringField(em);
         this.age = new NumberField(em);
-        this.stories = new CollectionField(em, 'Story');
+        this.stories = new CollectionField(em, this, 'Story');
     }
     update(values, oldItem) {
         return __awaiter(this, void 0, void 0, function* () {

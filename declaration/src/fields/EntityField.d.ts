@@ -8,5 +8,5 @@ export default class EntityField extends BaseField implements FieldInterface {
     constructor(em: EntityManager, targetModelName: string, convertValueToPk?: (value: any) => number | string);
     get targetModel(): BaseModel;
     validate(value: any): boolean;
-    convert(value: any): any;
+    convert(data: any, key: string): any;
 }
