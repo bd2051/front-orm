@@ -339,7 +339,8 @@ export default class EntityManager {
     }), {
       get(target: WorkingModel[], prop: string, receiver: any): any {
         if (['push', 'pop', 'shift', 'unshift'].includes(prop)) {
-          return (targetPk: number|string) => {
+          return (value: any) => {
+            const targetPk = convertValueToPk(value)
             const uuid = getUuidByString(`${model.getName()}_${parentPk}`)
             if (typeof workingModels[uuid] === 'undefined') {
               workingModels[uuid] = model.getWorkingModel(parentPk)
