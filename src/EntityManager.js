@@ -235,6 +235,7 @@ export default class EntityManager {
     }
     _createArrayProxy(arrayTarget, model, targetModel, name, parentPk, convertValueToPk) {
         const updateListModel = this.getUpdateListModel(model.getName());
+        const storageModel = this.getStorageModel(model.getName());
         const storageTargetModel = this.getStorageModel(targetModel.getName());
         const workingModels = this.workingModels;
         return new Proxy(arrayTarget.map((value) => {
@@ -256,7 +257,7 @@ export default class EntityManager {
                         let updatedEntity = updateListModel[parentPk];
                         if (typeof updatedEntity === 'undefined') {
                             updateListModel[parentPk] = {
-                                [name]: arrayTarget
+                                [name]: [...storageModel[parentPk][name]]
                             };
                             updatedEntity = updateListModel[parentPk];
                         }
