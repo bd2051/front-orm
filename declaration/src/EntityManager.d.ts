@@ -78,6 +78,6 @@ export default class EntityManager {
     getDeleteListModel(modelName: string): List;
     flush(): Promise<void>;
     _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void, hasRefresh?: Boolean): any;
-    _createArrayProxy(arrayTarget: Array<number | string>, model: BaseModel, targetModel: BaseModel, name: string, parentPk: number | string): any;
+    _createArrayProxy(arrayTarget: Array<number | string>, model: BaseModel, targetModel: BaseModel, name: string, parentPk: number | string, convertValueToPk: (value: any) => number | string): any;
 }
 export {};

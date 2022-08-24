@@ -33,6 +33,13 @@ export default class CollectionField extends BaseField implements FieldInterface
     if (!Array.isArray(value)) {
       return false
     }
-    return this.em._createArrayProxy(value, this.model, this.targetModel, key, data[this.model.getPkName()])
+    return this.em._createArrayProxy(
+      value,
+      this.model,
+      this.targetModel,
+      key,
+      data[this.model.getPkName()],
+      this.convertValueToPk
+    )
   }
 }

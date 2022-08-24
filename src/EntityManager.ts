@@ -323,12 +323,14 @@ export default class EntityManager {
     model: BaseModel,
     targetModel: BaseModel,
     name: string,
-    parentPk: number|string
+    parentPk: number|string,
+    convertValueToPk: (value: any) => number | string
   ): any {
     const updateListModel = this.getUpdateListModel(model.getName())
     const storageTargetModel = this.getStorageModel(targetModel.getName())
     const workingModels = this.workingModels
-    return new Proxy(arrayTarget.map((pk) => {
+    return new Proxy(arrayTarget.map((value) => {
+      const pk = convertValueToPk(value)
       const findByPk = targetModel.getRepository().methodsCb.findByPk
       return this._createProxy(targetModel, pk, async (done) => {
         storageTargetModel[pk] = await findByPk(pk)

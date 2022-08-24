@@ -233,11 +233,12 @@ export default class EntityManager {
             }
         });
     }
-    _createArrayProxy(arrayTarget, model, targetModel, name, parentPk) {
+    _createArrayProxy(arrayTarget, model, targetModel, name, parentPk, convertValueToPk) {
         const updateListModel = this.getUpdateListModel(model.getName());
         const storageTargetModel = this.getStorageModel(targetModel.getName());
         const workingModels = this.workingModels;
-        return new Proxy(arrayTarget.map((pk) => {
+        return new Proxy(arrayTarget.map((value) => {
+            const pk = convertValueToPk(value);
             const findByPk = targetModel.getRepository().methodsCb.findByPk;
             return this._createProxy(targetModel, pk, (done) => __awaiter(this, void 0, void 0, function* () {
                 storageTargetModel[pk] = yield findByPk(pk);
