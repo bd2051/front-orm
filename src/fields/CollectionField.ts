@@ -26,7 +26,8 @@ export default class CollectionField extends BaseField implements FieldInterface
     if (!Array.isArray(value)) {
       return false
     }
-    return value.every((element) => this.targetModel.getPkField().validate(this.convertValueToPk(element)))
+    // return value.every((element) => this.targetModel.getPkField().validate(this.convertValueToPk(element)))
+    return true
   }
   convert(data: any, key: string) {
     const value = data[key]

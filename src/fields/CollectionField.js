@@ -13,7 +13,8 @@ export default class CollectionField extends BaseField {
         if (!Array.isArray(value)) {
             return false;
         }
-        return value.every((element) => this.targetModel.getPkField().validate(this.convertValueToPk(element)));
+        // return value.every((element) => this.targetModel.getPkField().validate(this.convertValueToPk(element)))
+        return true;
     }
     convert(data, key) {
         const value = data[key];
