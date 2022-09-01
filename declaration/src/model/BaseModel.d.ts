@@ -19,12 +19,6 @@ export default class BaseModel {
     getRepository(): Repository;
     validateFields(data: Fields): this;
     convertFields(data: any): Fields;
-    create(values: object): any;
-    cancelCreate(pk: number | string): void;
-    update(values: object, oldItem: object): any;
-    cancelUpdate(pk: number | string): void;
-    delete(pk: number | string, oldItem: object): any;
-    cancelDelete(pk: number | string): void;
     refresh(storageModel: StorageModel, pk: number | string, done: () => void): any;
     cancelRefresh(storageModel: StorageModel, pk: number | string): any;
     getWorkingModel(pkValue?: number | string): Fields;

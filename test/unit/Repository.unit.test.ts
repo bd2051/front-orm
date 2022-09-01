@@ -25,9 +25,6 @@ class Story extends BaseModel {
   before() {
     this.em = new EntityManager()
     this.em.setHooks({
-      create() {},
-      update() {},
-      delete() {},
       refresh() {},
       cancelRefresh() {}
     })
@@ -62,29 +59,5 @@ class Story extends BaseModel {
     const rep = new Repository(this.em, this.model, {})
     const findByPk = rep.methodsCb['findByPk']
     expect(findByPk('value')).to.be.equal('value')
-  }
-
-  @test 'test create' (done) {
-    this.SUT.create({
-      name: 'Test Story'
-    }).then(() => {
-      assert.equal(Object.values(this.em.getCreateListModel('Story'))[0]['name'], 'Test Story')
-      done()
-    }).catch(done)
-  }
-
-  @test 'test delete' (done) {
-    this.SUT.delete(1).then((proxy) => {
-      assert.equal(this.em.getDeleteListModel('Story')[1]['name'], 'story')
-      delete this.em.getStorageModel('Story')[1]
-      assert.isUndefined(this.em.getStorageModel('Story')[1])
-      const name = proxy.name
-      assert.equal(name, null)
-      setTimeout(() => {
-        const name = proxy.name
-        assert.equal(name, 'story')
-        done()
-      }, 200)
-    }).catch(done)
   }
 }

@@ -38,30 +38,6 @@ export default class Repository {
       return JSON.stringify(obj, Array.from(allKeys).sort());
   }
 
-  async create(values: any) {
-    const uuid = getUuidByString(Date.now().toString())
-    const model = this.model
-    const createListModel = this.em.getCreateListModel(model.getName())
-    createListModel[uuid] = values
-    return this.em._createProxy(model, uuid, async () => {}, false)
-  }
-
-  async delete(pk: number|string): Promise<any> {
-    const model = this.model
-    const deleteListModel = this.em.getDeleteListModel(model.getName())
-    const storageModel = this.em.getStorageModel(model.getName())
-    let item = storageModel[pk]
-    if (typeof item === 'undefined') {
-      item = await model.getRepository().methodsCb.findByPk(pk)
-      storageModel[pk] = item
-    }
-    deleteListModel[pk] = item
-    return this.em._createProxy(model, pk, async (done) => {
-      storageModel[pk] = await model.getRepository().methodsCb.findByPk(pk)
-      done()
-    })
-  }
-
   async _methodsHandler(values: any, methodRepository: BaseType, methodName: string) {
     const uuid = getUuidByString(methodName + this._sortJsonStringify(values))
     const cache = this.em.cache

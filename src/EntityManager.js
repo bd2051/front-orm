@@ -14,22 +14,10 @@ export default class EntityManager {
         this.models = {};
         this.repositories = {};
         this.storage = {};
-        this.updateList = {};
-        this.createList = {};
-        this.deleteList = {};
         this.workingModels = {};
         this.cache = {};
         this.pending = null;
         this.hooks = {
-            create: () => {
-                throw new Error('Set create hook');
-            },
-            update: () => {
-                throw new Error('Set update hook');
-            },
-            delete: () => {
-                throw new Error('Set delete hook');
-            },
             refresh: () => {
                 throw new Error('Set refresh hook');
             },
@@ -61,9 +49,6 @@ export default class EntityManager {
     }
     setModel(model, repositories) {
         this.storage[model.getName()] = {};
-        this.updateList[model.getName()] = {};
-        this.createList[model.getName()] = {};
-        this.deleteList[model.getName()] = {};
         this.models[model.getName()] = model;
         this.repositories[model.getName()] = new Repository(this, model, repositories);
     }
@@ -88,61 +73,11 @@ export default class EntityManager {
         }
         return storageModel;
     }
-    getCreateListModel(modelName) {
-        const createListModel = this.createList[modelName];
-        if (typeof createListModel === 'undefined') {
-            throw new Error('The model does not exist');
-        }
-        return createListModel;
-    }
-    getUpdateListModel(modelName) {
-        const updateListModel = this.updateList[modelName];
-        if (typeof updateListModel === 'undefined') {
-            throw new Error('The model does not exist');
-        }
-        return updateListModel;
-    }
-    getDeleteListModel(modelName) {
-        const deleteListModel = this.deleteList[modelName];
-        if (typeof deleteListModel === 'undefined') {
-            throw new Error('The model does not exist');
-        }
-        return deleteListModel;
-    }
     flush() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield Promise.all(Object.keys(this.updateList).map((modelName) => __awaiter(this, void 0, void 0, function* () {
-                const model = this.getModel(modelName);
-                const storageModel = this.getStorageModel(modelName);
-                const updateListModel = this.getUpdateListModel(modelName);
-                yield Promise.all(Object.entries(updateListModel).map(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
-                    const storage = storageModel[pk];
-                    if (typeof storage === 'undefined') {
-                        throw new Error('Logic error');
-                    }
-                    yield model.update(item, storage);
-                    delete updateListModel[pk];
-                })));
-            })));
-            yield Promise.all(Object.entries(this.createList).map(([modelName, createListModel]) => __awaiter(this, void 0, void 0, function* () {
-                const model = this.getModel(modelName);
-                yield Promise.all(Object.entries(createListModel).map(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
-                    yield model.create(item);
-                    delete createListModel[pk];
-                })));
-            })));
-            yield Promise.all(Object.entries(this.deleteList).map(([modelName, deleteListModel]) => __awaiter(this, void 0, void 0, function* () {
-                const model = this.getModel(modelName);
-                yield Promise.all(Object.entries(deleteListModel).map(([pk, item]) => __awaiter(this, void 0, void 0, function* () {
-                    yield model.delete(pk, item);
-                    delete deleteListModel[pk];
-                })));
-            })));
         });
     }
     _createProxy(model, pk, cb, hasRefresh = true) {
-        const createListModel = this.getCreateListModel(model.getName());
-        const updateListModel = this.getUpdateListModel(model.getName());
         const storageModel = this.getStorageModel(model.getName());
         const uuid = getUuidByString(`${model.getName()}_${pk}`);
         if (typeof this.workingModels[uuid] === 'undefined') {
@@ -172,33 +107,11 @@ export default class EntityManager {
         const em = this;
         return new Proxy(proxyTarget, {
             get(target, prop, receiver) {
-                if (prop === 'cancelUpdate') {
-                    return () => model.cancelUpdate(pk);
-                }
-                if (prop === 'cancelCreate') {
-                    return () => model.cancelCreate(pk);
-                }
-                if (prop === 'cancelDelete') {
-                    return () => model.cancelDelete(pk);
-                }
                 if (prop === 'cancelRefresh') {
                     return () => model.cancelRefresh(storageModel, pk);
                 }
                 if (prop in target) {
-                    const createdEntity = createListModel[pk];
-                    const updatedEntity = updateListModel[pk];
                     const storage = storageModel[pk];
-                    if (typeof createdEntity !== 'undefined') {
-                        const convertedCreatedEntity = model.validateFields(createdEntity).convertFields(createdEntity);
-                        return Reflect.get(convertedCreatedEntity, prop, receiver);
-                    }
-                    if (typeof updatedEntity !== 'undefined') {
-                        const updatedProp = updatedEntity[prop];
-                        if (typeof updatedProp !== 'undefined') {
-                            const convertedUpdatedEntity = model.validateFields(updatedEntity).convertFields(updatedEntity);
-                            return Reflect.get(convertedUpdatedEntity, prop, receiver);
-                        }
-                    }
                     if (typeof storage !== 'undefined') {
                         const convertedStorage = model.validateFields(storage).convertFields(storage);
                         return Reflect.get(convertedStorage, prop, receiver);
@@ -214,17 +127,7 @@ export default class EntityManager {
             },
             set(target, prop, value, receiver) {
                 if (prop in target) {
-                    const updateList = updateListModel[pk];
-                    if (typeof updateList === 'undefined') {
-                        updateListModel[pk] = {
-                            [prop]: value
-                        };
-                    }
-                    else {
-                        updateList[prop] = value;
-                    }
-                    target[prop].type = 'updated';
-                    target[prop].value = value;
+                    throw new Error('Use update method');
                 }
                 else {
                     Reflect.set(target, prop, value, receiver);
@@ -233,11 +136,8 @@ export default class EntityManager {
             }
         });
     }
-    _createArrayProxy(arrayTarget, model, targetModel, name, parentPk, convertValueToPk) {
-        const updateListModel = this.getUpdateListModel(model.getName());
-        const storageModel = this.getStorageModel(model.getName());
+    _createArrayProxy(arrayTarget, targetModel, convertValueToPk) {
         const storageTargetModel = this.getStorageModel(targetModel.getName());
-        const workingModels = this.workingModels;
         return new Proxy(arrayTarget.map((value) => {
             const pk = convertValueToPk(value);
             const findByPk = targetModel.getRepository().methodsCb.findByPk;
@@ -248,21 +148,7 @@ export default class EntityManager {
         }), {
             get(target, prop, receiver) {
                 if (['push', 'pop', 'shift', 'unshift'].includes(prop)) {
-                    return (value) => {
-                        const targetPk = convertValueToPk(value);
-                        const uuid = getUuidByString(`${model.getName()}_${parentPk}`);
-                        if (typeof workingModels[uuid] === 'undefined') {
-                            workingModels[uuid] = model.getWorkingModel(parentPk);
-                        }
-                        let updatedEntity = updateListModel[parentPk];
-                        if (typeof updatedEntity === 'undefined') {
-                            updateListModel[parentPk] = {
-                                [name]: [...storageModel[parentPk][name]]
-                            };
-                            updatedEntity = updateListModel[parentPk];
-                        }
-                        return (updatedEntity[name][prop])(targetPk);
-                    };
+                    throw new Error('Use update method');
                 }
                 return Reflect.get(target, prop, receiver);
             }

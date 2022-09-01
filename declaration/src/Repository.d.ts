@@ -15,8 +15,6 @@ export default class Repository {
     methodsCb: MethodsCb;
     constructor(em: EntityManager, model: BaseModel, repositories: Repositories);
     _sortJsonStringify(obj: object): string;
-    create(values: any): Promise<any>;
-    delete(pk: number | string): Promise<any>;
     _methodsHandler(values: any, methodRepository: BaseType, methodName: string): Promise<object | undefined>;
 }
 export {};

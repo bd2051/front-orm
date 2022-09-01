@@ -21,9 +21,6 @@ interface Storage {
 interface Cache {
     [key: string]: object;
 }
-interface List {
-    [key: string]: any;
-}
 interface WorkingField {
     type: 'storage' | 'updated' | 'pending';
     value: any;
@@ -49,9 +46,6 @@ interface Classes {
     types: TypesClass;
 }
 interface Hooks {
-    create: (model: BaseModel, values: object) => any;
-    update: (model: BaseModel, values: object, oldItem: object) => any;
-    delete: (model: BaseModel, pk: number | string, oldItem: object) => any;
     refresh: (model: BaseModel, storageModel: StorageModel, pk: number | string, done: () => void) => any;
     cancelRefresh: (model: BaseModel, storageModel: StorageModel, pk: number | string) => any;
 }
@@ -59,9 +53,6 @@ export default class EntityManager {
     models: Models;
     repositories: Repositories;
     storage: Storage;
-    updateList: Storage;
-    createList: Storage;
-    deleteList: Storage;
     workingModels: WorkingModelList;
     cache: Cache;
     hooks: Hooks;
@@ -73,11 +64,8 @@ export default class EntityManager {
     getModel(modelName: string): BaseModel;
     getRepository(modelName: string): Repository;
     getStorageModel(modelName: string): FirstLevelStorage;
-    getCreateListModel(modelName: string): List;
-    getUpdateListModel(modelName: string): List;
-    getDeleteListModel(modelName: string): List;
     flush(): Promise<void>;
     _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void, hasRefresh?: Boolean): any;
-    _createArrayProxy(arrayTarget: Array<number | string>, model: BaseModel, targetModel: BaseModel, name: string, parentPk: number | string, convertValueToPk: (value: any) => number | string): any;
+    _createArrayProxy(arrayTarget: Array<number | string>, targetModel: BaseModel, convertValueToPk: (value: any) => number | string): any;
 }
 export {};

@@ -26,32 +26,6 @@ export default class Repository {
         JSON.stringify(obj, (key) => allKeys.add(key));
         return JSON.stringify(obj, Array.from(allKeys).sort());
     }
-    create(values) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const uuid = getUuidByString(Date.now().toString());
-            const model = this.model;
-            const createListModel = this.em.getCreateListModel(model.getName());
-            createListModel[uuid] = values;
-            return this.em._createProxy(model, uuid, () => __awaiter(this, void 0, void 0, function* () { }), false);
-        });
-    }
-    delete(pk) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const model = this.model;
-            const deleteListModel = this.em.getDeleteListModel(model.getName());
-            const storageModel = this.em.getStorageModel(model.getName());
-            let item = storageModel[pk];
-            if (typeof item === 'undefined') {
-                item = yield model.getRepository().methodsCb.findByPk(pk);
-                storageModel[pk] = item;
-            }
-            deleteListModel[pk] = item;
-            return this.em._createProxy(model, pk, (done) => __awaiter(this, void 0, void 0, function* () {
-                storageModel[pk] = yield model.getRepository().methodsCb.findByPk(pk);
-                done();
-            }));
-        });
-    }
     _methodsHandler(values, methodRepository, methodName) {
         return __awaiter(this, void 0, void 0, function* () {
             const uuid = getUuidByString(methodName + this._sortJsonStringify(values));

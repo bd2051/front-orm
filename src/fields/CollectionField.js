@@ -21,6 +21,6 @@ export default class CollectionField extends BaseField {
         if (!Array.isArray(value)) {
             return false;
         }
-        return this.em._createArrayProxy(value, this.model, this.targetModel, key, data[this.model.getPkName()], this.convertValueToPk);
+        return this.em._createArrayProxy(value, this.targetModel, this.convertValueToPk);
     }
 }

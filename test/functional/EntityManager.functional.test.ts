@@ -32,9 +32,6 @@ _chai.should();
     this.SUT.models.should.to.not.be.undefined
     this.SUT.storage.should.to.not.be.undefined
     this.SUT.repositories.should.to.not.be.undefined
-    this.SUT.updateList.should.to.not.be.undefined
-    this.SUT.createList.should.to.not.be.undefined
-    this.SUT.deleteList.should.to.not.be.undefined
     this.SUT.cache.should.to.not.be.undefined
     this.SUT.hooks.should.to.not.be.undefined
   }
@@ -45,11 +42,8 @@ _chai.should();
         const author = await this.findAuthor(10)
         expect(author.stories).to.be.length(2)
         expect(author.stories[0].name).to.be.null
-        author.stories.push(6)
-        expect(author.stories[2].name).to.be.null
         setTimeout(() => {
           expect(author.stories[0].name).to.be.equal('Excellent story')
-          expect(author.stories[2].name).to.be.equal('Great story')
           done()
         }, 500)
       } catch (e) {

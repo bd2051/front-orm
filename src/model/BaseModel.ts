@@ -67,27 +67,6 @@ export default class BaseModel {
       return acc
     }, {})
   }
-  create(values: object) {
-    return this.em.hooks.create(this, values)
-  }
-  cancelCreate(pk: number|string) {
-    const createListModel = this.em.getCreateListModel(this.getName())
-    delete createListModel[pk]
-  }
-  update(values: object, oldItem: object) {
-    return this.em.hooks.update(this, values, oldItem)
-  }
-  cancelUpdate(pk: number|string) {
-    const updateListModel = this.em.getUpdateListModel(this.getName())
-    delete updateListModel[pk]
-  }
-  delete(pk: number|string, oldItem: object) {
-    return this.em.hooks.delete(this, pk, oldItem)
-  }
-  cancelDelete(pk: number|string) {
-    const deleteListModel = this.em.getDeleteListModel(this.getName())
-    delete deleteListModel[pk]
-  }
   refresh(storageModel: StorageModel, pk: number|string, done: () => void) {
     return this.em.hooks.refresh(this, storageModel, pk, done)
   }

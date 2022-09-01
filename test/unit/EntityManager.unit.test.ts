@@ -29,39 +29,24 @@ class Story extends BaseModel {
     this.SUT.models.should.to.not.be.undefined
     this.SUT.storage.should.to.not.be.undefined
     this.SUT.repositories.should.to.not.be.undefined
-    this.SUT.updateList.should.to.not.be.undefined
-    this.SUT.createList.should.to.not.be.undefined
-    this.SUT.deleteList.should.to.not.be.undefined
     this.SUT.cache.should.to.not.be.undefined
     this.SUT.hooks.should.to.not.be.undefined
   }
 
   @test 'Set hooks' () {
     this.SUT.setHooks({
-      create(baseModel, value) {return baseModel.getName() + value['result']},
-      update(baseModel, value, oldItem) {return baseModel.getName() + value['result'] + oldItem['result']},
-      delete(baseModel, pk, oldItem) {return baseModel.getName() + pk + oldItem['result']},
       refresh(baseModel, value, pk) {return baseModel.getName() + value['result'] + pk},
       cancelRefresh(baseModel, value, pk) {return baseModel.getName() + value['result'] + pk}
     })
     const baseModel = new BaseModel(this.SUT)
-    const createResult = this.SUT.hooks.create(baseModel, {result: 'testCreate'})
-    const updateResult = this.SUT.hooks.update(baseModel, {result: 'testUpdate'}, {result: ' oldItem'})
-    const deleteResult = this.SUT.hooks.delete(baseModel, 'testPk', {result: ' testCreate'})
     const refreshResult = this.SUT.hooks.refresh(baseModel, {result: 'testCreate'}, ' testPk', () => {})
     const cancelRefreshResult = this.SUT.hooks.cancelRefresh(baseModel, {result: 'testCreate'}, ' testPk')
-    expect(createResult).to.be.equal('BaseModeltestCreate')
-    expect(updateResult).to.be.equal('BaseModeltestUpdate oldItem')
-    expect(deleteResult).to.be.equal('BaseModeltestPk testCreate')
     expect(refreshResult).to.be.equal('BaseModeltestCreate testPk')
     expect(cancelRefreshResult).to.be.equal('BaseModeltestCreate testPk')
   }
 
   @test 'hooks Error' () {
     const baseModel = new BaseModel(this.SUT)
-    assert.throw(() => this.SUT.hooks.create(baseModel, {e: 'error'}))
-    assert.throw(() => this.SUT.hooks.update(baseModel, {e: 'error'}, {e: 'error'}))
-    assert.throw(() => this.SUT.hooks.delete(baseModel, 'err', {e: 'error'}))
     assert.throw(() => this.SUT.hooks.refresh(baseModel, {}, 'err', () => {}))
     assert.throw(() => this.SUT.hooks.cancelRefresh(baseModel, {}, 'err'))
   }
@@ -75,114 +60,14 @@ class Story extends BaseModel {
     expect(this.SUT.models['Story']).should.to.not.be.undefined
     expect(this.SUT.storage['Story']).should.to.not.be.undefined
     expect(this.SUT.repositories['Story']).should.to.not.be.undefined
-    expect(this.SUT.updateList['Story']).should.to.not.be.undefined
-    expect(this.SUT.createList['Story']).should.to.not.be.undefined
-    expect(this.SUT.deleteList['Story']).should.to.not.be.undefined
 
     expect(this.SUT.getModel('Story')).should.to.not.be.undefined
     expect(this.SUT.getStorageModel('Story')).should.to.not.be.undefined
     expect(this.SUT.getRepository('Story')).should.to.not.be.undefined
-    expect(this.SUT.getUpdateListModel('Story')).should.to.not.be.undefined
-    expect(this.SUT.getCreateListModel('Story')).should.to.not.be.undefined
-    expect(this.SUT.getDeleteListModel('Story')).should.to.not.be.undefined
 
     assert.throws(() => this.SUT.getModel('Unknown'))
     assert.throws(() => this.SUT.getStorageModel('Unknown'))
     assert.throws(() => this.SUT.getRepository('Unknown'))
-    assert.throws(() => this.SUT.getUpdateListModel('Unknown'))
-    assert.throws(() => this.SUT.getCreateListModel('Unknown'))
-    assert.throws(() => this.SUT.getDeleteListModel('Unknown'))
-  }
-
-  @test 'flush error' (done) {
-    this.SUT.setModel(this.model, {
-      findByPk: new Entity(this.SUT, (values) => {
-        return values
-      })
-    })
-    this.SUT.setHooks({
-      create() {},
-      update() {},
-      delete() {},
-      refresh() {},
-      cancelRefresh() {}
-    })
-
-    this.SUT.updateList['Story']![1] = {
-      id: 1,
-      name: 'Story'
-    }
-
-    const testError = async () => {
-      let error = {
-        message: 'unknown'
-      }
-      try {
-        await this.SUT.flush()
-      } catch (e) {
-        error = e
-      }
-      return error
-    }
-
-    testError().then((error) => {
-      error.message.should.to.be.equal('Logic error')
-      done()
-    }).catch((e) => {
-      done(e)
-    })
-  }
-
-  @test 'flush' (done) {
-    this.SUT.setModel(this.model, {
-      findByPk: new Entity(this.SUT, (values) => {
-        return values
-      })
-    })
-    this.SUT.setHooks({
-      create() {},
-      update() {},
-      delete() {},
-      refresh() {},
-      cancelRefresh() {}
-    })
-
-    this.SUT.updateList['Story']![1] = {
-      id: 1,
-      name: 'Story'
-    }
-    this.SUT.createList['Story']!['uuid'] = {
-      name: 'Story'
-    }
-    this.SUT.deleteList['Story']![1] = {
-      id: 1,
-      name: 'Story'
-    }
-    this.SUT.storage['Story']![1] = {
-      id: 1,
-      name: 'Story'
-    }
-
-    const test = async () => {
-      let error = {
-        message: 'unknown'
-      }
-      try {
-        await this.SUT.flush()
-      } catch (e) {
-        error = e
-      }
-      return this.SUT
-    }
-
-    test().then((em) => {
-      assert.isUndefined(em.updateList['Story']![1])
-      assert.isUndefined(em.createList['Story']![1])
-      assert.isUndefined(em.deleteList['Story']![1])
-      done()
-    }).catch((e) => {
-      done(e)
-    })
   }
 
   @test 'create proxy' (done) {
@@ -197,9 +82,6 @@ class Story extends BaseModel {
       })
     })
     this.SUT.setHooks({
-      create() {},
-      update() {},
-      delete() {},
       refresh() {},
       cancelRefresh() {}
     })
@@ -227,35 +109,6 @@ class Story extends BaseModel {
       assert.equal(name, 'story')
       assert.exists(this.SUT.getStorageModel('Story')[1])
       assert.equal(this.SUT.getStorageModel('Story')[1]!['name'], 'story')
-      proxy.name = 'New story'
-      name = proxy.name
-      assert.equal(name, 'New story')
-      assert.exists(this.SUT.getUpdateListModel('Story')[1])
-      assert.equal(this.SUT.getStorageModel('Story')[1]!['name'], 'story')
-      assert.equal(this.SUT.getUpdateListModel('Story')[1]!['name'], 'New story')
-      proxy.name = 'Last story'
-      name = proxy.name
-      assert.equal(name, 'Last story')
-      let id = proxy.id
-      assert.equal(id, 1)
-      const cancelUpdate = proxy.cancelUpdate
-      cancelUpdate()
-      name = proxy.name
-      assert.equal(name, 'story')
-      proxy.author = 'Author unknown'
-
-      this.SUT.getCreateListModel('Story')[1] = {
-        id: 1,
-        name: 'creating'
-      }
-      name = proxy.name
-      assert.equal(name, 'creating')
-      proxy.cancelCreate()
-      name = proxy.name
-      assert.equal(name, 'story')
-
-      proxy.cancelDelete()
-      proxy.cancelRefresh()
 
       done()
     }, 200)
@@ -277,9 +130,6 @@ class Story extends BaseModel {
       })
     })
     this.SUT.setHooks({
-      create() {},
-      update() {},
-      delete() {},
       refresh() {},
       cancelRefresh() {}
     })
