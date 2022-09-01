@@ -18,18 +18,11 @@ interface FirstLevelStorage {
 interface Storage {
     [key: string]: FirstLevelStorage;
 }
+interface StorageItem {
+    [key: string]: any;
+}
 interface Cache {
     [key: string]: object;
-}
-interface WorkingField {
-    type: 'storage' | 'updated' | 'pending';
-    value: any;
-}
-interface WorkingModel {
-    [key: string]: WorkingField;
-}
-interface WorkingModelList {
-    [key: string]: WorkingModel;
 }
 interface CommonClasses {
     [key: string]: typeof BaseModel | typeof Repository;
@@ -53,7 +46,6 @@ export default class EntityManager {
     models: Models;
     repositories: Repositories;
     storage: Storage;
-    workingModels: WorkingModelList;
     cache: Cache;
     hooks: Hooks;
     pending: any;
@@ -64,6 +56,7 @@ export default class EntityManager {
     getModel(modelName: string): BaseModel;
     getRepository(modelName: string): Repository;
     getStorageModel(modelName: string): FirstLevelStorage;
+    setStorage(model: BaseModel, pk: number | string, value: StorageItem): void;
     flush(): Promise<void>;
     _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void, hasRefresh?: Boolean): any;
     _createArrayProxy(arrayTarget: Array<number | string>, targetModel: BaseModel, convertValueToPk: (value: any) => number | string): any;

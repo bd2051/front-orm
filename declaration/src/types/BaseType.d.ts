@@ -1,8 +1,5 @@
 import EntityManager from "../EntityManager";
 import BaseModel from "../model/BaseModel";
-interface Storage {
-    [key: number | string]: object;
-}
 export default class BaseType {
     em: EntityManager;
     findCb: (values: any) => object;
@@ -10,6 +7,5 @@ export default class BaseType {
     constructor(em: EntityManager, findCb: (values: any) => object);
     setEntityManager(em: EntityManager): void;
     convertResult(result: object, model: BaseModel): any;
-    getResultProxy(model: BaseModel, storageModel: Storage, value: number | string): any;
+    getResultProxy(model: BaseModel, value: number | string): any;
 }
-export {};

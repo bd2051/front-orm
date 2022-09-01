@@ -23,9 +23,10 @@ export default class BaseType {
         console.warn(result, model, 'add convertResult method');
         return new Proxy({}, {});
     }
-    getResultProxy(model, storageModel, value) {
+    getResultProxy(model, value) {
         return this.em._createProxy(model, value, (done) => __awaiter(this, void 0, void 0, function* () {
-            storageModel[value] = yield model.getRepository().methodsCb.findByPk(value);
+            const result = yield model.getRepository().methodsCb.findByPk(value);
+            this.em.setStorage(model, value, result);
             done();
         }));
     }

@@ -1,4 +1,3 @@
-import getUuidByString from "uuid-by-string";
 import {
   Repository,
   BaseModel,
@@ -39,6 +38,10 @@ interface Storage {
   [key: string]: FirstLevelStorage
 }
 
+interface StorageItem {
+  [key: string]: any
+}
+
 interface Cache {
   [key: string]: object
 }
@@ -50,10 +53,6 @@ interface WorkingField {
 
 interface WorkingModel {
   [key: string]: WorkingField
-}
-
-interface WorkingModelList {
-  [key: string]: WorkingModel
 }
 
 interface CommonClasses {
@@ -83,7 +82,6 @@ export default class EntityManager {
   models: Models
   repositories: Repositories
   storage: Storage
-  workingModels: WorkingModelList
   cache: Cache
   hooks: Hooks
   pending: any
@@ -93,7 +91,6 @@ export default class EntityManager {
     this.models = {}
     this.repositories = {}
     this.storage = {}
-    this.workingModels = {}
     this.cache = {}
     this.pending = null
     this.hooks = {
@@ -152,53 +149,48 @@ export default class EntityManager {
     }
     return storageModel
   }
+  setStorage(model: BaseModel, pk: number | string, value: StorageItem): void {
+    const storageModel = this.getStorageModel(model.getName())
+    const property = Object.entries(value).reduce((acc: PropertyDescriptorMap, [key, subValue]) => {
+      acc[key] = {
+        enumerable: true,
+        configurable: true,
+        writable: true,
+        value: subValue
+      }
+      return acc
+    }, {})
+    storageModel[pk] = Object.create(model, property)
+  }
   async flush() {
   }
   _createProxy(model: BaseModel, pk: string|number, cb: (done: () => void) => void, hasRefresh: Boolean = true): any {
     const storageModel = this.getStorageModel(model.getName())
-    const uuid = getUuidByString(`${model.getName()}_${pk}`)
-    if (typeof this.workingModels[uuid] === 'undefined') {
-      this.workingModels[uuid] = model.getWorkingModel(pk)
-    }
-    const proxyTarget = this.workingModels[uuid]
-    if (typeof storageModel[pk] !== 'undefined') {
-      Object.keys(proxyTarget!).forEach((key) => {
-        proxyTarget![key]!.value = storageModel[pk][key]
-      })
-    }
     const done = () => {
-      const storageEntity = storageModel[pk]
-      if (typeof storageEntity === 'undefined') {
-        throw new Error('Logic error')
-      }
-      Object.entries(proxyTarget!).forEach(([key, value]) => {
-        if (value.type === 'storage' || value.type === 'pending') {
-          proxyTarget![key]!.type = 'storage'
-          proxyTarget![key]!.value = storageEntity[key]
-        }
-      })
     }
     if (hasRefresh) {
       model.refresh(storageModel, pk, done)
     }
     const em = this
-    return new Proxy(proxyTarget!, {
+    let proxyTarget = storageModel[pk];
+    if (typeof proxyTarget === 'undefined') {
+      em.setStorage(model, pk, {})
+    }
+    return new Proxy(storageModel[pk], {
       get(target, prop: string, receiver) {
         if (prop === 'cancelRefresh') {
           return () => model.cancelRefresh(storageModel, pk)
         }
         if (prop in target) {
           const storage = storageModel[pk]
-          if (typeof storage !== 'undefined') {
+          if (typeof storage !== 'undefined' && !BaseField.prototype.isPrototypeOf(storage[prop])) {
             const convertedStorage = model.validateFields(storage).convertFields(storage)
             return Reflect.get(convertedStorage, prop, receiver)
           }
           cb(done)
-          target[prop]!.type = 'pending'
-          target[prop]!.value = em.pending
           return em.pending
         } else {
-          Reflect.get(target, prop, receiver)
+          return Reflect.get(target, prop, receiver)
         }
       },
       set(target: WorkingModel, prop: string, value: any, receiver: any): boolean {
@@ -216,12 +208,13 @@ export default class EntityManager {
     targetModel: BaseModel,
     convertValueToPk: (value: any) => number | string
   ): any {
-    const storageTargetModel = this.getStorageModel(targetModel.getName())
+    const em = this
     return new Proxy(arrayTarget.map((value) => {
       const pk = convertValueToPk(value)
       const findByPk = targetModel.getRepository().methodsCb.findByPk
       return this._createProxy(targetModel, pk, async (done) => {
-        storageTargetModel[pk] = await findByPk(pk)
+        const result = await findByPk(pk)
+        em.setStorage(targetModel, pk, result)
         done()
       })
     }), {

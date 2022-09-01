@@ -7,14 +7,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import getUuidByString from "uuid-by-string";
-import { Repository, BaseModel, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField } from "./index";
+import { Repository, BaseModel, BaseField, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField } from "./index";
 export default class EntityManager {
     constructor() {
         this.models = {};
         this.repositories = {};
         this.storage = {};
-        this.workingModels = {};
         this.cache = {};
         this.pending = null;
         this.hooks = {
@@ -73,56 +71,51 @@ export default class EntityManager {
         }
         return storageModel;
     }
+    setStorage(model, pk, value) {
+        const storageModel = this.getStorageModel(model.getName());
+        const property = Object.entries(value).reduce((acc, [key, subValue]) => {
+            acc[key] = {
+                enumerable: true,
+                configurable: true,
+                writable: true,
+                value: subValue
+            };
+            return acc;
+        }, {});
+        storageModel[pk] = Object.create(model, property);
+    }
     flush() {
         return __awaiter(this, void 0, void 0, function* () {
         });
     }
     _createProxy(model, pk, cb, hasRefresh = true) {
         const storageModel = this.getStorageModel(model.getName());
-        const uuid = getUuidByString(`${model.getName()}_${pk}`);
-        if (typeof this.workingModels[uuid] === 'undefined') {
-            this.workingModels[uuid] = model.getWorkingModel(pk);
-        }
-        const proxyTarget = this.workingModels[uuid];
-        if (typeof storageModel[pk] !== 'undefined') {
-            Object.keys(proxyTarget).forEach((key) => {
-                proxyTarget[key].value = storageModel[pk][key];
-            });
-        }
         const done = () => {
-            const storageEntity = storageModel[pk];
-            if (typeof storageEntity === 'undefined') {
-                throw new Error('Logic error');
-            }
-            Object.entries(proxyTarget).forEach(([key, value]) => {
-                if (value.type === 'storage' || value.type === 'pending') {
-                    proxyTarget[key].type = 'storage';
-                    proxyTarget[key].value = storageEntity[key];
-                }
-            });
         };
         if (hasRefresh) {
             model.refresh(storageModel, pk, done);
         }
         const em = this;
-        return new Proxy(proxyTarget, {
+        let proxyTarget = storageModel[pk];
+        if (typeof proxyTarget === 'undefined') {
+            em.setStorage(model, pk, {});
+        }
+        return new Proxy(storageModel[pk], {
             get(target, prop, receiver) {
                 if (prop === 'cancelRefresh') {
                     return () => model.cancelRefresh(storageModel, pk);
                 }
                 if (prop in target) {
                     const storage = storageModel[pk];
-                    if (typeof storage !== 'undefined') {
+                    if (typeof storage !== 'undefined' && !BaseField.prototype.isPrototypeOf(storage[prop])) {
                         const convertedStorage = model.validateFields(storage).convertFields(storage);
                         return Reflect.get(convertedStorage, prop, receiver);
                     }
                     cb(done);
-                    target[prop].type = 'pending';
-                    target[prop].value = em.pending;
                     return em.pending;
                 }
                 else {
-                    Reflect.get(target, prop, receiver);
+                    return Reflect.get(target, prop, receiver);
                 }
             },
             set(target, prop, value, receiver) {
@@ -137,12 +130,13 @@ export default class EntityManager {
         });
     }
     _createArrayProxy(arrayTarget, targetModel, convertValueToPk) {
-        const storageTargetModel = this.getStorageModel(targetModel.getName());
+        const em = this;
         return new Proxy(arrayTarget.map((value) => {
             const pk = convertValueToPk(value);
             const findByPk = targetModel.getRepository().methodsCb.findByPk;
             return this._createProxy(targetModel, pk, (done) => __awaiter(this, void 0, void 0, function* () {
-                storageTargetModel[pk] = yield findByPk(pk);
+                const result = yield findByPk(pk);
+                em.setStorage(targetModel, pk, result);
                 done();
             }));
         }), {

@@ -31,11 +31,11 @@ export default class EntityField extends BaseField implements FieldInterface {
       return null
     }
     const pk = this.convertValueToPk(value)
-    let storageModel = this.em.getStorageModel(this.targetModel.getName())
     const model = this.targetModel
     const findByPk = model.getRepository().methodsCb.findByPk
     return this.em._createProxy(model, pk, async (done) => {
-      storageModel[pk] = await findByPk(pk)
+      const result = await findByPk(pk)
+      this.em.setStorage(model, pk, result)
       done()
     })
   }

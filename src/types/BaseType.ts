@@ -1,10 +1,6 @@
 import EntityManager from "../EntityManager";
 import BaseModel from "../model/BaseModel";
 
-interface Storage {
-  [key: number|string]: object
-}
-
 export default class BaseType {
   em: EntityManager
   findCb: (values: any) => object
@@ -25,9 +21,10 @@ export default class BaseType {
         console.warn(result, model, 'add convertResult method')
       return new Proxy({}, {})
   }
-  getResultProxy(model: BaseModel, storageModel: Storage, value: number | string) {
+  getResultProxy(model: BaseModel, value: number | string) {
     return this.em._createProxy(model, value, async (done) => {
-      storageModel[value] = await model.getRepository().methodsCb.findByPk(value)
+      const result = await model.getRepository().methodsCb.findByPk(value)
+      this.em.setStorage(model, value, result)
       done()
     })
   }

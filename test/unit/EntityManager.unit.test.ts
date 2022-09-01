@@ -147,15 +147,15 @@ class Story extends BaseModel {
       }
       return proxy
     }
-    test().then(async proxy => {
-      let name = await proxy.name
+    test().then(proxy => {
+      let name = proxy.name
       assert.equal(name, 'find')
 
       Object.keys(this.SUT.cache).forEach(key => {
         delete this.SUT.cache[key]
       })
 
-      name = await proxy.name
+      name = proxy.name
       assert.equal(name, 'find')
       done()
     }).catch(done)

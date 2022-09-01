@@ -18,8 +18,8 @@ export default class Collection extends BaseType{
       throw new Error('Invalid storageModel')
     }
     result.forEach((item) => {
-      storageModel[item[model.getPkName()]] = item
+      this.em.setStorage(model, item[model.getPkName()], item)
     })
-    return result.map(item => this.getResultProxy(model, storageModel, item[model.getPkName()]))
+    return result.map(item => this.getResultProxy(model, item[model.getPkName()]))
   }
 }
