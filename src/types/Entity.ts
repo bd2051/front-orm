@@ -15,7 +15,7 @@ export default class Entity extends BaseType {
     if (typeof storageModel === 'undefined') {
       throw new Error('Invalid storageModel')
     }
-    this.em.setStorage(model, pkValue, result)
+    this.em.setStorageValue(model, pkValue, result)
     return this.getResultProxy(model, pkValue)
   }
 }

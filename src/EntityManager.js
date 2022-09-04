@@ -71,7 +71,7 @@ export default class EntityManager {
         }
         return storageModel;
     }
-    setStorage(model, pk, value) {
+    setStorageValue(model, pk, value) {
         const storageModel = this.getStorageModel(model.getName());
         const property = Object.entries(value).reduce((acc, [key, subValue]) => {
             acc[key] = {
@@ -98,7 +98,7 @@ export default class EntityManager {
         const em = this;
         let proxyTarget = storageModel[pk];
         if (typeof proxyTarget === 'undefined') {
-            em.setStorage(model, pk, {});
+            em.setStorageValue(model, pk, {});
         }
         return new Proxy(storageModel[pk], {
             get(target, prop, receiver) {
@@ -136,7 +136,7 @@ export default class EntityManager {
             const findByPk = targetModel.getRepository().methodsCb.findByPk;
             return this._createProxy(targetModel, pk, (done) => __awaiter(this, void 0, void 0, function* () {
                 const result = yield findByPk(pk);
-                em.setStorage(targetModel, pk, result);
+                em.setStorageValue(targetModel, pk, result);
                 done();
             }));
         }), {

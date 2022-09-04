@@ -33,7 +33,7 @@ export default class EntityField extends BaseField {
         const findByPk = model.getRepository().methodsCb.findByPk;
         return this.em._createProxy(model, pk, (done) => __awaiter(this, void 0, void 0, function* () {
             const result = yield findByPk(pk);
-            this.em.setStorage(model, pk, result);
+            this.em.setStorageValue(model, pk, result);
             done();
         }));
     }

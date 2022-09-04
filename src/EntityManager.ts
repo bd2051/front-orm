@@ -46,15 +46,6 @@ interface Cache {
   [key: string]: object
 }
 
-interface WorkingField {
-  type: 'storage' | 'updated' | 'pending'
-  value: any
-}
-
-interface WorkingModel {
-  [key: string]: WorkingField
-}
-
 interface CommonClasses {
   [key: string]: typeof BaseModel | typeof Repository
 }
@@ -149,7 +140,7 @@ export default class EntityManager {
     }
     return storageModel
   }
-  setStorage(model: BaseModel, pk: number | string, value: StorageItem): void {
+  setStorageValue(model: BaseModel, pk: number | string, value: StorageItem): void {
     const storageModel = this.getStorageModel(model.getName())
     const property = Object.entries(value).reduce((acc: PropertyDescriptorMap, [key, subValue]) => {
       acc[key] = {
@@ -174,7 +165,7 @@ export default class EntityManager {
     const em = this
     let proxyTarget = storageModel[pk];
     if (typeof proxyTarget === 'undefined') {
-      em.setStorage(model, pk, {})
+      em.setStorageValue(model, pk, {})
     }
     return new Proxy(storageModel[pk], {
       get(target, prop: string, receiver) {
@@ -193,7 +184,7 @@ export default class EntityManager {
           return Reflect.get(target, prop, receiver)
         }
       },
-      set(target: WorkingModel, prop: string, value: any, receiver: any): boolean {
+      set(target, prop: string, value: any, receiver: any): boolean {
         if (prop in target) {
           throw new Error('Use update method')
         } else {
@@ -214,11 +205,11 @@ export default class EntityManager {
       const findByPk = targetModel.getRepository().methodsCb.findByPk
       return this._createProxy(targetModel, pk, async (done) => {
         const result = await findByPk(pk)
-        em.setStorage(targetModel, pk, result)
+        em.setStorageValue(targetModel, pk, result)
         done()
       })
     }), {
-      get(target: WorkingModel[], prop: string, receiver: any): any {
+      get(target, prop: string, receiver: any): any {
         if (['push', 'pop', 'shift', 'unshift'].includes(prop)) {
           throw new Error('Use update method')
         }

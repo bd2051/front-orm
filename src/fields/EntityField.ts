@@ -35,7 +35,7 @@ export default class EntityField extends BaseField implements FieldInterface {
     const findByPk = model.getRepository().methodsCb.findByPk
     return this.em._createProxy(model, pk, async (done) => {
       const result = await findByPk(pk)
-      this.em.setStorage(model, pk, result)
+      this.em.setStorageValue(model, pk, result)
       done()
     })
   }
