@@ -5,9 +5,6 @@ import Repository from "../Repository";
 interface Fields {
     [key: string]: any;
 }
-interface StorageModel {
-    [key: number | string]: any;
-}
 export default class BaseModel {
     [key: string]: BaseField | EntityManager | string | null | ((v: any, o1?: any, o2?: any) => any);
     pkName: string | null;
@@ -19,8 +16,8 @@ export default class BaseModel {
     getRepository(): Repository;
     validateFields(data: Fields): this;
     convertFields(data: any): Fields;
-    refresh(storageModel: StorageModel, pk: number | string, done: () => void): any;
-    cancelRefresh(storageModel: StorageModel, pk: number | string): any;
+    refresh(pk: number | string, done: () => void): any;
+    cancelRefresh(pk: number | string): any;
     getWorkingModel(pkValue?: number | string): Fields;
 }
 export {};

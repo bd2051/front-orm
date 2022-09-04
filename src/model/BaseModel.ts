@@ -7,10 +7,6 @@ interface Fields {
   [key: string]: any
 }
 
-interface StorageModel {
-  [key: number|string]: any
-}
-
 export default class BaseModel {
   [key: string]: BaseField | EntityManager | string | null | ((v: any, o1?: any, o2?: any) => any)
   pkName: string | null
@@ -67,11 +63,11 @@ export default class BaseModel {
       return acc
     }, {})
   }
-  refresh(storageModel: StorageModel, pk: number|string, done: () => void) {
-    return this.em.hooks.refresh(this, storageModel, pk, done)
+  refresh(pk: number|string, done: () => void) {
+    return this.em.hooks.refresh(this, pk, done)
   }
-  cancelRefresh(storageModel: StorageModel, pk: number|string) {
-    return this.em.hooks.cancelRefresh(this, storageModel, pk)
+  cancelRefresh(pk: number|string) {
+    return this.em.hooks.cancelRefresh(this, pk)
   }
   getWorkingModel(pkValue?: number|string) {
     const workingModel = Object.entries(this)

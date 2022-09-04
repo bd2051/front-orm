@@ -7,6 +7,6 @@ export default class Story extends BaseModel {
     create(values: object): void;
     update(values: object, oldItem: any): Promise<void>;
     delete(pk: string | number): Promise<void>;
-    refresh(storageModel: any, pk: string | number, done: () => void): void;
-    cancelRefresh(storageModel: any, pk: string | number): Promise<void>;
+    refresh(pk: string | number, done: () => void): void;
+    cancelRefresh(pk: string | number): Promise<void>;
 }

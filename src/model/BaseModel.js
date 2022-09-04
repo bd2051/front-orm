@@ -52,11 +52,11 @@ export default class BaseModel {
             return acc;
         }, {});
     }
-    refresh(storageModel, pk, done) {
-        return this.em.hooks.refresh(this, storageModel, pk, done);
+    refresh(pk, done) {
+        return this.em.hooks.refresh(this, pk, done);
     }
-    cancelRefresh(storageModel, pk) {
-        return this.em.hooks.cancelRefresh(this, storageModel, pk);
+    cancelRefresh(pk) {
+        return this.em.hooks.cancelRefresh(this, pk);
     }
     getWorkingModel(pkValue) {
         const workingModel = Object.entries(this)

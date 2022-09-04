@@ -1,7 +1,4 @@
 import { Repository, BaseModel, BaseType, BaseField, Entity, EntityField, CollectionField } from "./index";
-interface StorageModel {
-    [key: number | string]: any;
-}
 interface Models {
     [key: string]: BaseModel;
 }
@@ -39,14 +36,15 @@ interface Classes {
     types: TypesClass;
 }
 interface Hooks {
-    refresh: (model: BaseModel, storageModel: StorageModel, pk: number | string, done: () => void) => any;
-    cancelRefresh: (model: BaseModel, storageModel: StorageModel, pk: number | string) => any;
+    refresh: (model: BaseModel, pk: number | string, done: () => void) => any;
+    cancelRefresh: (model: BaseModel, pk: number | string) => any;
 }
 export default class EntityManager {
     models: Models;
     repositories: Repositories;
     storage: Storage;
     cache: Cache;
+    storageCache: WeakMap<any, any>;
     hooks: Hooks;
     pending: any;
     defaultClasses: Classes;

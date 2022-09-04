@@ -5,10 +5,6 @@ export default class Entity extends BaseType {
         if (typeof pkValue === 'undefined') {
             throw new Error('Invalid result. Missing primary key');
         }
-        const storageModel = this.em.storage[model.getName()];
-        if (typeof storageModel === 'undefined') {
-            throw new Error('Invalid storageModel');
-        }
         this.em.setStorageValue(model, pkValue, result);
         return this.getResultProxy(model, pkValue);
     }

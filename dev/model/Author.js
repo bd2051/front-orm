@@ -32,18 +32,17 @@ export default class Author extends BaseModel {
             });
         });
     }
-    refresh(storageModel, pk, done) {
+    refresh(pk, done) {
         intervalMap[pk] = setInterval(() => {
             fetch(`http://localhost:8000/api/authors/${pk}`).then(response => response.json())
                 .then((data) => {
-                storageModel[pk] = data;
+                this.em.setStorageValue(this, pk, data);
                 done();
             });
         }, 1000);
     }
-    cancelRefresh(storageModel, pk) {
+    cancelRefresh(pk) {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log(storageModel);
             clearInterval(intervalMap[pk]);
         });
     }

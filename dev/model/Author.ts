@@ -35,19 +35,18 @@ export default class Author extends BaseModel {
       return data
     })
   }
-  refresh(storageModel: any, pk: string|number, done: () => void) {
+  refresh(pk: string|number, done: () => void) {
     intervalMap[pk] = setInterval(() => {
         fetch(
         `http://localhost:8000/api/authors/${pk}`
       ).then(response => response.json())
       .then((data) => {
-        storageModel[pk] = data
+        this.em.setStorageValue(this, pk, data)
         done()
       })
     }, 1000)
   }
-  async cancelRefresh(storageModel: any, pk: string|number) {
-    console.log(storageModel)
+  async cancelRefresh(pk: string|number) {
     clearInterval(intervalMap[pk])
   }
 }

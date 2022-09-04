@@ -13,10 +13,6 @@ import {
   CollectionField
 } from "./index";
 
-interface StorageModel {
-  [key: number|string]: any
-}
-
 interface Models {
   [key: string]: BaseModel
 }
@@ -65,8 +61,8 @@ interface Classes {
 }
 
 interface Hooks {
-  refresh: (model: BaseModel, storageModel: StorageModel, pk: number|string, done: () => void) => any
-  cancelRefresh: (model: BaseModel, storageModel: StorageModel, pk: number|string) => any
+  refresh: (model: BaseModel, pk: number|string, done: () => void) => any
+  cancelRefresh: (model: BaseModel, pk: number|string) => any
 }
 
 export default class EntityManager {
@@ -74,6 +70,7 @@ export default class EntityManager {
   repositories: Repositories
   storage: Storage
   cache: Cache
+  storageCache: WeakMap<any, any>
   hooks: Hooks
   pending: any
   defaultClasses: Classes
@@ -82,6 +79,7 @@ export default class EntityManager {
     this.models = {}
     this.repositories = {}
     this.storage = {}
+    this.storageCache = new WeakMap()
     this.cache = {}
     this.pending = null
     this.hooks = {
@@ -142,6 +140,13 @@ export default class EntityManager {
   }
   setStorageValue(model: BaseModel, pk: number | string, value: StorageItem): void {
     const storageModel = this.getStorageModel(model.getName())
+    let storageCacheKey = storageModel[pk]
+    if (typeof storageCacheKey === 'undefined') {
+      storageModel[pk] = {
+        pk
+      }
+      storageCacheKey = storageModel[pk]
+    }
     const property = Object.entries(value).reduce((acc: PropertyDescriptorMap, [key, subValue]) => {
       acc[key] = {
         enumerable: true,
@@ -151,7 +156,8 @@ export default class EntityManager {
       }
       return acc
     }, {})
-    storageModel[pk] = Object.create(model, property)
+    this.storageCache.set(storageCacheKey, Object.create(model, property))
+    console.log(this.storageCache)
   }
   async flush() {
   }
@@ -160,22 +166,24 @@ export default class EntityManager {
     const done = () => {
     }
     if (hasRefresh) {
-      model.refresh(storageModel, pk, done)
+      model.refresh(pk, done)
     }
     const em = this
     let proxyTarget = storageModel[pk];
     if (typeof proxyTarget === 'undefined') {
       em.setStorageValue(model, pk, {})
     }
-    return new Proxy(storageModel[pk], {
+    return new Proxy(this.storageCache.get(storageModel[pk]), {
       get(target, prop: string, receiver) {
         if (prop === 'cancelRefresh') {
-          return () => model.cancelRefresh(storageModel, pk)
+          return () => model.cancelRefresh(pk)
         }
         if (prop in target) {
-          const storage = storageModel[pk]
-          if (typeof storage !== 'undefined' && !BaseField.prototype.isPrototypeOf(storage[prop])) {
-            const convertedStorage = model.validateFields(storage).convertFields(storage)
+          const storageCacheKey = storageModel[pk]
+          const storageCacheValue = em.storageCache.get(storageCacheKey)
+          console.log(storageCacheKey, storageCacheValue)
+          if (typeof storageCacheKey !== 'undefined' && !BaseField.prototype.isPrototypeOf(storageCacheValue[prop])) {
+            const convertedStorage = model.validateFields(storageCacheValue).convertFields(storageCacheValue)
             return Reflect.get(convertedStorage, prop, receiver)
           }
           cb(done)
