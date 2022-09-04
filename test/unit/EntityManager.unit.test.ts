@@ -35,20 +35,20 @@ class Story extends BaseModel {
 
   @test 'Set hooks' () {
     this.SUT.setHooks({
-      refresh(baseModel, value, pk) {return baseModel.getName() + value['result'] + pk},
-      cancelRefresh(baseModel, value, pk) {return baseModel.getName() + value['result'] + pk}
+      refresh(baseModel, pk) {return baseModel.getName() + pk},
+      cancelRefresh(baseModel, pk) {return baseModel.getName() + pk}
     })
     const baseModel = new BaseModel(this.SUT)
-    const refreshResult = this.SUT.hooks.refresh(baseModel, {result: 'testCreate'}, ' testPk', () => {})
-    const cancelRefreshResult = this.SUT.hooks.cancelRefresh(baseModel, {result: 'testCreate'}, ' testPk')
-    expect(refreshResult).to.be.equal('BaseModeltestCreate testPk')
-    expect(cancelRefreshResult).to.be.equal('BaseModeltestCreate testPk')
+    const refreshResult = this.SUT.hooks.refresh(baseModel, ' testPk', () => {})
+    const cancelRefreshResult = this.SUT.hooks.cancelRefresh(baseModel,  ' testPk')
+    expect(refreshResult).to.be.equal('BaseModel testPk')
+    expect(cancelRefreshResult).to.be.equal('BaseModel testPk')
   }
 
   @test 'hooks Error' () {
     const baseModel = new BaseModel(this.SUT)
-    assert.throw(() => this.SUT.hooks.refresh(baseModel, {}, 'err', () => {}))
-    assert.throw(() => this.SUT.hooks.cancelRefresh(baseModel, {}, 'err'))
+    assert.throw(() => this.SUT.hooks.refresh(baseModel, 'err', () => {}))
+    assert.throw(() => this.SUT.hooks.cancelRefresh(baseModel, 'err'))
   }
 
   @test 'Set model' () {
@@ -94,7 +94,8 @@ class Story extends BaseModel {
         this.SUT.getModel('Story'),
         pk,
         async (done) => {
-          this.SUT.getStorageModel('Story')[pk] = await this.SUT.getRepository('Story').methodsCb.findByPk(pk)
+          const data = await this.SUT.getRepository('Story').methodsCb.findByPk(pk)
+          this.SUT.setStorageValue(this.SUT.getModel('Story'), pk, data)
           done()
         }
       )
@@ -107,8 +108,11 @@ class Story extends BaseModel {
     setTimeout(() => {
       let name = proxy.name
       assert.equal(name, 'story')
-      assert.exists(this.SUT.getStorageModel('Story')[1])
-      assert.equal(this.SUT.getStorageModel('Story')[1]!['name'], 'story')
+      const cacheKey = this.SUT.getStorageModel('Story')[1]
+      assert.exists(cacheKey)
+      const cacheValue = this.SUT.storageCache.get(cacheKey)
+      assert.exists(cacheValue)
+      assert.equal(cacheValue['name'], 'story')
 
       done()
     }, 200)

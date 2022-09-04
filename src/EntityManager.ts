@@ -157,7 +157,6 @@ export default class EntityManager {
       return acc
     }, {})
     this.storageCache.set(storageCacheKey, Object.create(model, property))
-    console.log(this.storageCache)
   }
   async flush() {
   }
