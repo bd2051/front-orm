@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Repository, BaseModel, BaseField, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField } from "./index";
+import { applyChange, diff } from "deep-diff";
 export default class EntityManager {
     constructor() {
         this.models = {};
@@ -15,6 +16,7 @@ export default class EntityManager {
         this.storage = {};
         this.storageCache = new WeakMap();
         this.cache = {};
+        this.commits = [];
         this.pending = null;
         this.hooks = {
             refresh: () => {
@@ -91,6 +93,40 @@ export default class EntityManager {
             return acc;
         }, {});
         this.storageCache.set(storageCacheKey, Object.create(model, property));
+    }
+    put(value, target) {
+        let cacheKey = {};
+        let cacheValue = {};
+        if (typeof target !== 'undefined') {
+            const pk = target[target.getPkName()];
+            if (!(typeof pk === 'number' || typeof pk === 'string')) {
+                throw new Error('Logic error');
+            }
+            const storageModel = this.getStorageModel(target.getName());
+            cacheKey = storageModel[pk];
+            if (typeof cacheKey === 'undefined') {
+                cacheKey = {
+                    pk
+                };
+            }
+            cacheValue = Object.assign({}, target);
+        }
+        const diffs = diff(cacheValue, Object.assign(Object.assign({}, cacheValue), value));
+        if (typeof diffs === 'undefined') {
+            return;
+        }
+        this.commits.push({
+            cacheKey,
+            diffs
+        });
+        let changingTarget = target;
+        if (typeof changingTarget === 'undefined') {
+            this.storageCache.set(cacheKey, {});
+            changingTarget = this.storageCache.get(cacheKey);
+        }
+        diffs.forEach(function (change) {
+            applyChange(changingTarget, true, change);
+        });
     }
     flush() {
         return __awaiter(this, void 0, void 0, function* () {

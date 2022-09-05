@@ -12,6 +12,7 @@ import {
   StringField,
   CollectionField
 } from "./index";
+import {applyChange, diff, Diff} from "deep-diff";
 
 interface Models {
   [key: string]: BaseModel
@@ -65,11 +66,27 @@ interface Hooks {
   cancelRefresh: (model: BaseModel, pk: number|string) => any
 }
 
+interface PutValue {
+  [key: string]: any
+}
+
+interface PutTarget {
+  [key: string]: string | number | (() => string)
+  getPkName: () => string
+  getName: () => string
+}
+
+interface Commit {
+  cacheKey: object,
+  diffs: Array<Diff<any, any>>
+}
+
 export default class EntityManager {
   models: Models
   repositories: Repositories
   storage: Storage
   cache: Cache
+  commits: Array<Commit>
   storageCache: WeakMap<any, any>
   hooks: Hooks
   pending: any
@@ -81,6 +98,7 @@ export default class EntityManager {
     this.storage = {}
     this.storageCache = new WeakMap()
     this.cache = {}
+    this.commits = []
     this.pending = null
     this.hooks = {
       refresh: () => {
@@ -157,6 +175,47 @@ export default class EntityManager {
       return acc
     }, {})
     this.storageCache.set(storageCacheKey, Object.create(model, property))
+  }
+  put(value: PutValue, target?: PutTarget) {
+    let cacheKey = {}
+    let cacheValue = {}
+    if (typeof target !== 'undefined') {
+      const pk = target[target.getPkName()]
+      if (!(typeof pk === 'number' || typeof pk === 'string')) {
+        throw new Error('Logic error')
+      }
+      const storageModel = this.getStorageModel(target.getName())
+      cacheKey = storageModel[pk]
+      if (typeof cacheKey === 'undefined') {
+        cacheKey = {
+          pk
+        }
+      }
+      cacheValue = {...target}
+    }
+
+    const diffs = diff(cacheValue, {
+      ...cacheValue,
+      ...value
+    })
+
+    if (typeof diffs === 'undefined') {
+      return
+    }
+
+    this.commits.push({
+      cacheKey,
+      diffs
+    })
+
+    let changingTarget = target
+    if (typeof changingTarget === 'undefined') {
+      this.storageCache.set(cacheKey, {})
+      changingTarget = this.storageCache.get(cacheKey)
+    }
+    diffs.forEach(function (change: Diff<any, any>) {
+      applyChange(changingTarget, true, change);
+    });
   }
   async flush() {
   }

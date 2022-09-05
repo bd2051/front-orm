@@ -1,4 +1,5 @@
 import { Repository, BaseModel, BaseType, BaseField, Entity, EntityField, CollectionField } from "./index";
+import { Diff } from "deep-diff";
 interface Models {
     [key: string]: BaseModel;
 }
@@ -39,11 +40,24 @@ interface Hooks {
     refresh: (model: BaseModel, pk: number | string, done: () => void) => any;
     cancelRefresh: (model: BaseModel, pk: number | string) => any;
 }
+interface PutValue {
+    [key: string]: any;
+}
+interface PutTarget {
+    [key: string]: string | number | (() => string);
+    getPkName: () => string;
+    getName: () => string;
+}
+interface Commit {
+    cacheKey: object;
+    diffs: Array<Diff<any, any>>;
+}
 export default class EntityManager {
     models: Models;
     repositories: Repositories;
     storage: Storage;
     cache: Cache;
+    commits: Array<Commit>;
     storageCache: WeakMap<any, any>;
     hooks: Hooks;
     pending: any;
@@ -55,6 +69,7 @@ export default class EntityManager {
     getRepository(modelName: string): Repository;
     getStorageModel(modelName: string): FirstLevelStorage;
     setStorageValue(model: BaseModel, pk: number | string, value: StorageItem): void;
+    put(value: PutValue, target?: PutTarget): void;
     flush(): Promise<void>;
     _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void, hasRefresh?: Boolean): any;
     _createArrayProxy(arrayTarget: Array<number | string>, targetModel: BaseModel, convertValueToPk: (value: any) => number | string): any;
