@@ -16,8 +16,6 @@ export default class BaseModel {
     getRepository(): Repository;
     validateFields(data: Fields): this;
     convertFields(data: any): Fields;
-    refresh(pk: number | string, done: () => void): any;
-    cancelRefresh(pk: number | string): any;
     getWorkingModel(pkValue?: number | string): Fields;
 }
 export {};

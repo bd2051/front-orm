@@ -18,14 +18,7 @@ export default class EntityManager {
         this.cache = {};
         this.commits = [];
         this.pending = null;
-        this.hooks = {
-            refresh: () => {
-                throw new Error('Set refresh hook');
-            },
-            cancelRefresh: () => {
-                throw new Error('Set cancelRefresh hook');
-            },
-        };
+        this.hooks = {};
         this.defaultClasses = {
             common: {
                 BaseModel,
@@ -138,13 +131,10 @@ export default class EntityManager {
             console.log(this.commits);
         });
     }
-    _createProxyByCacheKey(cacheKey, model, cancelRefresh = () => { }, cb = (done) => { done(); }, done = () => { }) {
+    _createProxyByCacheKey(cacheKey, model, cb = (done) => { done(); }, done = () => { }) {
         const em = this;
         return new Proxy(this.storageCache.get(cacheKey), {
             get(target, prop, receiver) {
-                if (prop === 'cancelRefresh') {
-                    return cancelRefresh;
-                }
                 if (prop in Object.assign({}, target)) {
                     const storageCacheKey = cacheKey;
                     const storageCacheValue = em.storageCache.get(storageCacheKey);
@@ -170,18 +160,15 @@ export default class EntityManager {
             }
         });
     }
-    _createProxy(model, pk, cb, hasRefresh = true) {
+    _createProxy(model, pk, cb) {
         const storageModel = this.getStorageModel(model.getName());
         const done = () => {
         };
-        if (hasRefresh) {
-            model.refresh(pk, done);
-        }
         let proxyTarget = storageModel[pk];
         if (typeof proxyTarget === 'undefined') {
             this.setStorageValue(model, pk, {});
         }
-        return this._createProxyByCacheKey(storageModel[pk], model, () => model.cancelRefresh(pk), cb, done);
+        return this._createProxyByCacheKey(storageModel[pk], model, cb, done);
     }
     _createArrayProxy(arrayTarget, targetModel, convertValueToPk) {
         const em = this;

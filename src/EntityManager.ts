@@ -62,8 +62,6 @@ interface Classes {
 }
 
 interface Hooks {
-  refresh: (model: BaseModel, pk: number|string, done: () => void) => any
-  cancelRefresh: (model: BaseModel, pk: number|string) => any
 }
 
 interface PutValue {
@@ -101,14 +99,7 @@ export default class EntityManager {
     this.cache = {}
     this.commits = []
     this.pending = null
-    this.hooks = {
-      refresh: () => {
-        throw new Error('Set refresh hook')
-      },
-      cancelRefresh: () => {
-        throw new Error('Set cancelRefresh hook')
-      },
-    }
+    this.hooks = {}
     this.defaultClasses = {
       common: {
         BaseModel,
@@ -234,16 +225,12 @@ export default class EntityManager {
   _createProxyByCacheKey(
     cacheKey: object,
     model: PutTarget | BaseModel,
-    cancelRefresh = () => {},
     cb = (done: () => void) => {done()},
     done = () => {}
   ) {
     const em = this
     return new Proxy(this.storageCache.get(cacheKey), {
       get(target, prop: string, receiver) {
-        if (prop === 'cancelRefresh') {
-          return cancelRefresh
-        }
         if (prop in {...target}) {
           const storageCacheKey = cacheKey
           const storageCacheValue = em.storageCache.get(storageCacheKey)
@@ -267,12 +254,9 @@ export default class EntityManager {
       }
     })
   }
-  _createProxy(model: BaseModel, pk: string|number, cb: (done: () => void) => void, hasRefresh: Boolean = true): any {
+  _createProxy(model: BaseModel, pk: string|number, cb: (done: () => void) => void): any {
     const storageModel = this.getStorageModel(model.getName())
     const done = () => {
-    }
-    if (hasRefresh) {
-      model.refresh(pk, done)
     }
     let proxyTarget = storageModel[pk];
     if (typeof proxyTarget === 'undefined') {
@@ -281,7 +265,6 @@ export default class EntityManager {
     return this._createProxyByCacheKey(
       storageModel[pk],
       model,
-      () => model.cancelRefresh(pk),
       cb,
       done
     )

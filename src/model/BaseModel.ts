@@ -66,12 +66,6 @@ export default class BaseModel {
       return acc
     }, {})
   }
-  refresh(pk: number|string, done: () => void) {
-    return this.em.hooks.refresh(this, pk, done)
-  }
-  cancelRefresh(pk: number|string) {
-    return this.em.hooks.cancelRefresh(this, pk)
-  }
   getWorkingModel(pkValue?: number|string) {
     const workingModel = Object.entries(this)
       .filter(([, value]) => value instanceof BaseField)

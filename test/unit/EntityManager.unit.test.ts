@@ -33,24 +33,6 @@ class Story extends BaseModel {
     this.SUT.hooks.should.to.not.be.undefined
   }
 
-  @test 'Set hooks' () {
-    this.SUT.setHooks({
-      refresh(baseModel, pk) {return baseModel.getName() + pk},
-      cancelRefresh(baseModel, pk) {return baseModel.getName() + pk}
-    })
-    const baseModel = new BaseModel(this.SUT)
-    const refreshResult = this.SUT.hooks.refresh(baseModel, ' testPk', () => {})
-    const cancelRefreshResult = this.SUT.hooks.cancelRefresh(baseModel,  ' testPk')
-    expect(refreshResult).to.be.equal('BaseModel testPk')
-    expect(cancelRefreshResult).to.be.equal('BaseModel testPk')
-  }
-
-  @test 'hooks Error' () {
-    const baseModel = new BaseModel(this.SUT)
-    assert.throw(() => this.SUT.hooks.refresh(baseModel, 'err', () => {}))
-    assert.throw(() => this.SUT.hooks.cancelRefresh(baseModel, 'err'))
-  }
-
   @test 'Set model' () {
     this.SUT.setModel(this.model, {
       findByPk: new Entity(this.SUT, (values) => {

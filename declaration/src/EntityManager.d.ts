@@ -37,8 +37,6 @@ interface Classes {
     types: TypesClass;
 }
 interface Hooks {
-    refresh: (model: BaseModel, pk: number | string, done: () => void) => any;
-    cancelRefresh: (model: BaseModel, pk: number | string) => any;
 }
 interface PutValue {
     [key: string]: any;
@@ -72,8 +70,8 @@ export default class EntityManager {
     setStorageValue(model: BaseModel, pk: number | string, value: StorageItem): void;
     put(value: PutValue, target: PutTarget | BaseModel): any;
     flush(): Promise<void>;
-    _createProxyByCacheKey(cacheKey: object, model: PutTarget | BaseModel, cancelRefresh?: () => void, cb?: (done: () => void) => void, done?: () => void): any;
-    _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void, hasRefresh?: Boolean): any;
+    _createProxyByCacheKey(cacheKey: object, model: PutTarget | BaseModel, cb?: (done: () => void) => void, done?: () => void): any;
+    _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void): any;
     _createArrayProxy(arrayTarget: Array<number | string>, targetModel: BaseModel, convertValueToPk: (value: any) => number | string): any;
 }
 export {};

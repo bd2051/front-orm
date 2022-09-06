@@ -55,12 +55,6 @@ export default class BaseModel {
             return acc;
         }, {});
     }
-    refresh(pk, done) {
-        return this.em.hooks.refresh(this, pk, done);
-    }
-    cancelRefresh(pk) {
-        return this.em.hooks.cancelRefresh(this, pk);
-    }
     getWorkingModel(pkValue) {
         const workingModel = Object.entries(this)
             .filter(([, value]) => value instanceof BaseField)
