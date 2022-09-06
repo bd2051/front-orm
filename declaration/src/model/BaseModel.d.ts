@@ -6,9 +6,10 @@ interface Fields {
     [key: string]: any;
 }
 export default class BaseModel {
-    [key: string]: BaseField | EntityManager | string | null | ((v: any, o1?: any, o2?: any) => any);
+    [key: string]: BaseField | EntityManager | Fields | string | null | ((v: any, o1?: any, o2?: any) => any);
     pkName: string | null;
     em: EntityManager;
+    _fields: Fields | null;
     constructor(em: EntityManager);
     getPkName(): string;
     getPkField(): PrimaryKey;
@@ -16,6 +17,6 @@ export default class BaseModel {
     getRepository(): Repository;
     validateFields(data: Fields): this;
     convertFields(data: any): Fields;
-    getWorkingModel(pkValue?: number | string): Fields;
+    get fields(): Fields;
 }
 export {};

@@ -4,6 +4,7 @@ export default class BaseModel {
     constructor(em) {
         this.pkName = null;
         this.em = em;
+        this._fields = null;
     }
     getPkName() {
         if (this.pkName === null) {
@@ -55,22 +56,15 @@ export default class BaseModel {
             return acc;
         }, {});
     }
-    getWorkingModel(pkValue) {
-        const workingModel = Object.entries(this)
-            .filter(([, value]) => value instanceof BaseField)
-            .reduce((acc, [key,]) => {
-            acc[key] = {
-                type: 'storage',
-                value: this.em.pending
-            };
-            return acc;
-        }, {});
-        if (typeof pkValue !== 'undefined') {
-            workingModel[this.getPkName()] = {
-                type: 'storage',
-                value: pkValue
-            };
+    get fields() {
+        if (this._fields === null) {
+            this._fields = Object.entries(this)
+                .filter(([, value]) => value instanceof BaseField)
+                .reduce((acc, [key]) => {
+                acc[key] = true;
+                return acc;
+            }, {});
         }
-        return workingModel;
+        return this._fields;
     }
 }

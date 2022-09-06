@@ -135,7 +135,7 @@ export default class EntityManager {
         const em = this;
         return new Proxy(this.storageCache.get(cacheKey), {
             get(target, prop, receiver) {
-                if (prop in Object.assign({}, target)) {
+                if (model.fields[prop]) {
                     const storageCacheKey = cacheKey;
                     const storageCacheValue = em.storageCache.get(storageCacheKey);
                     if (typeof storageCacheKey !== 'undefined' && !BaseField.prototype.isPrototypeOf(storageCacheValue[prop])) {

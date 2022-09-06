@@ -8,13 +8,15 @@ interface Fields {
 }
 
 export default class BaseModel {
-  [key: string]: BaseField | EntityManager | string | null | ((v: any, o1?: any, o2?: any) => any)
+  [key: string]: BaseField | EntityManager | Fields | string | null | ((v: any, o1?: any, o2?: any) => any)
   pkName: string | null
   em: EntityManager
+  _fields: Fields | null
 
   constructor(em: EntityManager) {
     this.pkName = null
     this.em = em
+    this._fields = null
   }
   getPkName(): string {
     if (this.pkName === null) {
@@ -66,22 +68,15 @@ export default class BaseModel {
       return acc
     }, {})
   }
-  getWorkingModel(pkValue?: number|string) {
-    const workingModel = Object.entries(this)
-      .filter(([, value]) => value instanceof BaseField)
-      .reduce((acc: Fields, [key,]) => {
-        acc[key] = {
-          type: 'storage',
-          value: this.em.pending
-        }
-        return acc
-    }, {})
-    if (typeof pkValue !== 'undefined') {
-      workingModel[this.getPkName()] = {
-        type: 'storage',
-        value: pkValue
-      }
+  get fields(): Fields {
+    if (this._fields === null) {
+      this._fields = Object.entries(this)
+        .filter(([, value]) => value instanceof BaseField)
+        .reduce((acc: Fields, [key]) => {
+          acc[key] = true
+          return acc
+        }, {})
     }
-    return workingModel
+    return this._fields
   }
 }

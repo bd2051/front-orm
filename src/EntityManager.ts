@@ -68,11 +68,16 @@ interface PutValue {
   [key: string]: any
 }
 
+interface Fields {
+  [key: string]: any
+}
+
 interface PutTarget {
-  [key: string]: string | number | BaseField | ((v?: any) => any)
+  [key: string]: string | number | BaseField | Fields | ((v?: any) => any)
   getPkName: () => string
   getName: () => string
   validateFields: (v: any) => BaseModel
+  fields: Fields
 }
 
 interface Commit {
@@ -231,7 +236,7 @@ export default class EntityManager {
     const em = this
     return new Proxy(this.storageCache.get(cacheKey), {
       get(target, prop: string, receiver) {
-        if (prop in {...target}) {
+        if (model.fields[prop]) {
           const storageCacheKey = cacheKey
           const storageCacheValue = em.storageCache.get(storageCacheKey)
           if (typeof storageCacheKey !== 'undefined' && !BaseField.prototype.isPrototypeOf(storageCacheValue[prop])) {
