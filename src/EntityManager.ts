@@ -71,7 +71,7 @@ interface PutValue {
 }
 
 interface PutTarget {
-  [key: string]: string | number | (() => string)
+  [key: string]: string | number | BaseField | (() => string)
   getPkName: () => string
   getName: () => string
 }
@@ -176,11 +176,12 @@ export default class EntityManager {
     }, {})
     this.storageCache.set(storageCacheKey, Object.create(model, property))
   }
-  put(value: PutValue, target?: PutTarget) {
+  put(value: PutValue, target: PutTarget | BaseModel) {
     let cacheKey = {}
     let cacheValue = {}
-    if (typeof target !== 'undefined') {
-      const pk = target[target.getPkName()]
+    let model = target
+    const pk = target[target.getPkName()]
+    if (!(pk instanceof BaseField)) {
       if (!(typeof pk === 'number' || typeof pk === 'string')) {
         throw new Error('Logic error')
       }
@@ -192,6 +193,7 @@ export default class EntityManager {
         }
       }
       cacheValue = {...target}
+      model = Object.getPrototypeOf(target)
     }
 
     const diffs = diff(cacheValue, {
@@ -209,35 +211,42 @@ export default class EntityManager {
     })
 
     let changingTarget = target
-    if (typeof changingTarget === 'undefined') {
+    if (changingTarget instanceof BaseModel) {
       this.storageCache.set(cacheKey, {})
       changingTarget = this.storageCache.get(cacheKey)
     }
     diffs.forEach(function (change: Diff<any, any>) {
       applyChange(changingTarget, true, change);
     });
+
+    if (!(model instanceof BaseModel)) {
+      throw new Error('Logic error')
+    }
+    console.log(changingTarget, cacheKey, this.storageCache.get(cacheKey))
+
+    return this._createProxyByCacheKey(
+      cacheKey,
+      model
+    )
   }
   async flush() {
+    console.log(this.commits)
   }
-  _createProxy(model: BaseModel, pk: string|number, cb: (done: () => void) => void, hasRefresh: Boolean = true): any {
-    const storageModel = this.getStorageModel(model.getName())
-    const done = () => {
-    }
-    if (hasRefresh) {
-      model.refresh(pk, done)
-    }
+  _createProxyByCacheKey(
+    cacheKey: object,
+    model: BaseModel,
+    cancelRefresh = () => {},
+    cb = (done: () => void) => {done()},
+    done = () => {}
+  ) {
     const em = this
-    let proxyTarget = storageModel[pk];
-    if (typeof proxyTarget === 'undefined') {
-      em.setStorageValue(model, pk, {})
-    }
-    return new Proxy(this.storageCache.get(storageModel[pk]), {
+    return new Proxy(this.storageCache.get(cacheKey), {
       get(target, prop: string, receiver) {
         if (prop === 'cancelRefresh') {
-          return () => model.cancelRefresh(pk)
+          return cancelRefresh
         }
         if (prop in target) {
-          const storageCacheKey = storageModel[pk]
+          const storageCacheKey = cacheKey
           const storageCacheValue = em.storageCache.get(storageCacheKey)
           console.log(storageCacheKey, storageCacheValue)
           if (typeof storageCacheKey !== 'undefined' && !BaseField.prototype.isPrototypeOf(storageCacheValue[prop])) {
@@ -259,6 +268,25 @@ export default class EntityManager {
         return true
       }
     })
+  }
+  _createProxy(model: BaseModel, pk: string|number, cb: (done: () => void) => void, hasRefresh: Boolean = true): any {
+    const storageModel = this.getStorageModel(model.getName())
+    const done = () => {
+    }
+    if (hasRefresh) {
+      model.refresh(pk, done)
+    }
+    let proxyTarget = storageModel[pk];
+    if (typeof proxyTarget === 'undefined') {
+      this.setStorageValue(model, pk, {})
+    }
+    return this._createProxyByCacheKey(
+      storageModel[pk],
+      model,
+      () => model.cancelRefresh(pk),
+      cb,
+      done
+    )
   }
   _createArrayProxy(
     arrayTarget: Array<number|string>,

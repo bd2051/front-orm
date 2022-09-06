@@ -97,8 +97,9 @@ export default class EntityManager {
     put(value, target) {
         let cacheKey = {};
         let cacheValue = {};
-        if (typeof target !== 'undefined') {
-            const pk = target[target.getPkName()];
+        let model = target;
+        const pk = target[target.getPkName()];
+        if (!(pk instanceof BaseField)) {
             if (!(typeof pk === 'number' || typeof pk === 'string')) {
                 throw new Error('Logic error');
             }
@@ -110,6 +111,7 @@ export default class EntityManager {
                 };
             }
             cacheValue = Object.assign({}, target);
+            model = Object.getPrototypeOf(target);
         }
         const diffs = diff(cacheValue, Object.assign(Object.assign({}, cacheValue), value));
         if (typeof diffs === 'undefined') {
@@ -120,37 +122,33 @@ export default class EntityManager {
             diffs
         });
         let changingTarget = target;
-        if (typeof changingTarget === 'undefined') {
+        if (changingTarget instanceof BaseModel) {
             this.storageCache.set(cacheKey, {});
             changingTarget = this.storageCache.get(cacheKey);
         }
         diffs.forEach(function (change) {
             applyChange(changingTarget, true, change);
         });
+        if (!(model instanceof BaseModel)) {
+            throw new Error('Logic error');
+        }
+        console.log(changingTarget, cacheKey, this.storageCache.get(cacheKey));
+        return this._createProxyByCacheKey(cacheKey, model);
     }
     flush() {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log(this.commits);
         });
     }
-    _createProxy(model, pk, cb, hasRefresh = true) {
-        const storageModel = this.getStorageModel(model.getName());
-        const done = () => {
-        };
-        if (hasRefresh) {
-            model.refresh(pk, done);
-        }
+    _createProxyByCacheKey(cacheKey, model, cancelRefresh = () => { }, cb = (done) => { done(); }, done = () => { }) {
         const em = this;
-        let proxyTarget = storageModel[pk];
-        if (typeof proxyTarget === 'undefined') {
-            em.setStorageValue(model, pk, {});
-        }
-        return new Proxy(this.storageCache.get(storageModel[pk]), {
+        return new Proxy(this.storageCache.get(cacheKey), {
             get(target, prop, receiver) {
                 if (prop === 'cancelRefresh') {
-                    return () => model.cancelRefresh(pk);
+                    return cancelRefresh;
                 }
                 if (prop in target) {
-                    const storageCacheKey = storageModel[pk];
+                    const storageCacheKey = cacheKey;
                     const storageCacheValue = em.storageCache.get(storageCacheKey);
                     console.log(storageCacheKey, storageCacheValue);
                     if (typeof storageCacheKey !== 'undefined' && !BaseField.prototype.isPrototypeOf(storageCacheValue[prop])) {
@@ -174,6 +172,19 @@ export default class EntityManager {
                 return true;
             }
         });
+    }
+    _createProxy(model, pk, cb, hasRefresh = true) {
+        const storageModel = this.getStorageModel(model.getName());
+        const done = () => {
+        };
+        if (hasRefresh) {
+            model.refresh(pk, done);
+        }
+        let proxyTarget = storageModel[pk];
+        if (typeof proxyTarget === 'undefined') {
+            this.setStorageValue(model, pk, {});
+        }
+        return this._createProxyByCacheKey(storageModel[pk], model, () => model.cancelRefresh(pk), cb, done);
     }
     _createArrayProxy(arrayTarget, targetModel, convertValueToPk) {
         const em = this;
