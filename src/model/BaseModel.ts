@@ -36,6 +36,9 @@ export default class BaseModel {
     return pkFields!
   }
   getName() {
+    if (this.constructor.name === 'Object') {
+      return Object.getPrototypeOf(this).getName()
+    }
     return this.constructor.name
   }
   getRepository(): Repository {

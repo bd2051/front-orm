@@ -44,9 +44,10 @@ interface PutValue {
     [key: string]: any;
 }
 interface PutTarget {
-    [key: string]: string | number | BaseField | (() => string);
+    [key: string]: string | number | BaseField | ((v?: any) => any);
     getPkName: () => string;
     getName: () => string;
+    validateFields: (v: any) => BaseModel;
 }
 interface Commit {
     cacheKey: object;
@@ -71,7 +72,7 @@ export default class EntityManager {
     setStorageValue(model: BaseModel, pk: number | string, value: StorageItem): void;
     put(value: PutValue, target: PutTarget | BaseModel): any;
     flush(): Promise<void>;
-    _createProxyByCacheKey(cacheKey: object, model: BaseModel, cancelRefresh?: () => void, cb?: (done: () => void) => void, done?: () => void): any;
+    _createProxyByCacheKey(cacheKey: object, model: PutTarget | BaseModel, cancelRefresh?: () => void, cb?: (done: () => void) => void, done?: () => void): any;
     _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void, hasRefresh?: Boolean): any;
     _createArrayProxy(arrayTarget: Array<number | string>, targetModel: BaseModel, convertValueToPk: (value: any) => number | string): any;
 }

@@ -71,9 +71,10 @@ interface PutValue {
 }
 
 interface PutTarget {
-  [key: string]: string | number | BaseField | (() => string)
+  [key: string]: string | number | BaseField | ((v?: any) => any)
   getPkName: () => string
   getName: () => string
+  validateFields: (v: any) => BaseModel
 }
 
 interface Commit {
@@ -179,7 +180,6 @@ export default class EntityManager {
   put(value: PutValue, target: PutTarget | BaseModel) {
     let cacheKey = {}
     let cacheValue = {}
-    let model = target
     const pk = target[target.getPkName()]
     if (!(pk instanceof BaseField)) {
       if (!(typeof pk === 'number' || typeof pk === 'string')) {
@@ -193,7 +193,6 @@ export default class EntityManager {
         }
       }
       cacheValue = {...target}
-      model = Object.getPrototypeOf(target)
     }
 
     const diffs = diff(cacheValue, {
@@ -210,23 +209,23 @@ export default class EntityManager {
       diffs
     })
 
-    let changingTarget = target
-    if (changingTarget instanceof BaseModel) {
+    let changingTarget = this.storageCache.get(cacheKey)
+    if (typeof changingTarget === 'undefined') {
       this.storageCache.set(cacheKey, {})
       changingTarget = this.storageCache.get(cacheKey)
     }
     diffs.forEach(function (change: Diff<any, any>) {
+      console.log(changingTarget.age, change)
       applyChange(changingTarget, true, change);
+      console.log(changingTarget.age, change)
     });
+    this.storageCache.set(cacheKey, changingTarget)
 
-    if (!(model instanceof BaseModel)) {
-      throw new Error('Logic error')
-    }
     console.log(changingTarget, cacheKey, this.storageCache.get(cacheKey))
 
     return this._createProxyByCacheKey(
       cacheKey,
-      model
+      target
     )
   }
   async flush() {
@@ -234,7 +233,7 @@ export default class EntityManager {
   }
   _createProxyByCacheKey(
     cacheKey: object,
-    model: BaseModel,
+    model: PutTarget | BaseModel,
     cancelRefresh = () => {},
     cb = (done: () => void) => {done()},
     done = () => {}
@@ -245,10 +244,9 @@ export default class EntityManager {
         if (prop === 'cancelRefresh') {
           return cancelRefresh
         }
-        if (prop in target) {
+        if (prop in {...target}) {
           const storageCacheKey = cacheKey
           const storageCacheValue = em.storageCache.get(storageCacheKey)
-          console.log(storageCacheKey, storageCacheValue)
           if (typeof storageCacheKey !== 'undefined' && !BaseField.prototype.isPrototypeOf(storageCacheValue[prop])) {
             const convertedStorage = model.validateFields(storageCacheValue).convertFields(storageCacheValue)
             return Reflect.get(convertedStorage, prop, receiver)

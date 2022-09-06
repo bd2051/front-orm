@@ -97,7 +97,6 @@ export default class EntityManager {
     put(value, target) {
         let cacheKey = {};
         let cacheValue = {};
-        let model = target;
         const pk = target[target.getPkName()];
         if (!(pk instanceof BaseField)) {
             if (!(typeof pk === 'number' || typeof pk === 'string')) {
@@ -111,7 +110,6 @@ export default class EntityManager {
                 };
             }
             cacheValue = Object.assign({}, target);
-            model = Object.getPrototypeOf(target);
         }
         const diffs = diff(cacheValue, Object.assign(Object.assign({}, cacheValue), value));
         if (typeof diffs === 'undefined') {
@@ -121,19 +119,19 @@ export default class EntityManager {
             cacheKey,
             diffs
         });
-        let changingTarget = target;
-        if (changingTarget instanceof BaseModel) {
+        let changingTarget = this.storageCache.get(cacheKey);
+        if (typeof changingTarget === 'undefined') {
             this.storageCache.set(cacheKey, {});
             changingTarget = this.storageCache.get(cacheKey);
         }
         diffs.forEach(function (change) {
+            console.log(changingTarget.age, change);
             applyChange(changingTarget, true, change);
+            console.log(changingTarget.age, change);
         });
-        if (!(model instanceof BaseModel)) {
-            throw new Error('Logic error');
-        }
+        this.storageCache.set(cacheKey, changingTarget);
         console.log(changingTarget, cacheKey, this.storageCache.get(cacheKey));
-        return this._createProxyByCacheKey(cacheKey, model);
+        return this._createProxyByCacheKey(cacheKey, target);
     }
     flush() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -147,10 +145,9 @@ export default class EntityManager {
                 if (prop === 'cancelRefresh') {
                     return cancelRefresh;
                 }
-                if (prop in target) {
+                if (prop in Object.assign({}, target)) {
                     const storageCacheKey = cacheKey;
                     const storageCacheValue = em.storageCache.get(storageCacheKey);
-                    console.log(storageCacheKey, storageCacheValue);
                     if (typeof storageCacheKey !== 'undefined' && !BaseField.prototype.isPrototypeOf(storageCacheValue[prop])) {
                         const convertedStorage = model.validateFields(storageCacheValue).convertFields(storageCacheValue);
                         return Reflect.get(convertedStorage, prop, receiver);

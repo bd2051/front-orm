@@ -12,7 +12,7 @@ export default class BaseModel {
     constructor(em: EntityManager);
     getPkName(): string;
     getPkField(): PrimaryKey;
-    getName(): string;
+    getName(): any;
     getRepository(): Repository;
     validateFields(data: Fields): this;
     convertFields(data: any): Fields;
