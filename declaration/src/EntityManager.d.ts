@@ -50,6 +50,7 @@ interface PutTarget {
     getName: () => string;
     validateFields: (v: any) => BaseModel;
     fields: Fields;
+    _target: BaseModel;
 }
 interface Commit {
     cacheKey: object;
@@ -62,6 +63,7 @@ export default class EntityManager {
     cache: Cache;
     commits: Array<Commit>;
     storageCache: WeakMap<any, any>;
+    reverseStorageCache: WeakMap<any, any>;
     hooks: Hooks;
     pending: any;
     defaultClasses: Classes;

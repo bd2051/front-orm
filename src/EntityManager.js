@@ -14,7 +14,22 @@ export default class EntityManager {
         this.models = {};
         this.repositories = {};
         this.storage = {};
-        this.storageCache = new WeakMap();
+        this.reverseStorageCache = new WeakMap();
+        const reverseStorageCache = this.reverseStorageCache;
+        this.storageCache = new Proxy(new WeakMap(), {
+            get(target, prop, receiver) {
+                if (prop === 'set') {
+                    return (key, value) => {
+                        reverseStorageCache.set(value, key);
+                        return target.set.call(target, key, value);
+                    };
+                }
+                if (prop === 'get') {
+                    return target.get.bind(target);
+                }
+                return Reflect.get(target, prop, receiver);
+            }
+        });
         this.cache = {};
         this.commits = [];
         this.pending = null;
@@ -90,18 +105,8 @@ export default class EntityManager {
     put(value, target) {
         let cacheKey = {};
         let cacheValue = {};
-        const pk = target[target.getPkName()];
-        if (!(pk instanceof BaseField)) {
-            if (!(typeof pk === 'number' || typeof pk === 'string')) {
-                throw new Error('Logic error');
-            }
-            const storageModel = this.getStorageModel(target.getName());
-            cacheKey = storageModel[pk];
-            if (typeof cacheKey === 'undefined') {
-                cacheKey = {
-                    pk
-                };
-            }
+        if (this.reverseStorageCache.get(target._target)) {
+            cacheKey = this.reverseStorageCache.get(target._target);
             cacheValue = Object.assign({}, target);
         }
         const diffs = diff(cacheValue, Object.assign(Object.assign({}, cacheValue), value));
@@ -114,13 +119,12 @@ export default class EntityManager {
         });
         let changingTarget = this.storageCache.get(cacheKey);
         if (typeof changingTarget === 'undefined') {
-            this.storageCache.set(cacheKey, {});
+            this.storageCache.set(cacheKey, Object.create(target));
             changingTarget = this.storageCache.get(cacheKey);
         }
+        console.log('changingTarget', changingTarget);
         diffs.forEach(function (change) {
-            console.log(changingTarget.age, change);
             applyChange(changingTarget, true, change);
-            console.log(changingTarget.age, change);
         });
         this.storageCache.set(cacheKey, changingTarget);
         console.log(changingTarget, cacheKey, this.storageCache.get(cacheKey));
@@ -129,12 +133,35 @@ export default class EntityManager {
     flush() {
         return __awaiter(this, void 0, void 0, function* () {
             console.log(this.commits);
+            // flush hooks common
+            const map = this.commits.reduce((acc, commit) => {
+                if (!acc.get(commit.cacheKey)) {
+                    acc.set(commit.cacheKey, commit);
+                }
+                else {
+                    commit.diffs.forEach((change) => {
+                        acc.get(commit.cacheKey).diffs.push(change);
+                    });
+                }
+                return acc;
+            }, new Map());
+            map.forEach((commit, cacheKey) => {
+                const item = {};
+                const method = cacheKey.pk ? 'PUT' : 'POST';
+                commit.diffs.forEach(function (change) {
+                    applyChange(item, true, change);
+                });
+                console.log(item, commit, method);
+            });
         });
     }
     _createProxyByCacheKey(cacheKey, model, cb = (done) => { done(); }, done = () => { }) {
         const em = this;
         return new Proxy(this.storageCache.get(cacheKey), {
             get(target, prop, receiver) {
+                if (prop === '_target') {
+                    return target;
+                }
                 if (model.fields[prop]) {
                     const storageCacheKey = cacheKey;
                     const storageCacheValue = em.storageCache.get(storageCacheKey);

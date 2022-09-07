@@ -78,6 +78,7 @@ interface PutTarget {
   getName: () => string
   validateFields: (v: any) => BaseModel
   fields: Fields
+  _target: BaseModel
 }
 
 interface Commit {
@@ -92,6 +93,7 @@ export default class EntityManager {
   cache: Cache
   commits: Array<Commit>
   storageCache: WeakMap<any, any>
+  reverseStorageCache: WeakMap<any, any>
   hooks: Hooks
   pending: any
   defaultClasses: Classes
@@ -100,7 +102,22 @@ export default class EntityManager {
     this.models = {}
     this.repositories = {}
     this.storage = {}
-    this.storageCache = new WeakMap()
+    this.reverseStorageCache = new WeakMap()
+    const reverseStorageCache = this.reverseStorageCache
+    this.storageCache = new Proxy(new WeakMap(), {
+      get(target: WeakMap<any, any>, prop: string | symbol, receiver: any): any {
+        if (prop === 'set') {
+          return (key: any, value: any) => {
+            reverseStorageCache.set(value, key)
+            return target.set.call(target, key, value)
+          }
+        }
+        if (prop === 'get') {
+          return target.get.bind(target)
+        }
+        return Reflect.get(target, prop, receiver)
+      }
+    })
     this.cache = {}
     this.commits = []
     this.pending = null
@@ -176,18 +193,8 @@ export default class EntityManager {
   put(value: PutValue, target: PutTarget | BaseModel) {
     let cacheKey = {}
     let cacheValue = {}
-    const pk = target[target.getPkName()]
-    if (!(pk instanceof BaseField)) {
-      if (!(typeof pk === 'number' || typeof pk === 'string')) {
-        throw new Error('Logic error')
-      }
-      const storageModel = this.getStorageModel(target.getName())
-      cacheKey = storageModel[pk]
-      if (typeof cacheKey === 'undefined') {
-        cacheKey = {
-          pk
-        }
-      }
+    if (this.reverseStorageCache.get(target._target)) {
+      cacheKey = this.reverseStorageCache.get(target._target)
       cacheValue = {...target}
     }
 
@@ -207,13 +214,12 @@ export default class EntityManager {
 
     let changingTarget = this.storageCache.get(cacheKey)
     if (typeof changingTarget === 'undefined') {
-      this.storageCache.set(cacheKey, {})
+      this.storageCache.set(cacheKey, Object.create(target))
       changingTarget = this.storageCache.get(cacheKey)
     }
+    console.log('changingTarget', changingTarget)
     diffs.forEach(function (change: Diff<any, any>) {
-      console.log(changingTarget.age, change)
       applyChange(changingTarget, true, change);
-      console.log(changingTarget.age, change)
     });
     this.storageCache.set(cacheKey, changingTarget)
 
@@ -226,6 +232,25 @@ export default class EntityManager {
   }
   async flush() {
     console.log(this.commits)
+    // flush hooks common
+    const map = this.commits.reduce((acc: Map<any, any>, commit) => {
+      if (!acc.get(commit.cacheKey)) {
+        acc.set(commit.cacheKey, commit)
+      } else {
+        commit.diffs.forEach((change) => {
+          acc.get(commit.cacheKey).diffs.push(change)
+        })
+      }
+      return acc
+    }, new Map())
+    map.forEach((commit, cacheKey) => {
+      const item = {}
+      const method = cacheKey.pk ? 'PUT' : 'POST'
+      commit.diffs.forEach(function (change: Diff<any, any>) {
+        applyChange(item, true, change);
+      });
+      console.log(item, commit, method)
+    })
   }
   _createProxyByCacheKey(
     cacheKey: object,
@@ -236,6 +261,9 @@ export default class EntityManager {
     const em = this
     return new Proxy(this.storageCache.get(cacheKey), {
       get(target, prop: string, receiver) {
+        if (prop === '_target') {
+          return target
+        }
         if (model.fields[prop]) {
           const storageCacheKey = cacheKey
           const storageCacheValue = em.storageCache.get(storageCacheKey)
