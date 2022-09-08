@@ -37,4 +37,7 @@ export default class CollectionField extends BaseField implements FieldInterface
       this.convertValueToPk
     )
   }
+  link(values: any): any {
+    return values.map((value: any) => this.em.setStorageValue(this.targetModel, this.convertValueToPk(value), value))
+  }
 }

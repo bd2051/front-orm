@@ -9,4 +9,5 @@ export default class EntityField extends BaseField implements FieldInterface {
     get targetModel(): Model;
     validate(value: any): boolean;
     convert(data: any, key: string): any;
+    link(value: any): any;
 }

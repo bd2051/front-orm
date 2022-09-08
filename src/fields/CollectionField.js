@@ -22,4 +22,7 @@ export default class CollectionField extends BaseField {
         }
         return this.em._createArrayProxy(value, this.targetModel, this.convertValueToPk);
     }
+    link(values) {
+        return values.map((value) => this.em.setStorageValue(this.targetModel, this.convertValueToPk(value), value));
+    }
 }

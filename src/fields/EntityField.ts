@@ -39,4 +39,7 @@ export default class EntityField extends BaseField implements FieldInterface {
       done()
     })
   }
+  link(value: any): any {
+    return this.em.setStorageValue(this.targetModel, this.convertValueToPk(value), value)
+  }
 }

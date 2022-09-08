@@ -4,4 +4,5 @@ export default class BaseField {
     constructor(em: EntityManager);
     convert(data: any, key: string): any;
     validate(value: any): boolean;
+    link(value: any): any;
 }

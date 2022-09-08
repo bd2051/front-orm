@@ -95,8 +95,15 @@ export default class EntityManager {
             };
             storageCacheKey = storageModel[pk];
         }
-        const property = this._convertValueToPropertyDescriptorMap(Object.entries(value));
+        const linkedValue = Object.entries(value).reduce((acc, [key, value]) => {
+            if (typeof model[key] !== 'undefined') {
+                acc[key] = model[key].link(value);
+            }
+            return acc;
+        }, {});
+        const property = this._convertValueToPropertyDescriptorMap(Object.entries(linkedValue));
         this.storageCache.set(storageCacheKey, Object.create(model, property));
+        return this.storageCache.get(storageCacheKey);
     }
     _convertValueToPropertyDescriptorMap(entries) {
         return entries.reduce((acc, [key, value]) => {
@@ -110,11 +117,11 @@ export default class EntityManager {
         }, {});
     }
     put(value, target) {
-        let cacheKey = {};
-        let cacheValue = {};
-        if (this.reverseStorageCache.get(target._target)) {
-            cacheKey = this.reverseStorageCache.get(target._target);
-            cacheValue = Object.assign({}, target);
+        let cacheKey = this.reverseStorageCache.get(target._target);
+        let cacheValue = Object.assign({}, target);
+        if (typeof cacheKey === 'undefined') {
+            cacheKey = {};
+            cacheValue = {};
         }
         const diffs = diff(cacheValue, Object.assign(Object.assign({}, cacheValue), value));
         if (typeof diffs === 'undefined') {

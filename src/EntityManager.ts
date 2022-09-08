@@ -13,7 +13,7 @@ import {
   CollectionField
 } from "./index";
 import {applyChange, diff, Diff} from "deep-diff";
-import {BaseModel, Model, ModelInit} from "./types";
+import {BaseModel, Model, ModelData, ModelInit} from "./types";
 
 interface Models {
   [key: string]: Model
@@ -26,14 +26,6 @@ interface RepositoryInit {
 
 interface Repositories {
   [key: string]: Repository
-}
-
-interface FirstLevelStorage {
-  [key: string|number]: any
-}
-
-interface Storage {
-  [key: string]: FirstLevelStorage
 }
 
 interface StorageItem {
@@ -87,14 +79,26 @@ interface Commit {
   diffs: Array<Diff<any, any>>
 }
 
+interface CacheKey {
+  pk?: string | number
+}
+
+interface FirstLevelStorage {
+  [key: string|number]: CacheKey
+}
+
+interface Storage {
+  [key: string]: FirstLevelStorage
+}
+
 export default class EntityManager {
   models: Models
   repositories: Repositories
   storage: Storage
   cache: Cache
   commits: Array<Commit>
-  storageCache: WeakMap<any, any>
-  reverseStorageCache: WeakMap<any, any>
+  storageCache: WeakMap<CacheKey, ModelData>
+  reverseStorageCache: WeakMap<ModelData, CacheKey>
   hooks: Hooks
   pending: any
   defaultClasses: Classes
@@ -175,17 +179,24 @@ export default class EntityManager {
     }
     return storageModel
   }
-  setStorageValue(model: Model, pk: number | string, value: StorageItem): void {
+  setStorageValue(model: Model, pk: number | string, value: StorageItem): ModelData {
     const storageModel = this.getStorageModel(model.$getName())
     let storageCacheKey = storageModel[pk]
     if (typeof storageCacheKey === 'undefined') {
-      storageModel[pk] = {
+      storageModel[pk]  = {
         pk
       }
-      storageCacheKey = storageModel[pk]
+      storageCacheKey = storageModel[pk]!
     }
-    const property = this._convertValueToPropertyDescriptorMap(Object.entries(value))
+    const linkedValue = Object.entries(value).reduce((acc: StorageItem, [key, value]) => {
+      if (typeof model[key] !== 'undefined') {
+        acc[key] = model[key]!.link(value)
+      }
+      return acc
+    }, {})
+    const property = this._convertValueToPropertyDescriptorMap(Object.entries(linkedValue))
     this.storageCache.set(storageCacheKey, Object.create(model, property))
+    return this.storageCache.get(storageCacheKey)!
   }
   _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>) {
     return entries.reduce((acc: PropertyDescriptorMap, [key, value]) => {
@@ -199,11 +210,11 @@ export default class EntityManager {
     }, {})
   }
   put(value: PutValue, target: PutTarget | BaseModel) {
-    let cacheKey = {}
-    let cacheValue = {}
-    if (this.reverseStorageCache.get(target._target)) {
-      cacheKey = this.reverseStorageCache.get(target._target)
-      cacheValue = {...target}
+    let cacheKey = this.reverseStorageCache.get(target._target)
+    let cacheValue = {...target}
+    if (typeof cacheKey === 'undefined') {
+      cacheKey = {}
+      cacheValue = {}
     }
 
     const diffs = diff(cacheValue, {

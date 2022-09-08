@@ -8,4 +8,7 @@ export default class BaseField {
     validate(value) {
         return !(typeof value === 'undefined');
     }
+    link(value) {
+        return value;
+    }
 }

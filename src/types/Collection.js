@@ -7,10 +7,6 @@ export default class Collection extends BaseType {
         if (result.some(item => !item[model.$getPkName()])) {
             throw new Error('Invalid result. Missing primary key');
         }
-        const storageModel = this.em.storage[model.$getName()];
-        if (typeof storageModel === 'undefined') {
-            throw new Error('Invalid storageModel');
-        }
         result.forEach((item) => {
             this.em.setStorageValue(model, item[model.$getPkName()], item);
         });

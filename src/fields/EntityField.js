@@ -37,4 +37,7 @@ export default class EntityField extends BaseField {
             done();
         }));
     }
+    link(value) {
+        return this.em.setStorageValue(this.targetModel, this.convertValueToPk(value), value);
+    }
 }
