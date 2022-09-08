@@ -1,6 +1,6 @@
 import {
   Repository,
-  BaseModel,
+  getBaseModel,
   BaseType,
   BaseField,
   Entity,
@@ -13,9 +13,10 @@ import {
   CollectionField
 } from "./index";
 import {applyChange, diff, Diff} from "deep-diff";
+import {BaseModel, Model, ModelInit} from "./types";
 
 interface Models {
-  [key: string]: BaseModel
+  [key: string]: Model
 }
 
 interface RepositoryInit {
@@ -44,7 +45,7 @@ interface Cache {
 }
 
 interface CommonClasses {
-  [key: string]: typeof BaseModel | typeof Repository
+  [key: string]: typeof getBaseModel | typeof Repository
 }
 
 interface FieldsClass {
@@ -68,18 +69,18 @@ interface PutValue {
   [key: string]: any
 }
 
-interface Fields {
-  [key: string]: any
-}
+// interface Fields {
+//   [key: string]: any
+// }
 
-interface PutTarget {
-  [key: string]: string | number | BaseField | Fields | ((v?: any) => any)
-  getPkName: () => string
-  getName: () => string
-  validateFields: (v: any) => BaseModel
-  fields: Fields
-  _target: BaseModel
-}
+// interface PutTarget {
+//   [key: string]: string | number | BaseField | Fields | ((v?: any) => any)
+//   getPkName: () => string
+//   getName: () => string
+//   validateFields: (v: any) => BaseModel
+//   fields: Fields
+//   _target: BaseModel
+// }
 
 interface Commit {
   cacheKey: object,
@@ -124,7 +125,7 @@ export default class EntityManager {
     this.hooks = {}
     this.defaultClasses = {
       common: {
-        BaseModel,
+        getBaseModel,
         Repository,
       },
       fields: {
@@ -144,12 +145,16 @@ export default class EntityManager {
   setHooks(hooks: Hooks) {
     this.hooks = hooks
   }
-  setModel(model: BaseModel, repositories: RepositoryInit) {
-    this.storage[model.getName()] = {}
-    this.models[model.getName()] = model
-    this.repositories[model.getName()] = new Repository(this, model, repositories)
+  setModel(getModelInit: (em: EntityManager) => ModelInit, repositories: RepositoryInit) {
+    const baseModel: BaseModel = getBaseModel(this)
+    const modelInit = getModelInit(this)
+    const model: Model = Object.create(baseModel, this._convertValueToPropertyDescriptorMap(Object.entries(modelInit)))
+    model.$setName(getModelInit.name)
+    this.storage[model.$getName()] = {}
+    this.models[model.$getName()] = model
+    this.repositories[model.$getName()] = new Repository(this, model, repositories)
   }
-  getModel(modelName: string): BaseModel {
+  getModel(modelName: string): Model {
     const model = this.models[modelName]
     if (typeof model === 'undefined') {
       throw new Error('The model does not exist')
@@ -170,8 +175,8 @@ export default class EntityManager {
     }
     return storageModel
   }
-  setStorageValue(model: BaseModel, pk: number | string, value: StorageItem): void {
-    const storageModel = this.getStorageModel(model.getName())
+  setStorageValue(model: Model, pk: number | string, value: StorageItem): void {
+    const storageModel = this.getStorageModel(model.$getName())
     let storageCacheKey = storageModel[pk]
     if (typeof storageCacheKey === 'undefined') {
       storageModel[pk] = {
@@ -179,16 +184,19 @@ export default class EntityManager {
       }
       storageCacheKey = storageModel[pk]
     }
-    const property = Object.entries(value).reduce((acc: PropertyDescriptorMap, [key, subValue]) => {
+    const property = this._convertValueToPropertyDescriptorMap(Object.entries(value))
+    this.storageCache.set(storageCacheKey, Object.create(model, property))
+  }
+  _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>) {
+    return entries.reduce((acc: PropertyDescriptorMap, [key, value]) => {
       acc[key] = {
         enumerable: true,
-        configurable: true,
+        configurable: false,
         writable: true,
-        value: subValue
+        value: value
       }
       return acc
     }, {})
-    this.storageCache.set(storageCacheKey, Object.create(model, property))
   }
   put(value: PutValue, target: PutTarget | BaseModel) {
     let cacheKey = {}
@@ -254,7 +262,7 @@ export default class EntityManager {
   }
   _createProxyByCacheKey(
     cacheKey: object,
-    model: PutTarget | BaseModel,
+    model: Model,
     cb = (done: () => void) => {done()},
     done = () => {}
   ) {
@@ -287,8 +295,8 @@ export default class EntityManager {
       }
     })
   }
-  _createProxy(model: BaseModel, pk: string|number, cb: (done: () => void) => void): any {
-    const storageModel = this.getStorageModel(model.getName())
+  _createProxy(model: Model, pk: string|number, cb: (done: () => void) => void): any {
+    const storageModel = this.getStorageModel(model.$getName())
     const done = () => {
     }
     let proxyTarget = storageModel[pk];
@@ -304,13 +312,13 @@ export default class EntityManager {
   }
   _createArrayProxy(
     arrayTarget: Array<number|string>,
-    targetModel: BaseModel,
+    targetModel: Model,
     convertValueToPk: (value: any) => number | string
   ): any {
     const em = this
     return new Proxy(arrayTarget.map((value) => {
       const pk = convertValueToPk(value)
-      const findByPk = targetModel.getRepository().methodsCb.findByPk
+      const findByPk = targetModel.$getRepository().methodsCb.findByPk
       return this._createProxy(targetModel, pk, async (done) => {
         const result = await findByPk(pk)
         em.setStorageValue(targetModel, pk, result)

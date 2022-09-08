@@ -1,7 +1,7 @@
 import BaseField from "./BaseField";
-import BaseModel from "../model/BaseModel";
 import FieldInterface from "./FieldInterface";
 import EntityManager from "../EntityManager";
+import {Model} from "../types";
 
 export default class EntityField extends BaseField implements FieldInterface {
   targetModelName: string
@@ -16,14 +16,14 @@ export default class EntityField extends BaseField implements FieldInterface {
     this.targetModelName = targetModelName
     this.convertValueToPk = convertValueToPk
   }
-  get targetModel(): BaseModel {
+  get targetModel(): Model {
     return this.em.getModel(this.targetModelName)
   }
   validate(value: any) {
     if (value === null) {
       return true
     }
-    return this.targetModel.getPkField().validate(this.convertValueToPk(value))
+    return this.targetModel.$getPkField().validate(this.convertValueToPk(value))
   }
   convert(data: any, key: string) {
     const value = data[key]
@@ -32,7 +32,7 @@ export default class EntityField extends BaseField implements FieldInterface {
     }
     const pk = this.convertValueToPk(value)
     const model = this.targetModel
-    const findByPk = model.getRepository().methodsCb.findByPk
+    const findByPk = model.$getRepository().methodsCb.findByPk
     return this.em._createProxy(model, pk, async (done) => {
       const result = await findByPk(pk)
       this.em.setStorageValue(model, pk, result)

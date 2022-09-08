@@ -1,10 +1,10 @@
 import EntityManager from "../EntityManager";
-import BaseModel from "../model/BaseModel";
+import {Model} from "../types";
 
 export default class BaseType {
   em: EntityManager
   findCb: (values: any) => object
-  find: (values: any, model: BaseModel) => Promise<any>
+  find: (values: any, model: Model) => Promise<any>
 
   constructor(em: EntityManager, findCb: (values: any) => object) {
     this.em = em
@@ -17,13 +17,13 @@ export default class BaseType {
   setEntityManager(em: EntityManager) {
     this.em = em
   }
-  convertResult(result: object, model: BaseModel): any {
+  convertResult(result: object, model: Model): any {
         console.warn(result, model, 'add convertResult method')
       return new Proxy({}, {})
   }
-  getResultProxy(model: BaseModel, value: number | string) {
+  getResultProxy(model: Model, value: number | string) {
     return this.em._createProxy(model, value, async (done) => {
-      const result = await model.getRepository().methodsCb.findByPk(value)
+      const result = await model.$getRepository().methodsCb.findByPk(value)
       this.em.setStorageValue(model, value, result)
       done()
     })

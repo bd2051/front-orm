@@ -11,7 +11,8 @@ declare global {
 }
 
 const em = new EntityManager()
-em.setModel(new Author(em), {
+
+em.setModel(Author, {
   find: new Entity(em,(pk: number) => {
     return fetch(`http://localhost:8000/api/authors/${pk}`).then(response => response.json())
       .then((data) => {
@@ -34,7 +35,7 @@ em.setModel(new Author(em), {
       })
   })
 })
-em.setModel(new Story(em), {
+em.setModel(Story, {
   find: new Entity(em, (pk: number) => {
     return fetch(`http://localhost:8000/api/stories/${pk}`).then(response => response.json())
       .then((data) => {

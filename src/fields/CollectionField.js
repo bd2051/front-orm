@@ -1,10 +1,9 @@
 import BaseField from "./BaseField";
 export default class CollectionField extends BaseField {
-    constructor(em, model, targetModelName, convertValueToPk = (value) => value) {
+    constructor(em, targetModelName, convertValueToPk = (value) => value) {
         super(em);
         this.targetModelName = targetModelName;
         this.convertValueToPk = convertValueToPk;
-        this.model = model;
     }
     get targetModel() {
         return this.em.getModel(this.targetModelName);

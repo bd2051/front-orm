@@ -1,13 +1,13 @@
 import BaseType from "./BaseType";
-import BaseModel from "../model/BaseModel";
+import {Model} from "../types";
 
 interface Result {
   [key: string|number]: any
 }
 
 export default class Entity extends BaseType {
-  convertResult(result: Result, model: BaseModel) {
-    const pkValue = result[model.getPkName()]
+  convertResult(result: Result, model: Model) {
+    const pkValue = result[model.$getPkName()]
     if (typeof pkValue === 'undefined') {
       throw new Error('Invalid result. Missing primary key')
     }

@@ -6,7 +6,7 @@ import EntityField from "./fields/EntityField";
 import FieldInterface from "./fields/FieldInterface";
 import PrimaryKey from "./fields/PrimaryKey";
 import StringField from "./fields/StringField";
-import BaseModel from "./model/BaseModel";
+import getBaseModel from "./model/getBaseModel";
 import Repository from "./Repository";
 import BaseType from "./types/BaseType";
 import Collection from "./types/Collection";
@@ -22,7 +22,7 @@ export {
   PrimaryKey,
   StringField,
   CollectionField,
-  BaseModel,
+  getBaseModel,
   BaseType,
   Collection,
   Entity,

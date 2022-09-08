@@ -21,7 +21,7 @@ export default class EntityField extends BaseField {
         if (value === null) {
             return true;
         }
-        return this.targetModel.getPkField().validate(this.convertValueToPk(value));
+        return this.targetModel.$getPkField().validate(this.convertValueToPk(value));
     }
     convert(data, key) {
         const value = data[key];
@@ -30,7 +30,7 @@ export default class EntityField extends BaseField {
         }
         const pk = this.convertValueToPk(value);
         const model = this.targetModel;
-        const findByPk = model.getRepository().methodsCb.findByPk;
+        const findByPk = model.$getRepository().methodsCb.findByPk;
         return this.em._createProxy(model, pk, (done) => __awaiter(this, void 0, void 0, function* () {
             const result = yield findByPk(pk);
             this.em.setStorageValue(model, pk, result);

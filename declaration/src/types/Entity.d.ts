@@ -1,9 +1,9 @@
 import BaseType from "./BaseType";
-import BaseModel from "../model/BaseModel";
+import { Model } from "../types";
 interface Result {
     [key: string | number]: any;
 }
 export default class Entity extends BaseType {
-    convertResult(result: Result, model: BaseModel): any;
+    convertResult(result: Result, model: Model): any;
 }
 export {};

@@ -1,7 +1,7 @@
 import BaseType from "./BaseType";
 export default class Entity extends BaseType {
     convertResult(result, model) {
-        const pkValue = result[model.getPkName()];
+        const pkValue = result[model.$getPkName()];
         if (typeof pkValue === 'undefined') {
             throw new Error('Invalid result. Missing primary key');
         }

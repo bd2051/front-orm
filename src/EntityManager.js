@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { Repository, BaseModel, BaseField, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField } from "./index";
+import { Repository, getBaseModel, BaseField, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField } from "./index";
 import { applyChange, diff } from "deep-diff";
 export default class EntityManager {
     constructor() {
@@ -36,7 +36,7 @@ export default class EntityManager {
         this.hooks = {};
         this.defaultClasses = {
             common: {
-                BaseModel,
+                getBaseModel,
                 Repository,
             },
             fields: {
@@ -56,10 +56,14 @@ export default class EntityManager {
     setHooks(hooks) {
         this.hooks = hooks;
     }
-    setModel(model, repositories) {
-        this.storage[model.getName()] = {};
-        this.models[model.getName()] = model;
-        this.repositories[model.getName()] = new Repository(this, model, repositories);
+    setModel(getModelInit, repositories) {
+        const baseModel = getBaseModel(this);
+        const modelInit = getModelInit(this);
+        const model = Object.create(baseModel, this._convertValueToPropertyDescriptorMap(Object.entries(modelInit)));
+        model.$setName(getModelInit.name);
+        this.storage[model.$getName()] = {};
+        this.models[model.$getName()] = model;
+        this.repositories[model.$getName()] = new Repository(this, model, repositories);
     }
     getModel(modelName) {
         const model = this.models[modelName];
@@ -83,7 +87,7 @@ export default class EntityManager {
         return storageModel;
     }
     setStorageValue(model, pk, value) {
-        const storageModel = this.getStorageModel(model.getName());
+        const storageModel = this.getStorageModel(model.$getName());
         let storageCacheKey = storageModel[pk];
         if (typeof storageCacheKey === 'undefined') {
             storageModel[pk] = {
@@ -91,16 +95,19 @@ export default class EntityManager {
             };
             storageCacheKey = storageModel[pk];
         }
-        const property = Object.entries(value).reduce((acc, [key, subValue]) => {
+        const property = this._convertValueToPropertyDescriptorMap(Object.entries(value));
+        this.storageCache.set(storageCacheKey, Object.create(model, property));
+    }
+    _convertValueToPropertyDescriptorMap(entries) {
+        return entries.reduce((acc, [key, value]) => {
             acc[key] = {
                 enumerable: true,
-                configurable: true,
+                configurable: false,
                 writable: true,
-                value: subValue
+                value: value
             };
             return acc;
         }, {});
-        this.storageCache.set(storageCacheKey, Object.create(model, property));
     }
     put(value, target) {
         let cacheKey = {};
@@ -188,7 +195,7 @@ export default class EntityManager {
         });
     }
     _createProxy(model, pk, cb) {
-        const storageModel = this.getStorageModel(model.getName());
+        const storageModel = this.getStorageModel(model.$getName());
         const done = () => {
         };
         let proxyTarget = storageModel[pk];
@@ -201,7 +208,7 @@ export default class EntityManager {
         const em = this;
         return new Proxy(arrayTarget.map((value) => {
             const pk = convertValueToPk(value);
-            const findByPk = targetModel.getRepository().methodsCb.findByPk;
+            const findByPk = targetModel.$getRepository().methodsCb.findByPk;
             return this._createProxy(targetModel, pk, (done) => __awaiter(this, void 0, void 0, function* () {
                 const result = yield findByPk(pk);
                 em.setStorageValue(targetModel, pk, result);

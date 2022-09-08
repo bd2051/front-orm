@@ -1,7 +1,7 @@
 import BaseType from "./types/BaseType";
 import getUuidByString from "uuid-by-string";
-import BaseModel from "./model/BaseModel";
 import EntityManager from "./EntityManager";
+import {Model} from "./types";
 
 interface MethodsCb {
   findByPk: (value: any) => object
@@ -13,12 +13,12 @@ interface Repositories {
 }
 
 export default class Repository {
-  [key: string]: BaseModel | EntityManager | MethodsCb | BaseType | ((v: any, o1?: any, o2?: any) => any)
-  model: BaseModel
+  [key: string]: Model | EntityManager | MethodsCb | BaseType | ((v: any, o1?: any, o2?: any) => any)
+  model: Model
   em: EntityManager
   methodsCb: MethodsCb
 
-  constructor(em: EntityManager, model: BaseModel, repositories: Repositories) {
+  constructor(em: EntityManager, model: Model, repositories: Repositories) {
     this.model = model
     this.em = em
     this.methodsCb = {

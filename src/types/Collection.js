@@ -4,16 +4,16 @@ export default class Collection extends BaseType {
         if (!Array.isArray(result)) {
             throw new Error('Invalid result. The result must be array');
         }
-        if (result.some(item => !item[model.getPkName()])) {
+        if (result.some(item => !item[model.$getPkName()])) {
             throw new Error('Invalid result. Missing primary key');
         }
-        const storageModel = this.em.storage[model.getName()];
+        const storageModel = this.em.storage[model.$getName()];
         if (typeof storageModel === 'undefined') {
             throw new Error('Invalid storageModel');
         }
         result.forEach((item) => {
-            this.em.setStorageValue(model, item[model.getPkName()], item);
+            this.em.setStorageValue(model, item[model.$getPkName()], item);
         });
-        return result.map(item => this.getResultProxy(model, item[model.getPkName()]));
+        return result.map(item => this.getResultProxy(model, item[model.$getPkName()]));
     }
 }

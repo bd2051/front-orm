@@ -1,7 +1,8 @@
 import { Repository, BaseModel, BaseType, BaseField, Entity, EntityField, CollectionField } from "./index";
 import { Diff } from "deep-diff";
+import { Model } from "./types";
 interface Models {
-    [key: string]: BaseModel;
+    [key: string]: Model;
 }
 interface RepositoryInit {
     findByPk: Entity;
@@ -69,7 +70,7 @@ export default class EntityManager {
     defaultClasses: Classes;
     constructor();
     setHooks(hooks: Hooks): void;
-    setModel(model: BaseModel, repositories: RepositoryInit): void;
+    setModel(model: Model, repositories: RepositoryInit): void;
     getModel(modelName: string): BaseModel;
     getRepository(modelName: string): Repository;
     getStorageModel(modelName: string): FirstLevelStorage;
