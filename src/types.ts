@@ -21,7 +21,7 @@ export type BaseModel = {
 }
 
 export type ModelData = BaseModel & {
-  [key: string]: string | number
+  [key: string]: string | number | null | boolean | Array<any> | object
 }
 
 export type ModelView = BaseModel & {

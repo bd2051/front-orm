@@ -13,7 +13,7 @@ import {
   CollectionField
 } from "./index";
 import {applyChange, diff, Diff} from "deep-diff";
-import {BaseModel, Model, ModelData, ModelInit} from "./types";
+import {BaseModel, Model, ModelData, ModelInit, ModelView} from "./types";
 
 interface Models {
   [key: string]: Model
@@ -188,9 +188,9 @@ export default class EntityManager {
       }
       storageCacheKey = storageModel[pk]!
     }
-    const linkedValue = Object.entries(value).reduce((acc: StorageItem, [key, value]) => {
+    const linkedValue = Object.entries(value).reduce((acc: StorageItem, [key, subValue]) => {
       if (typeof model[key] !== 'undefined') {
-        acc[key] = model[key]!.link(value)
+        acc[key] = model[key]!.link(subValue)
       }
       return acc
     }, {})
@@ -209,12 +209,13 @@ export default class EntityManager {
       return acc
     }, {})
   }
-  put(value: PutValue, target: PutTarget | BaseModel) {
-    let cacheKey = this.reverseStorageCache.get(target._target)
-    let cacheValue = {...target}
-    if (typeof cacheKey === 'undefined') {
-      cacheKey = {}
-      cacheValue = {}
+  put(value: PutValue, target: ModelView | Model) {
+    let cacheKey = {}
+    let cacheValue = {}
+    if (typeof target._target !== undefined) {
+      const modelView = target as ModelView
+      cacheKey = this.reverseStorageCache.get(modelView._target)!
+      cacheValue = {...target._target}
     }
 
     const diffs = diff(cacheValue, {
@@ -236,17 +237,15 @@ export default class EntityManager {
       this.storageCache.set(cacheKey, Object.create(target))
       changingTarget = this.storageCache.get(cacheKey)
     }
-    console.log('changingTarget', changingTarget)
     diffs.forEach(function (change: Diff<any, any>) {
       applyChange(changingTarget, true, change);
     });
-    this.storageCache.set(cacheKey, changingTarget)
+    this.storageCache.set(cacheKey, changingTarget!)
 
     console.log(changingTarget, cacheKey, this.storageCache.get(cacheKey))
 
     return this._createProxyByCacheKey(
-      cacheKey,
-      target
+      cacheKey
     )
   }
   async flush() {
@@ -273,22 +272,24 @@ export default class EntityManager {
   }
   _createProxyByCacheKey(
     cacheKey: object,
-    model: Model,
     cb = (done: () => void) => {done()},
     done = () => {}
-  ) {
+  ): ModelView {
     const em = this
-    return new Proxy(this.storageCache.get(cacheKey), {
+    const modelData = this.storageCache.get(cacheKey) as unknown as ModelView
+    return new Proxy(modelData, {
       get(target, prop: string, receiver) {
         if (prop === '_target') {
           return target
         }
-        if (model.fields[prop]) {
-          const storageCacheKey = cacheKey
-          const storageCacheValue = em.storageCache.get(storageCacheKey)
-          if (typeof storageCacheKey !== 'undefined' && !BaseField.prototype.isPrototypeOf(storageCacheValue[prop])) {
-            const convertedStorage = model.validateFields(storageCacheValue).convertFields(storageCacheValue)
-            return Reflect.get(convertedStorage, prop, receiver)
+        if (prop in target) {
+          const storageCacheValue = em.storageCache.get(cacheKey)
+          if (typeof storageCacheValue === 'undefined') {
+            throw new Error('Logic error')
+          }
+          if (!(storageCacheValue[prop] as any instanceof BaseField)) {
+            const model = Object.getPrototypeOf(target) as Model
+            return model[prop]!.view(storageCacheValue[prop])
           }
           cb(done)
           return em.pending
@@ -306,7 +307,7 @@ export default class EntityManager {
       }
     })
   }
-  _createProxy(model: Model, pk: string|number, cb: (done: () => void) => void): any {
+  _createProxy(model: Model, pk: string|number, cb: (done: () => void) => void): ModelView {
     const storageModel = this.getStorageModel(model.$getName())
     const done = () => {
     }
@@ -315,33 +316,9 @@ export default class EntityManager {
       this.setStorageValue(model, pk, {})
     }
     return this._createProxyByCacheKey(
-      storageModel[pk],
-      model,
+      storageModel[pk]!,
       cb,
       done
     )
-  }
-  _createArrayProxy(
-    arrayTarget: Array<number|string>,
-    targetModel: Model,
-    convertValueToPk: (value: any) => number | string
-  ): any {
-    const em = this
-    return new Proxy(arrayTarget.map((value) => {
-      const pk = convertValueToPk(value)
-      const findByPk = targetModel.$getRepository().methodsCb.findByPk
-      return this._createProxy(targetModel, pk, async (done) => {
-        const result = await findByPk(pk)
-        em.setStorageValue(targetModel, pk, result)
-        done()
-      })
-    }), {
-      get(target, prop: string, receiver: any): any {
-        if (['push', 'pop', 'shift', 'unshift'].includes(prop)) {
-          throw new Error('Use update method')
-        }
-        return Reflect.get(target, prop, receiver)
-      }
-    })
   }
 }

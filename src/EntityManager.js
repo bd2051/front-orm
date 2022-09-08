@@ -95,9 +95,9 @@ export default class EntityManager {
             };
             storageCacheKey = storageModel[pk];
         }
-        const linkedValue = Object.entries(value).reduce((acc, [key, value]) => {
+        const linkedValue = Object.entries(value).reduce((acc, [key, subValue]) => {
             if (typeof model[key] !== 'undefined') {
-                acc[key] = model[key].link(value);
+                acc[key] = model[key].link(subValue);
             }
             return acc;
         }, {});
@@ -117,11 +117,12 @@ export default class EntityManager {
         }, {});
     }
     put(value, target) {
-        let cacheKey = this.reverseStorageCache.get(target._target);
-        let cacheValue = Object.assign({}, target);
-        if (typeof cacheKey === 'undefined') {
-            cacheKey = {};
-            cacheValue = {};
+        let cacheKey = {};
+        let cacheValue = {};
+        if (typeof target._target !== undefined) {
+            const modelView = target;
+            cacheKey = this.reverseStorageCache.get(modelView._target);
+            cacheValue = Object.assign({}, target._target);
         }
         const diffs = diff(cacheValue, Object.assign(Object.assign({}, cacheValue), value));
         if (typeof diffs === 'undefined') {
@@ -136,13 +137,12 @@ export default class EntityManager {
             this.storageCache.set(cacheKey, Object.create(target));
             changingTarget = this.storageCache.get(cacheKey);
         }
-        console.log('changingTarget', changingTarget);
         diffs.forEach(function (change) {
             applyChange(changingTarget, true, change);
         });
         this.storageCache.set(cacheKey, changingTarget);
         console.log(changingTarget, cacheKey, this.storageCache.get(cacheKey));
-        return this._createProxyByCacheKey(cacheKey, target);
+        return this._createProxyByCacheKey(cacheKey);
     }
     flush() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -169,19 +169,22 @@ export default class EntityManager {
             });
         });
     }
-    _createProxyByCacheKey(cacheKey, model, cb = (done) => { done(); }, done = () => { }) {
+    _createProxyByCacheKey(cacheKey, cb = (done) => { done(); }, done = () => { }) {
         const em = this;
-        return new Proxy(this.storageCache.get(cacheKey), {
+        const modelData = this.storageCache.get(cacheKey);
+        return new Proxy(modelData, {
             get(target, prop, receiver) {
                 if (prop === '_target') {
                     return target;
                 }
-                if (model.fields[prop]) {
-                    const storageCacheKey = cacheKey;
-                    const storageCacheValue = em.storageCache.get(storageCacheKey);
-                    if (typeof storageCacheKey !== 'undefined' && !BaseField.prototype.isPrototypeOf(storageCacheValue[prop])) {
-                        const convertedStorage = model.validateFields(storageCacheValue).convertFields(storageCacheValue);
-                        return Reflect.get(convertedStorage, prop, receiver);
+                if (prop in target) {
+                    const storageCacheValue = em.storageCache.get(cacheKey);
+                    if (typeof storageCacheValue === 'undefined') {
+                        throw new Error('Logic error');
+                    }
+                    if (!(storageCacheValue[prop] instanceof BaseField)) {
+                        const model = Object.getPrototypeOf(target);
+                        return model[prop].view(storageCacheValue[prop]);
                     }
                     cb(done);
                     return em.pending;
@@ -209,25 +212,6 @@ export default class EntityManager {
         if (typeof proxyTarget === 'undefined') {
             this.setStorageValue(model, pk, {});
         }
-        return this._createProxyByCacheKey(storageModel[pk], model, cb, done);
-    }
-    _createArrayProxy(arrayTarget, targetModel, convertValueToPk) {
-        const em = this;
-        return new Proxy(arrayTarget.map((value) => {
-            const pk = convertValueToPk(value);
-            const findByPk = targetModel.$getRepository().methodsCb.findByPk;
-            return this._createProxy(targetModel, pk, (done) => __awaiter(this, void 0, void 0, function* () {
-                const result = yield findByPk(pk);
-                em.setStorageValue(targetModel, pk, result);
-                done();
-            }));
-        }), {
-            get(target, prop, receiver) {
-                if (['push', 'pop', 'shift', 'unshift'].includes(prop)) {
-                    throw new Error('Use update method');
-                }
-                return Reflect.get(target, prop, receiver);
-            }
-        });
+        return this._createProxyByCacheKey(storageModel[pk], cb, done);
     }
 }

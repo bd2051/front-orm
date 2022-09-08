@@ -1,6 +1,6 @@
-import { Repository, BaseModel, BaseType, BaseField, Entity, EntityField, CollectionField } from "./index";
+import { Repository, getBaseModel, BaseType, BaseField, Entity, EntityField, CollectionField } from "./index";
 import { Diff } from "deep-diff";
-import { Model } from "./types";
+import { Model, ModelData, ModelInit, ModelView } from "./types";
 interface Models {
     [key: string]: Model;
 }
@@ -11,12 +11,6 @@ interface RepositoryInit {
 interface Repositories {
     [key: string]: Repository;
 }
-interface FirstLevelStorage {
-    [key: string | number]: any;
-}
-interface Storage {
-    [key: string]: FirstLevelStorage;
-}
 interface StorageItem {
     [key: string]: any;
 }
@@ -24,7 +18,7 @@ interface Cache {
     [key: string]: object;
 }
 interface CommonClasses {
-    [key: string]: typeof BaseModel | typeof Repository;
+    [key: string]: typeof getBaseModel | typeof Repository;
 }
 interface FieldsClass {
     [key: string]: typeof BaseField | typeof EntityField | typeof CollectionField;
@@ -42,20 +36,18 @@ interface Hooks {
 interface PutValue {
     [key: string]: any;
 }
-interface Fields {
-    [key: string]: any;
-}
-interface PutTarget {
-    [key: string]: string | number | BaseField | Fields | ((v?: any) => any);
-    getPkName: () => string;
-    getName: () => string;
-    validateFields: (v: any) => BaseModel;
-    fields: Fields;
-    _target: BaseModel;
-}
 interface Commit {
     cacheKey: object;
     diffs: Array<Diff<any, any>>;
+}
+interface CacheKey {
+    pk?: string | number;
+}
+interface FirstLevelStorage {
+    [key: string | number]: CacheKey;
+}
+interface Storage {
+    [key: string]: FirstLevelStorage;
 }
 export default class EntityManager {
     models: Models;
@@ -63,22 +55,22 @@ export default class EntityManager {
     storage: Storage;
     cache: Cache;
     commits: Array<Commit>;
-    storageCache: WeakMap<any, any>;
-    reverseStorageCache: WeakMap<any, any>;
+    storageCache: WeakMap<CacheKey, ModelData>;
+    reverseStorageCache: WeakMap<ModelData, CacheKey>;
     hooks: Hooks;
     pending: any;
     defaultClasses: Classes;
     constructor();
     setHooks(hooks: Hooks): void;
-    setModel(model: Model, repositories: RepositoryInit): void;
-    getModel(modelName: string): BaseModel;
+    setModel(getModelInit: (em: EntityManager) => ModelInit, repositories: RepositoryInit): void;
+    getModel(modelName: string): Model;
     getRepository(modelName: string): Repository;
     getStorageModel(modelName: string): FirstLevelStorage;
-    setStorageValue(model: BaseModel, pk: number | string, value: StorageItem): void;
-    put(value: PutValue, target: PutTarget | BaseModel): any;
+    setStorageValue(model: Model, pk: number | string, value: StorageItem): ModelData;
+    _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>): PropertyDescriptorMap;
+    put(value: PutValue, target: ModelView | Model): ModelView | undefined;
     flush(): Promise<void>;
-    _createProxyByCacheKey(cacheKey: object, model: PutTarget | BaseModel, cb?: (done: () => void) => void, done?: () => void): any;
-    _createProxy(model: BaseModel, pk: string | number, cb: (done: () => void) => void): any;
-    _createArrayProxy(arrayTarget: Array<number | string>, targetModel: BaseModel, convertValueToPk: (value: any) => number | string): any;
+    _createProxyByCacheKey(cacheKey: object, cb?: (done: () => void) => void, done?: () => void): ModelView;
+    _createProxy(model: Model, pk: string | number, cb: (done: () => void) => void): ModelView;
 }
 export {};

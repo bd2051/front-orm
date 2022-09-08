@@ -16,6 +16,6 @@ export default class Collection extends BaseType{
     result.forEach((item) => {
       this.em.setStorageValue(model, item[model.$getPkName()], item)
     })
-    return result.map(item => this.getResultProxy(model, item[model.$getPkName()]))
+    return result.map(item => this.getModelView(model, item[model.$getPkName()]))
   }
 }

@@ -17,25 +17,43 @@ export default class EntityField extends BaseField {
     get targetModel() {
         return this.em.getModel(this.targetModelName);
     }
-    validate(value) {
-        if (value === null) {
-            return true;
+    // validate(value: any) {
+    //   if (value === null) {
+    //     return true
+    //   }
+    //   return this.targetModel.$getPkField().validate(this.convertValueToPk(value))
+    // }
+    // convert(data: any, key: string) {
+    //   const value = data[key]
+    //   if (value === null) {
+    //     return null
+    //   }
+    //   const pk = this.convertValueToPk(value)
+    //   const model = this.targetModel
+    //   const findByPk = model.$getRepository().methodsCb.findByPk
+    //   return this.em._createProxy(model, pk, async (done) => {
+    //     const result = await findByPk(pk)
+    //     this.em.setStorageValue(model, pk, result)
+    //     done()
+    //   })
+    // }
+    view(value) {
+        const cacheKey = this.em.reverseStorageCache.get(value);
+        if (typeof cacheKey === 'undefined') {
+            throw new Error('Logic error');
         }
-        return this.targetModel.$getPkField().validate(this.convertValueToPk(value));
-    }
-    convert(data, key) {
-        const value = data[key];
-        if (value === null) {
-            return null;
+        const pk = cacheKey.pk;
+        let cb = (done) => __awaiter(this, void 0, void 0, function* () { done(); });
+        if (typeof pk !== 'undefined') {
+            const model = this.targetModel;
+            const findByPk = model.$getRepository().methodsCb.findByPk;
+            cb = (done) => __awaiter(this, void 0, void 0, function* () {
+                const result = yield findByPk(pk);
+                this.em.setStorageValue(model, pk, result);
+                done();
+            });
         }
-        const pk = this.convertValueToPk(value);
-        const model = this.targetModel;
-        const findByPk = model.$getRepository().methodsCb.findByPk;
-        return this.em._createProxy(model, pk, (done) => __awaiter(this, void 0, void 0, function* () {
-            const result = yield findByPk(pk);
-            this.em.setStorageValue(model, pk, result);
-            done();
-        }));
+        return this.em._createProxyByCacheKey(cacheKey, cb);
     }
     link(value) {
         return this.em.setStorageValue(this.targetModel, this.convertValueToPk(value), value);

@@ -6,6 +6,6 @@ export default class Entity extends BaseType {
             throw new Error('Invalid result. Missing primary key');
         }
         this.em.setStorageValue(model, pkValue, result);
-        return this.getResultProxy(model, pkValue);
+        return this.getModelView(model, pkValue);
     }
 }

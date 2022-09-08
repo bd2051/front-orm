@@ -4,6 +4,6 @@ interface Result {
     [key: string | number]: any;
 }
 export default class Entity extends BaseType {
-    convertResult(result: Result, model: Model): any;
+    convertResult(result: Result, model: Model): import("../types").ModelView;
 }
 export {};

@@ -6,11 +6,14 @@ export default class BaseField {
   constructor(em: EntityManager) {
     this.em = em
   }
-  convert(data: any, key: string): any { // TODO remove?
-    return data[key]
-  }
-  validate(value: any): boolean { // TODO remove?
-    return !(typeof value === 'undefined')
+  // convert(data: any, key: string): any { // TODO remove?
+  //   return data[key]
+  // }
+  // validate(value: any): boolean { // TODO remove?
+  //   return !(typeof value === 'undefined')
+  // }
+  view(value: any): any {
+    return value
   }
   link(value: any): any {
     return value

@@ -1,5 +1,5 @@
 import EntityManager from "../EntityManager";
-import { Model } from "../types";
+import { Model, ModelView } from "../types";
 export default class BaseType {
     em: EntityManager;
     findCb: (values: any) => object;
@@ -7,5 +7,5 @@ export default class BaseType {
     constructor(em: EntityManager, findCb: (values: any) => object);
     setEntityManager(em: EntityManager): void;
     convertResult(result: object, model: Model): any;
-    getResultProxy(model: Model, value: number | string): any;
+    getModelView(model: Model, value: number | string): ModelView;
 }

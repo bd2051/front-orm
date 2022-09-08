@@ -13,7 +13,7 @@ export declare type BaseModel = {
     $getRepository: () => Repository;
 };
 export declare type ModelData = BaseModel & {
-    [key: string]: string | number;
+    [key: string]: string | number | null | boolean | Array<any> | object;
 };
 export declare type ModelView = BaseModel & {
     _target: ModelData;

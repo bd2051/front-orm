@@ -1,5 +1,5 @@
 import EntityManager from "../EntityManager";
-import {Model} from "../types";
+import {Model, ModelView} from "../types";
 
 export default class BaseType {
   em: EntityManager
@@ -21,7 +21,7 @@ export default class BaseType {
         console.warn(result, model, 'add convertResult method')
       return new Proxy({}, {})
   }
-  getResultProxy(model: Model, value: number | string) {
+  getModelView(model: Model, value: number | string): ModelView {
     return this.em._createProxy(model, value, async (done) => {
       const result = await model.$getRepository().methodsCb.findByPk(value)
       this.em.setStorageValue(model, value, result)
