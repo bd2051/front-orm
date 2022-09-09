@@ -1,28 +1,25 @@
 import { suite, test } from '@testdeck/mocha';
 import * as _chai from 'chai';
 import {assert, expect} from 'chai';
-import {BaseModel, Entity, EntityManager, PrimaryKey, StringField} from "../../src";
+import {Entity, EntityManager, PrimaryKey, StringField} from "../../src";
+import {ModelInit} from "../../src/types";
 
 _chai.should();
 
-class Story extends BaseModel {
-  id: PrimaryKey
-  name: StringField
-
-  constructor(em: EntityManager) {
-    super(em);
-    this.id = new PrimaryKey(em)
-    this.name = new StringField(em)
+function Story(em: EntityManager): ModelInit {
+  return {
+    id: new PrimaryKey(em),
+    name: new StringField(em),
   }
 }
 
 @suite class EntityManagerModuleTest {
   private SUT: EntityManager;
-  private model: Story
+  private model: typeof Story
 
   before() {
     this.SUT = new EntityManager();
-    this.model = new Story(this.SUT)
+    this.model = Story
   }
 
   @test 'Em is created' () {
@@ -63,10 +60,7 @@ class Story extends BaseModel {
         })
       })
     })
-    this.SUT.setHooks({
-      refresh() {},
-      cancelRefresh() {}
-    })
+    this.SUT.setHooks({})
 
 
     let proxy;
@@ -90,9 +84,9 @@ class Story extends BaseModel {
     setTimeout(() => {
       let name = proxy.name
       assert.equal(name, 'story')
-      const cacheKey = this.SUT.getStorageModel('Story')[1]
+      const cacheKey = this.SUT.getStorageModel('Story')[1]!
       assert.exists(cacheKey)
-      const cacheValue = this.SUT.storageCache.get(cacheKey)
+      const cacheValue = this.SUT.storageCache.get(cacheKey)!
       assert.exists(cacheValue)
       assert.equal(cacheValue['name'], 'story')
 
@@ -115,10 +109,7 @@ class Story extends BaseModel {
         }
       })
     })
-    this.SUT.setHooks({
-      refresh() {},
-      cancelRefresh() {}
-    })
+    this.SUT.setHooks({})
     const test = async () => {
       let proxy;
       try {

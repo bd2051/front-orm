@@ -1,7 +1,7 @@
 import { suite, test } from '@testdeck/mocha';
 import * as _chai from 'chai';
 import {assert, expect} from 'chai';
-import {EntityManager, PrimaryKey } from '../../../src';
+import {EntityManager, getBaseModel, PrimaryKey} from '../../../src';
 
 _chai.should();
 
@@ -15,8 +15,13 @@ _chai.should();
     this.SUT = new PrimaryKey(this.em)
   }
 
-  @test 'validate' () {
-    expect(this.SUT.validate(null)).to.be.false
-    expect(this.SUT.validate(1)).to.be.true
+  @test 'view' () {
+    const modelData = Object.create(getBaseModel(this.em))
+    expect(this.SUT.view(modelData)).to.be.equal(modelData)
+  }
+
+  @test 'link' () {
+    const modelData = Object.create(getBaseModel(this.em))
+    expect(this.SUT.link(modelData)).to.be.equal(modelData)
   }
 }

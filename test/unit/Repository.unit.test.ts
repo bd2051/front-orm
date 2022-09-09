@@ -1,24 +1,21 @@
 import { suite, test } from '@testdeck/mocha';
 import * as _chai from 'chai';
 import {assert, expect} from 'chai';
-import {BaseModel, Entity, EntityManager, PrimaryKey, Repository, StringField} from "../../src";
+import {Entity, EntityManager, PrimaryKey, Repository, StringField} from "../../src";
+import {Model, ModelInit} from "../../src/types";
 
 _chai.should();
 
-class Story extends BaseModel {
-  id: PrimaryKey
-  name: StringField
-
-  constructor(em: EntityManager) {
-    super(em);
-    this.id = new PrimaryKey(em)
-    this.name = new StringField(em)
+function Story(em: EntityManager): ModelInit {
+  return {
+    id: new PrimaryKey(em),
+    name: new StringField(em),
   }
 }
 
 @suite class RepositoryModuleTest {
   private SUT: Repository
-  protected model: Story
+  protected model: Model
   protected em: EntityManager
 
 
@@ -29,8 +26,7 @@ class Story extends BaseModel {
       cancelRefresh() {}
     })
 
-    this.model = new Story(this.em)
-    this.em.setModel(this.model, {
+    this.em.setModel(Story, {
       findByPk: new Entity(this.em, (pk) => {
         return {
           id: pk,
@@ -44,7 +40,8 @@ class Story extends BaseModel {
         }
       })
     })
-    this.SUT = this.model.getRepository()
+    this.model = this.em.getModel(Story.name)
+    this.SUT = this.model.$getRepository()
   }
 
   @test 'Repository is created' () {

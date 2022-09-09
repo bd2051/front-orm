@@ -1,37 +1,27 @@
 import { suite, test } from '@testdeck/mocha';
 import * as _chai from 'chai';
 import {assert, expect} from 'chai';
-import {EntityManager, EntityField, BaseModel, PrimaryKey, StringField, Entity} from '../../../src';
+import {EntityManager, EntityField, PrimaryKey, StringField, Entity, getBaseModel} from '../../../src';
+import {ModelInit} from "../../../src/types";
 
 _chai.should();
 
-class Story extends BaseModel {
-  id: PrimaryKey
-  name: StringField
-
-  constructor(em: EntityManager) {
-    super(em);
-    this.id = new PrimaryKey(em)
-    this.name = new StringField(em)
+function Story(em: EntityManager): ModelInit {
+  return {
+    id: new PrimaryKey(em),
+    name: new StringField(em),
   }
 }
 
 @suite class EntityFieldModuleTest {
   private SUT: EntityField
-  protected model: Story
+  protected model: typeof Story
   protected em: EntityManager
 
   before() {
     this.em = new EntityManager()
-    this.em.setHooks({
-      create() {},
-      update() {},
-      delete() {},
-      refresh() {},
-      cancelRefresh() {}
-    })
-    this.model = new Story(this.em)
-    this.em.setModel(this.model, {
+    this.em.setHooks({})
+    this.em.setModel(Story, {
       findByPk: new Entity(this.em, (pk) => {
         return {
           id: pk,
@@ -42,33 +32,21 @@ class Story extends BaseModel {
     this.SUT = new EntityField(this.em, 'Story', (value) => value.id)
   }
 
-  @test 'validate' () {
-    expect(this.SUT.validate(null)).to.be.true
-    expect(this.SUT.validate({id: 111})).to.be.true
+  @test 'view' () {
+    const modelData = this.em.setStorageValue(this.em.getModel('Story'), 1, {
+      id: 1,
+      name: 'name'
+    })
+    const modelView = this.SUT.view(modelData)
+    const name = modelView['name']
+    expect(name).to.be.equal('name')
   }
 
-  @test 'convert' (done) {
-    expect(this.SUT.convert({'q': null}, 'q')).to.be.equal(null)
-    const proxy = this.SUT.convert({q: {id: 1}}, 'q')
-    const name = proxy.name
-    assert.equal(name, null)
-    setTimeout(() => {
-      const name = proxy.name
-      assert.equal(name, 'story')
-      done()
-    }, 200)
-  }
-
-  @test 'convert default' (done) {
-    const defaultSUT = new EntityField(this.em, 'Story')
-    expect(defaultSUT.convert({q: null}, 'q')).to.be.equal(null)
-    const proxy = defaultSUT.convert( {q: 1}, 'q')
-    const name = proxy.name
-    assert.equal(name, null)
-    setTimeout(() => {
-      const name = proxy.name
-      assert.equal(name, 'story')
-      done()
-    }, 200)
+  @test 'link' () {
+    const modelData = this.em.setStorageValue(this.em.getModel('Story'), 1, {
+      id: 1,
+      name: 'name'
+    })
+    expect(this.SUT.link(modelData)['name']).to.be.equal(modelData['name'])
   }
 }

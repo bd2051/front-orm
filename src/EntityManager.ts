@@ -242,8 +242,6 @@ export default class EntityManager {
     });
     this.storageCache.set(cacheKey, changingTarget!)
 
-    console.log(changingTarget, cacheKey, this.storageCache.get(cacheKey))
-
     return this._createProxyByCacheKey(
       cacheKey
     )

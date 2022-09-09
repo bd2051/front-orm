@@ -1,7 +1,7 @@
 import { suite, test } from '@testdeck/mocha';
 import * as _chai from 'chai';
 import {assert, expect} from 'chai';
-import {BaseModel, BaseType, EntityManager} from "../../../src";
+import {getBaseModel, BaseType, EntityManager} from "../../../src";
 
 _chai.should();
 
@@ -16,6 +16,6 @@ _chai.should();
   }
 
   @test 'convertResult' () {
-    expect(typeof (this.SUT.convertResult({}, new BaseModel(this.em)))).to.be.equal('object')
+    expect(typeof (this.SUT.convertResult({}, Object.create(getBaseModel(this.em))))).to.be.equal('object')
   }
 }

@@ -4,6 +4,6 @@ interface Result {
     [key: string | number]: any;
 }
 export default class Collection extends BaseType {
-    convertResult(result: Array<Result>, model: Model): any[];
+    convertResult(result: Array<Result>, model: Model): import("../types").ModelView[];
 }
 export {};

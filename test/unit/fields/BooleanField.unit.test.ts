@@ -1,7 +1,7 @@
 import { suite, test } from '@testdeck/mocha';
 import * as _chai from 'chai';
 import {assert, expect} from 'chai';
-import {BooleanField, EntityManager } from '../../../src';
+import {BooleanField, EntityManager, getBaseModel} from '../../../src';
 
 _chai.should();
 
@@ -15,9 +15,13 @@ _chai.should();
     this.SUT = new BooleanField(this.em)
   }
 
-  @test 'validate' () {
-    expect(this.SUT.validate(null)).to.be.false
-    expect(this.SUT.validate(true)).to.be.true
-    expect(this.SUT.validate(false)).to.be.true
+  @test 'view' () {
+    const modelData = Object.create(getBaseModel(this.em))
+    expect(this.SUT.view(modelData)).to.be.equal(modelData)
+  }
+
+  @test 'link' () {
+    const modelData = Object.create(getBaseModel(this.em))
+    expect(this.SUT.link(modelData)).to.be.equal(modelData)
   }
 }

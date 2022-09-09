@@ -71,14 +71,14 @@ export default (em: EntityManager) : BaseModel => Object.create(Object, {
     configurable: false,
     enumerable: false,
     value(): string {
-      if (this.pkName === null) {
+      if (this._pkName === null) {
         const pkName = Object.keys(this).find((key) => this[key] instanceof PrimaryKey)
         if (typeof pkName !== 'string') {
           throw new Error('Add PrimaryKey')
         }
-        this.pkName = pkName
+        this._pkName = pkName
       }
-      return this.pkName
+      return this._pkName
     }
   },
   $getPkField: {
@@ -118,7 +118,7 @@ export default (em: EntityManager) : BaseModel => Object.create(Object, {
     configurable: false,
     enumerable: false,
     value(): Repository {
-      return this.em.getRepository(this.getName())
+      return this.$em.getRepository(this.$getName())
     }
   }
 })
