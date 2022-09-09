@@ -275,6 +275,7 @@ export default class EntityManager {
   ): ModelView {
     const em = this
     const modelData = this.storageCache.get(cacheKey) as unknown as ModelView
+    console.log('qwe', modelData)
     return new Proxy(modelData, {
       get(target, prop: string, receiver) {
         if (prop === '_target') {

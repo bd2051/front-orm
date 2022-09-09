@@ -43,6 +43,7 @@ _chai.should();
         expect(author.stories).to.be.length(2)
         expect(author.stories[0].name).to.be.null
         setTimeout(() => {
+          console.log('123', author.stories)
           expect(author.stories[0].name).to.be.equal('Excellent story')
           done()
         }, 500)

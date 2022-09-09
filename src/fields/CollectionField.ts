@@ -67,6 +67,15 @@ export default class CollectionField extends BaseField implements FieldInterface
     })
   }
   link(values: any): any {
-    return values.map((value: any) => this.em.setStorageValue(this.targetModel, this.convertValueToPk(value), value))
+    return values.map((value: any) => {
+      const pk = this.convertValueToPk(value)
+      const cacheKey = this.em.getStorageModel(this.targetModel.$getName())[pk]
+      if (typeof cacheKey === 'undefined') {
+        return this.em.setStorageValue(this.targetModel, pk, {
+          [this.targetModel.$getPkName()]: pk
+        })
+      }
+      return this.em.storageCache.get(cacheKey)
+    })
   }
 }

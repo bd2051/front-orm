@@ -171,6 +171,7 @@ export default class EntityManager {
     _createProxyByCacheKey(cacheKey, cb = (done) => { done(); }, done = () => { }) {
         const em = this;
         const modelData = this.storageCache.get(cacheKey);
+        console.log('qwe', modelData);
         return new Proxy(modelData, {
             get(target, prop, receiver) {
                 if (prop === '_target') {
