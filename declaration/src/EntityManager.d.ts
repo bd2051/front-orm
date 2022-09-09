@@ -34,7 +34,7 @@ interface Classes {
 interface Hooks {
 }
 interface PutValue {
-    [key: string]: any;
+    [key: string]: string | number | null | Array<ModelView> | ModelView | boolean;
 }
 interface Commit {
     cacheKey: object;

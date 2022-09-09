@@ -119,12 +119,43 @@ export default class EntityManager {
     put(value, target) {
         let cacheKey = {};
         let cacheValue = {};
-        if (typeof target._target !== undefined) {
+        if (typeof target._target !== 'undefined') {
             const modelView = target;
             cacheKey = this.reverseStorageCache.get(modelView._target);
             cacheValue = Object.assign({}, target._target);
         }
-        const diffs = diff(cacheValue, Object.assign(Object.assign({}, cacheValue), value));
+        const convertValue = (value) => {
+            return Object.entries(value).reduce((acc, [key, value]) => {
+                if (typeof value === 'string') {
+                    acc[key] = value;
+                    return acc;
+                }
+                if (typeof value === 'number') {
+                    acc[key] = value;
+                    return acc;
+                }
+                if (typeof value === 'boolean') {
+                    acc[key] = value;
+                    return acc;
+                }
+                if (value === null) {
+                    acc[key] = value;
+                    return acc;
+                }
+                if (Array.isArray(value)) {
+                    acc[key] = value.map((item) => item._target);
+                    return acc;
+                }
+                if (typeof value._target !== 'undefined') {
+                    acc[key] = value._target;
+                    return acc;
+                }
+                return acc;
+            }, {});
+        };
+        console.log(cacheValue);
+        console.log(Object.assign(Object.assign({}, cacheValue), convertValue(value)));
+        const diffs = diff(cacheValue, Object.assign(Object.assign({}, cacheValue), convertValue(value)));
         if (typeof diffs === 'undefined') {
             return;
         }
@@ -133,6 +164,7 @@ export default class EntityManager {
             diffs
         });
         let changingTarget = this.storageCache.get(cacheKey);
+        console.log(cacheKey);
         if (typeof changingTarget === 'undefined') {
             this.storageCache.set(cacheKey, Object.create(target));
             changingTarget = this.storageCache.get(cacheKey);
@@ -184,6 +216,7 @@ export default class EntityManager {
                     }
                     if (!(storageCacheValue[prop] instanceof BaseField)) {
                         const model = Object.getPrototypeOf(target);
+                        console.log('storageCacheValue[prop]', storageCacheValue[prop]);
                         return model[prop].view(storageCacheValue[prop]);
                     }
                     cb(done);

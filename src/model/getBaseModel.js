@@ -1,8 +1,5 @@
 import PrimaryKey from "../fields/PrimaryKey";
-// interface Fields {
-//   [key: string]: any
-// }
-export default (em) => Object.create(Object, {
+export default (em) => Object.create({}, {
     $em: {
         writable: false,
         configurable: false,
@@ -40,27 +37,6 @@ export default (em) => Object.create(Object, {
             return this._name;
         }
     },
-    // _fields: {
-    //   writable: true,
-    //   configurable: false,
-    //   enumerable: false,
-    //   value: null
-    // },
-    // fields: {
-    //   writable: false,
-    //   configurable: false,
-    //   enumerable: false,
-    //   get() : Fields {
-    //     if (this._fields === null) {
-    //       this._fields = Object.entries(this)
-    //         .reduce((acc: Fields, [key]) => {
-    //           acc[key] = true
-    //           return acc
-    //         }, {})
-    //     }
-    //     return this._fields
-    //   }
-    // },
     $getPkName: {
         writable: false,
         configurable: false,
@@ -84,30 +60,6 @@ export default (em) => Object.create(Object, {
             return this[this.getPkName()];
         }
     },
-    // $validateFields: {
-    //   writable: false,
-    //   configurable: false,
-    //   enumerable: false,
-    //   value(data: Fields) {
-    //     if (!Object.entries(data).every(([key, item]) => {
-    //       return this[key].validate(item)
-    //     })) {
-    //       throw new Error('Invalid fields')
-    //     }
-    //     return this
-    //   }
-    // },
-    // $convertFields: {
-    //   writable: false,
-    //   configurable: false,
-    //   enumerable: false,
-    //   value(data: any) {
-    //     return Object.keys(data).reduce((acc: Fields, key) => {
-    //       acc[key] = this[key].convert(data, key)
-    //       return acc
-    //     }, {})
-    //   }
-    // },
     $getRepository: {
         writable: false,
         configurable: false,

@@ -58,7 +58,11 @@ interface Hooks {
 }
 
 interface PutValue {
-  [key: string]: any
+  [key: string]: string | number | null | Array<ModelView> | ModelView | boolean
+}
+
+interface ConvertedPutValue {
+  [key: string]: string | number | null | Array<ModelData> | ModelData | boolean
 }
 
 // interface Fields {
@@ -212,15 +216,51 @@ export default class EntityManager {
   put(value: PutValue, target: ModelView | Model) {
     let cacheKey = {}
     let cacheValue = {}
-    if (typeof target._target !== undefined) {
+    if (typeof target._target !== 'undefined') {
       const modelView = target as ModelView
       cacheKey = this.reverseStorageCache.get(modelView._target)!
       cacheValue = {...target._target}
     }
 
+    const convertValue = (value: PutValue) => {
+      return Object.entries(value).reduce((acc: ConvertedPutValue, [key, value]) => {
+        if (typeof value === 'string') {
+          acc[key] = value
+          return acc
+        }
+        if (typeof value === 'number') {
+          acc[key] = value
+          return acc
+        }
+        if (typeof value === 'boolean') {
+          acc[key] = value
+          return acc
+        }
+        if (value === null) {
+          acc[key] = value
+          return acc
+        }
+        if (Array.isArray(value)) {
+          acc[key] = value.map((item) => item._target)
+          return acc
+        }
+        if (typeof value._target !== 'undefined') {
+          acc[key] = value._target
+          return acc
+        }
+        return acc
+      }, {})
+    }
+
+    console.log(cacheValue)
+    console.log({
+      ...cacheValue,
+      ...convertValue(value)
+    })
+
     const diffs = diff(cacheValue, {
       ...cacheValue,
-      ...value
+      ...convertValue(value)
     })
 
     if (typeof diffs === 'undefined') {
@@ -233,6 +273,7 @@ export default class EntityManager {
     })
 
     let changingTarget = this.storageCache.get(cacheKey)
+    console.log(cacheKey)
     if (typeof changingTarget === 'undefined') {
       this.storageCache.set(cacheKey, Object.create(target))
       changingTarget = this.storageCache.get(cacheKey)
@@ -242,9 +283,7 @@ export default class EntityManager {
     });
     this.storageCache.set(cacheKey, changingTarget!)
 
-    return this._createProxyByCacheKey(
-      cacheKey
-    )
+    return this._createProxyByCacheKey(cacheKey)
   }
   async flush() {
     console.log(this.commits)
@@ -288,6 +327,7 @@ export default class EntityManager {
           }
           if (!(storageCacheValue[prop] as any instanceof BaseField)) {
             const model = Object.getPrototypeOf(target) as Model
+            console.log('storageCacheValue[prop]', storageCacheValue[prop])
             return model[prop]!.view(storageCacheValue[prop])
           }
           cb(done)

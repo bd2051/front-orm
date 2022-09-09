@@ -40,6 +40,8 @@ export default class CollectionField extends BaseField implements FieldInterface
   view(values: Array<ModelData>): Array<ModelView> {
     return new Proxy(values.map((value) => {
       const cacheKey = this.em.reverseStorageCache.get(value)
+      console.log(value)
+      console.log(cacheKey)
       if (typeof cacheKey === 'undefined') {
         throw new Error('Logic error')
       }
