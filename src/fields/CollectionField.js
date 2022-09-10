@@ -38,8 +38,6 @@ export default class CollectionField extends BaseField {
     view(values) {
         return new Proxy(values.map((value) => {
             const cacheKey = this.em.reverseStorageCache.get(value);
-            console.log(value);
-            console.log(cacheKey);
             if (typeof cacheKey === 'undefined') {
                 throw new Error('Logic error');
             }

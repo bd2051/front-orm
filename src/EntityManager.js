@@ -153,8 +153,6 @@ export default class EntityManager {
                 return acc;
             }, {});
         };
-        console.log(cacheValue);
-        console.log(Object.assign(Object.assign({}, cacheValue), convertValue(value)));
         const diffs = diff(cacheValue, Object.assign(Object.assign({}, cacheValue), convertValue(value)));
         if (typeof diffs === 'undefined') {
             return;
@@ -164,7 +162,6 @@ export default class EntityManager {
             diffs
         });
         let changingTarget = this.storageCache.get(cacheKey);
-        console.log(cacheKey);
         if (typeof changingTarget === 'undefined') {
             this.storageCache.set(cacheKey, Object.create(target));
             changingTarget = this.storageCache.get(cacheKey);
@@ -203,7 +200,6 @@ export default class EntityManager {
     _createProxyByCacheKey(cacheKey, cb = (done) => { done(); }, done = () => { }) {
         const em = this;
         const modelData = this.storageCache.get(cacheKey);
-        console.log('qwe', modelData);
         return new Proxy(modelData, {
             get(target, prop, receiver) {
                 if (prop === '_target') {
@@ -216,7 +212,6 @@ export default class EntityManager {
                     }
                     if (!(storageCacheValue[prop] instanceof BaseField)) {
                         const model = Object.getPrototypeOf(target);
-                        console.log('storageCacheValue[prop]', storageCacheValue[prop]);
                         return model[prop].view(storageCacheValue[prop]);
                     }
                     cb(done);

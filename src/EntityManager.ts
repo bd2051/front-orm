@@ -252,12 +252,6 @@ export default class EntityManager {
       }, {})
     }
 
-    console.log(cacheValue)
-    console.log({
-      ...cacheValue,
-      ...convertValue(value)
-    })
-
     const diffs = diff(cacheValue, {
       ...cacheValue,
       ...convertValue(value)
@@ -273,7 +267,6 @@ export default class EntityManager {
     })
 
     let changingTarget = this.storageCache.get(cacheKey)
-    console.log(cacheKey)
     if (typeof changingTarget === 'undefined') {
       this.storageCache.set(cacheKey, Object.create(target))
       changingTarget = this.storageCache.get(cacheKey)
@@ -314,7 +307,6 @@ export default class EntityManager {
   ): ModelView {
     const em = this
     const modelData = this.storageCache.get(cacheKey) as unknown as ModelView
-    console.log('qwe', modelData)
     return new Proxy(modelData, {
       get(target, prop: string, receiver) {
         if (prop === '_target') {
@@ -327,7 +319,6 @@ export default class EntityManager {
           }
           if (!(storageCacheValue[prop] as any instanceof BaseField)) {
             const model = Object.getPrototypeOf(target) as Model
-            console.log('storageCacheValue[prop]', storageCacheValue[prop])
             return model[prop]!.view(storageCacheValue[prop])
           }
           cb(done)
