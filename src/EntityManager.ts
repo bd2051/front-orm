@@ -77,6 +77,12 @@ interface Hooks {
   update: (value: any, commit: Commit, data: ModelData) => Promise<string | number>
 }
 
+interface HooksInit {
+  preFlush?: (commits: Array<Commit>) => Array<Commit>;
+  create: (value: any, commit: Commit, data: ModelData) => Promise<string | number>
+  update: (value: any, commit: Commit, data: ModelData) => Promise<string | number>
+}
+
 interface FirstLevelStorage {
   [key: string|number]: CacheKey
 }
@@ -156,8 +162,11 @@ export default class EntityManager {
       }
     }
   }
-  setHooks(hooks: Hooks) {
-    this.hooks = hooks
+  setHooks(hooks: HooksInit) {
+    this.hooks = {
+      ...this.hooks,
+      ...hooks
+    }
   }
   setModel(getModelInit: (em: EntityManager) => ModelInit, repositories: RepositoryInit) {
     const baseModel: BaseModel = getBaseModel(this)
