@@ -70,7 +70,7 @@ export default class EntityManager {
     _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>): PropertyDescriptorMap;
     put(value: PutValue, target: ModelView | Model): ModelView | undefined;
     flush(): Promise<void>;
-    _createProxyByCacheKey(cacheKey: object, cb?: (done: () => void) => void, done?: () => void): ModelView;
+    _createProxyByCacheKey(cacheKey: CacheKey, cb?: (done: () => void) => void, done?: () => void): ModelView;
     _createProxy(model: Model, pk: string | number, cb: (done: () => void) => void): ModelView;
 }
 export {};

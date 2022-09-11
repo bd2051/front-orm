@@ -177,22 +177,47 @@ export default class EntityManager {
             console.log(this.commits);
             // flush hooks common
             const map = this.commits.reduce((acc, commit) => {
-                if (!acc.get(commit.cacheKey)) {
+                const cacheValue = acc.get(commit.cacheKey);
+                if (typeof cacheValue === 'undefined') {
                     acc.set(commit.cacheKey, commit);
                 }
                 else {
                     commit.diffs.forEach((change) => {
-                        acc.get(commit.cacheKey).diffs.push(change);
+                        cacheValue.diffs.push(change);
                     });
                 }
                 return acc;
             }, new Map());
+            //
+            // const calculatePriority = (item: any, model: Model) : number => {
+            //   let priority = 0
+            //   if (typeof item[model.$getPkName()] === 'undefined') {
+            //     priority++
+            //     const values = Object.values(item) as (Array<Array<ModelData>| ModelData | null>)
+            //     values.forEach((value: Array<ModelData> | ModelData | null) => {
+            //       if (value === null) {
+            //         return
+            //       }
+            //       if (Array.isArray(value)) {
+            //         if (value.every((item: ModelData) => typeof item[item.$getPkName()] !== 'undefined')) {
+            //           priority++
+            //         }
+            //       } else if (typeof value.$getPkName !== 'undefined') {
+            //         if (typeof value[value.$getPkName()] !== 'undefined') {
+            //           priority++
+            //         }
+            //       }
+            //     })
+            //   }
+            //   return priority
+            // }
             map.forEach((commit, cacheKey) => {
                 const item = {};
                 const method = cacheKey.pk ? 'PUT' : 'POST';
                 commit.diffs.forEach(function (change) {
                     applyChange(item, true, change);
                 });
+                // const priority = calculatePriority(item, Object.getPrototypeOf(this.storageCache.get(cacheKey)!))
                 console.log(item, commit, method);
             });
         });

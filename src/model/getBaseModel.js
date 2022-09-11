@@ -57,7 +57,7 @@ export default (em) => Object.create({}, {
         configurable: false,
         enumerable: false,
         value() {
-            return this[this.getPkName()];
+            return this[this.$getPkName()];
         }
     },
     $getRepository: {
@@ -66,6 +66,22 @@ export default (em) => Object.create({}, {
         enumerable: false,
         value() {
             return this.$em.getRepository(this.$getName());
+        }
+    },
+    $create: {
+        writable: false,
+        configurable: false,
+        enumerable: false,
+        async value(value, commit) {
+            return this.$em.hooks.create(value, commit, this)
+        }
+    },
+    $update: {
+        writable: false,
+        configurable: false,
+        enumerable: false,
+        async value(value, commit) {
+            return this.$em.hooks.update(value, commit, this)
         }
     }
 });

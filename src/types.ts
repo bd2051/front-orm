@@ -18,6 +18,9 @@ export type BaseModel = {
   // $validateFields: (data: Fields) => BaseModel
   // $convertFields: (data: Fields) => any
   $getRepository: () => Repository
+  $create: (value: any, commit: any) => Promise<number | string>,
+  $update: (value: any, commit: any) => Promise<number | string>,
+
 }
 
 export type ModelData = BaseModel & {

@@ -54,9 +54,6 @@ interface Classes {
   types: TypesClass
 }
 
-interface Hooks {
-}
-
 interface PutValue {
   [key: string]: string | number | null | Array<ModelView> | ModelView | boolean
 }
@@ -65,26 +62,19 @@ interface ConvertedPutValue {
   [key: string]: string | number | null | Array<ModelData> | ModelData | boolean
 }
 
-// interface Fields {
-//   [key: string]: any
-// }
-
-// interface PutTarget {
-//   [key: string]: string | number | BaseField | Fields | ((v?: any) => any)
-//   getPkName: () => string
-//   getName: () => string
-//   validateFields: (v: any) => BaseModel
-//   fields: Fields
-//   _target: BaseModel
-// }
+interface CacheKey {
+  pk?: string | number
+}
 
 interface Commit {
-  cacheKey: object,
+  cacheKey: CacheKey,
   diffs: Array<Diff<any, any>>
 }
 
-interface CacheKey {
-  pk?: string | number
+interface Hooks {
+  preFlush: (commits: Array<Commit>) => Array<Commit>;
+  create: (value: any, commit: Commit, data: ModelData) => Promise<string | number>
+  update: (value: any, commit: Commit, data: ModelData) => Promise<string | number>
 }
 
 interface FirstLevelStorage {
@@ -130,7 +120,23 @@ export default class EntityManager {
     this.cache = {}
     this.commits = []
     this.pending = null
-    this.hooks = {}
+    this.hooks = {
+      preFlush: (commits) => {
+        return commits
+      },
+      create: async (value, commit, data) => {
+        if (value && commit && data) {
+          throw new Error('Add create hook')
+        }
+        return ''
+      },
+      update: async (value, commit, data) => {
+        if (value && commit && data) {
+          throw new Error('Add create hook')
+        }
+        return ''
+      }
+    }
     this.defaultClasses = {
       common: {
         getBaseModel,
@@ -279,29 +285,68 @@ export default class EntityManager {
     return this._createProxyByCacheKey(cacheKey)
   }
   async flush() {
-    console.log(this.commits)
+    const commits = this.hooks.preFlush(this.commits)
     // flush hooks common
-    const map = this.commits.reduce((acc: Map<any, any>, commit) => {
-      if (!acc.get(commit.cacheKey)) {
+    const map = commits.reduce((acc: Map<CacheKey, Commit>, commit) => {
+      const cacheValue = acc.get(commit.cacheKey)
+      if (typeof cacheValue === 'undefined') {
         acc.set(commit.cacheKey, commit)
       } else {
         commit.diffs.forEach((change) => {
-          acc.get(commit.cacheKey).diffs.push(change)
+          cacheValue.diffs.push(change)
         })
       }
       return acc
     }, new Map())
+    //
+    // const calculatePriority = (item: any, model: Model) : number => {
+    //   let priority = 0
+    //   if (typeof item[model.$getPkName()] === 'undefined') {
+    //     priority++
+    //     const values = Object.values(item) as (Array<Array<ModelData>| ModelData | null>)
+    //     values.forEach((value: Array<ModelData> | ModelData | null) => {
+    //       if (value === null) {
+    //         return
+    //       }
+    //       if (Array.isArray(value)) {
+    //         if (value.every((item: ModelData) => typeof item[item.$getPkName()] !== 'undefined')) {
+    //           priority++
+    //         }
+    //       } else if (typeof value.$getPkName !== 'undefined') {
+    //         if (typeof value[value.$getPkName()] !== 'undefined') {
+    //           priority++
+    //         }
+    //       }
+    //     })
+    //   }
+    //   return priority
+    // }
+
     map.forEach((commit, cacheKey) => {
       const item = {}
-      const method = cacheKey.pk ? 'PUT' : 'POST'
       commit.diffs.forEach(function (change: Diff<any, any>) {
         applyChange(item, true, change);
       });
-      console.log(item, commit, method)
+      // const priority = calculatePriority(item, Object.getPrototypeOf(this.storageCache.get(cacheKey)!))
+
+      const cacheValue = this.storageCache.get(cacheKey)!
+      let promise
+      if (typeof cacheKey.pk === 'undefined') {
+        promise = cacheValue.$create(item, commit)
+      } else {
+        promise = cacheValue.$update(item, commit)
+      }
+      promise.then((pk) => {
+        cacheKey.pk = pk
+        cacheValue[cacheValue.$getPkName()] = pk
+        this.getStorageModel(cacheValue.$getName())[pk] = cacheKey
+      })
     })
+
+    this.commits = []
   }
   _createProxyByCacheKey(
-    cacheKey: object,
+    cacheKey: CacheKey,
     cb = (done: () => void) => {done()},
     done = () => {}
   ): ModelView {
