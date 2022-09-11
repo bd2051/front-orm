@@ -33,7 +33,23 @@ export default class EntityManager {
         this.cache = {};
         this.commits = [];
         this.pending = null;
-        this.hooks = {};
+        this.hooks = {
+            preFlush: (commits) => {
+                return commits;
+            },
+            create: (value, commit, data) => __awaiter(this, void 0, void 0, function* () {
+                if (value && commit && data) {
+                    throw new Error('Add create hook');
+                }
+                return '';
+            }),
+            update: (value, commit, data) => __awaiter(this, void 0, void 0, function* () {
+                if (value && commit && data) {
+                    throw new Error('Add create hook');
+                }
+                return '';
+            })
+        };
         this.defaultClasses = {
             common: {
                 getBaseModel,
@@ -174,9 +190,9 @@ export default class EntityManager {
     }
     flush() {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log(this.commits);
+            const commits = this.hooks.preFlush(this.commits);
             // flush hooks common
-            const map = this.commits.reduce((acc, commit) => {
+            const map = commits.reduce((acc, commit) => {
                 const cacheValue = acc.get(commit.cacheKey);
                 if (typeof cacheValue === 'undefined') {
                     acc.set(commit.cacheKey, commit);
@@ -213,13 +229,25 @@ export default class EntityManager {
             // }
             map.forEach((commit, cacheKey) => {
                 const item = {};
-                const method = cacheKey.pk ? 'PUT' : 'POST';
                 commit.diffs.forEach(function (change) {
                     applyChange(item, true, change);
                 });
                 // const priority = calculatePriority(item, Object.getPrototypeOf(this.storageCache.get(cacheKey)!))
-                console.log(item, commit, method);
+                const cacheValue = this.storageCache.get(cacheKey);
+                let promise;
+                if (typeof cacheKey.pk === 'undefined') {
+                    promise = cacheValue.$create(item, commit);
+                }
+                else {
+                    promise = cacheValue.$update(item, commit);
+                }
+                promise.then((pk) => {
+                    cacheKey.pk = pk;
+                    cacheValue[cacheValue.$getPkName()] = pk;
+                    this.getStorageModel(cacheValue.$getName())[pk] = cacheKey;
+                });
             });
+            this.commits = [];
         });
     }
     _createProxyByCacheKey(cacheKey, cb = (done) => { done(); }, done = () => { }) {

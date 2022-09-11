@@ -31,17 +31,20 @@ interface Classes {
     fields: FieldsClass;
     types: TypesClass;
 }
-interface Hooks {
-}
 interface PutValue {
     [key: string]: string | number | null | Array<ModelView> | ModelView | boolean;
 }
-interface Commit {
-    cacheKey: object;
-    diffs: Array<Diff<any, any>>;
-}
 interface CacheKey {
     pk?: string | number;
+}
+interface Commit {
+    cacheKey: CacheKey;
+    diffs: Array<Diff<any, any>>;
+}
+interface Hooks {
+    preFlush: (commits: Array<Commit>) => Array<Commit>;
+    create: (value: any, commit: Commit, data: ModelData) => Promise<string | number>;
+    update: (value: any, commit: Commit, data: ModelData) => Promise<string | number>;
 }
 interface FirstLevelStorage {
     [key: string | number]: CacheKey;
