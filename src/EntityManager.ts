@@ -72,15 +72,15 @@ interface Commit {
 }
 
 interface Hooks {
-  preFlush: (commits: Array<Commit>) => Array<Commit>;
-  create: (value: any, commit: Commit, data: ModelData) => Promise<string | number>
-  update: (value: any, commit: Commit, data: ModelData) => Promise<string | number>
+  preFlush: (commits: Array<Commit>) => Array<Commit>
+  create: (data: ModelData, value: any, commit?: Commit) => Promise<string | number>
+  update: (data: ModelData, value: any, commit?: Commit) => Promise<string | number>
 }
 
 interface HooksInit {
-  preFlush?: (commits: Array<Commit>) => Array<Commit>;
-  create: (value: any, commit: Commit, data: ModelData) => Promise<string | number>
-  update: (value: any, commit: Commit, data: ModelData) => Promise<string | number>
+  preFlush?: (commits: Array<Commit>) => Array<Commit>
+  create: (data: ModelData, value: any, commit?: Commit) => Promise<string | number>
+  update: (data: ModelData, value: any, commit?: Commit) => Promise<string | number>
 }
 
 interface FirstLevelStorage {

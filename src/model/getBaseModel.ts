@@ -71,5 +71,21 @@ export default (em: EntityManager) : BaseModel => Object.create({}, {
     value(): Repository {
       return this.$em.getRepository(this.$getName())
     }
+  },
+  $create: {
+    writable: false,
+    configurable: false,
+    enumerable: false,
+    value(value: any, commit: any) {
+      return this.$em.hooks.create(this, value, commit)
+    }
+  },
+  $update: {
+    writable: false,
+    configurable: false,
+    enumerable: false,
+    value(value: any, commit: any) {
+      return this.$em.hooks.update(this, value, commit)
+    }
   }
 })

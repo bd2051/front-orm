@@ -89,7 +89,10 @@ app.post('/api/stories', (req, res) => {
     id: storyLastId,
     ...req.body
   }
-  res.json({success: true})
+  res.json({
+    success: true,
+    id: storyLastId
+  })
 })
 
 app.put('/api/stories', (req, res) => {

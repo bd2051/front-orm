@@ -59,6 +59,48 @@ em.setModel(Story, {
   })
 })
 
+const apiNameMap = {
+  Author: 'authors',
+  Story: 'stories'
+}
+
+em.setHooks({
+  preFlush(commits) {
+    console.log(commits)
+    return commits
+  },
+  create(data, value) {
+    return fetch(
+      `http://localhost:8000/api/${apiNameMap[data.$getName() as 'Author' | 'Story']}`,{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json;charset=utf-8'
+        },
+        body: JSON.stringify(value)
+      }
+    ).then(response => response.json())
+    .then((result) => {
+      console.log(result)
+      return result.id as number | string
+    })
+  },
+  update(data, value) {
+    return fetch(
+      `http://localhost:8000/api/${apiNameMap[data.$getName() as 'Author' | 'Story']}`,{
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json;charset=utf-8'
+        },
+        body: JSON.stringify(value)
+      }
+    ).then(response => response.json())
+    .then((result) => {
+      console.log(result)
+      return data['id'] as number | string
+    })
+  },
+})
+
 try {
   if (window) {
     window.em = em
