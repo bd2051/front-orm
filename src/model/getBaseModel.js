@@ -23,7 +23,12 @@ export default (em) => Object.create({}, {
         configurable: false,
         enumerable: false,
         value(val) {
-            return this._name = val;
+            return Object.defineProperty(this, '_name', {
+                writable: false,
+                configurable: false,
+                enumerable: false,
+                value: val
+            });
         }
     },
     $getName: {
@@ -43,9 +48,13 @@ export default (em) => Object.create({}, {
         enumerable: false,
         value() {
             if (this._pkName === null) {
-                const pkName = Object.keys(this).find((key) => this[key] instanceof PrimaryKey);
+                let pkName = Object.keys(this).find((key) => this[key] instanceof PrimaryKey);
+                console.log('pkName', pkName);
                 if (typeof pkName !== 'string') {
-                    throw new Error('Add PrimaryKey');
+                    pkName = Object.keys(Object.getPrototypeOf(this)).find((key) => this[key] instanceof PrimaryKey);
+                    if (typeof pkName !== 'string') {
+                        throw new Error('Add PrimaryKey');
+                    }
                 }
                 this._pkName = pkName;
             }
@@ -66,6 +75,22 @@ export default (em) => Object.create({}, {
         enumerable: false,
         value() {
             return this.$em.getRepository(this.$getName());
+        }
+    },
+    $create: {
+        writable: false,
+        configurable: false,
+        enumerable: false,
+        value(value, commit) {
+            return this.$em.hooks.create(this, value, commit);
+        }
+    },
+    $update: {
+        writable: false,
+        configurable: false,
+        enumerable: false,
+        value(value, commit) {
+            return this.$em.hooks.update(this, value, commit);
         }
     }
 });

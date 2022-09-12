@@ -27,7 +27,12 @@ export default (em: EntityManager) : BaseModel => Object.create({}, {
     configurable: false,
     enumerable: false,
     value(val: string) {
-      return this._name = val
+      return Object.defineProperty(this, '_name', {
+        writable: false,
+        configurable: false,
+        enumerable: false,
+        value: val
+      })
     }
   },
   $getName: {
@@ -47,9 +52,13 @@ export default (em: EntityManager) : BaseModel => Object.create({}, {
     enumerable: false,
     value(): string {
       if (this._pkName === null) {
-        const pkName = Object.keys(this).find((key) => this[key] instanceof PrimaryKey)
+        let pkName = Object.keys(this).find((key) => this[key] instanceof PrimaryKey)
+        console.log('pkName', pkName)
         if (typeof pkName !== 'string') {
-          throw new Error('Add PrimaryKey')
+          pkName = Object.keys(Object.getPrototypeOf(this)).find((key) => this[key] instanceof PrimaryKey)
+          if (typeof pkName !== 'string') {
+            throw new Error('Add PrimaryKey')
+          }
         }
         this._pkName = pkName
       }

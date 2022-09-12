@@ -84,14 +84,14 @@ em.setHooks({
       return result.id as number | string
     })
   },
-  update(data, value) {
+  update(data) {
     return fetch(
       `http://localhost:8000/api/${apiNameMap[data.$getName() as 'Author' | 'Story']}`,{
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json;charset=utf-8'
         },
-        body: JSON.stringify(value)
+        body: JSON.stringify({...data})
       }
     ).then(response => response.json())
     .then((result) => {

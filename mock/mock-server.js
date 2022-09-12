@@ -89,6 +89,9 @@ app.post('/api/stories', (req, res) => {
     id: storyLastId,
     ...req.body
   }
+  if (req.body.author !== null) {
+    stories[storyLastId].author = req.body.author.id
+  }
   res.json({
     success: true,
     id: storyLastId
@@ -97,11 +100,17 @@ app.post('/api/stories', (req, res) => {
 
 app.put('/api/stories', (req, res) => {
   stories[req.body.id] = req.body
+  if (req.body.author !== null) {
+    stories[req.body.id].author = req.body.author.id
+  }
   res.json({success: true})
 })
 
 app.put('/api/authors', (req, res) => {
   authors[req.body.id] = req.body
+  if ( req.body.stories.length > 0) {
+    authors[req.body.id].stories = req.body.stories.map(el => el.id)
+  }
   res.json({success: true})
 })
 

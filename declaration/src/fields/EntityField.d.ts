@@ -7,6 +7,6 @@ export default class EntityField extends BaseField implements FieldInterface {
     convertValueToPk: (value: any) => number | string;
     constructor(em: EntityManager, targetModelName: string, convertValueToPk?: (value: any) => number | string);
     get targetModel(): Model;
-    view(value: ModelData): ModelView;
-    link(value: any): any;
+    view(value: ModelData | null): ModelView | null;
+    link(value: any): ModelData | null;
 }

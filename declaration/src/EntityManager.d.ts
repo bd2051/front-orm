@@ -43,8 +43,13 @@ interface Commit {
 }
 interface Hooks {
     preFlush: (commits: Array<Commit>) => Array<Commit>;
-    create: (value: any, commit: Commit, data: ModelData) => Promise<string | number>;
-    update: (value: any, commit: Commit, data: ModelData) => Promise<string | number>;
+    create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
+    update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
+}
+interface HooksInit {
+    preFlush?: (commits: Array<Commit>) => Array<Commit>;
+    create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
+    update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
 }
 interface FirstLevelStorage {
     [key: string | number]: CacheKey;
@@ -64,14 +69,14 @@ export default class EntityManager {
     pending: any;
     defaultClasses: Classes;
     constructor();
-    setHooks(hooks: Hooks): void;
+    setHooks(hooks: HooksInit): void;
     setModel(getModelInit: (em: EntityManager) => ModelInit, repositories: RepositoryInit): void;
     getModel(modelName: string): Model;
     getRepository(modelName: string): Repository;
     getStorageModel(modelName: string): FirstLevelStorage;
     setStorageValue(model: Model, pk: number | string, value: StorageItem): ModelData;
     _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>): PropertyDescriptorMap;
-    put(value: PutValue, target: ModelView | Model): ModelView | undefined;
+    put(value: PutValue, target: ModelView | Model): ModelView;
     flush(): Promise<void>;
     _createProxyByCacheKey(cacheKey: CacheKey, cb?: (done: () => void) => void, done?: () => void): ModelView;
     _createProxy(model: Model, pk: string | number, cb: (done: () => void) => void): ModelView;

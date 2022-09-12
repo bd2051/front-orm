@@ -39,7 +39,10 @@ export default class EntityField extends BaseField implements FieldInterface {
   //     done()
   //   })
   // }
-  view(value: ModelData): ModelView {
+  view(value: ModelData | null): ModelView | null {
+    if (value === null) {
+      return value
+    }
     const cacheKey = this.em.reverseStorageCache.get(value)
     if (typeof cacheKey === 'undefined') {
       throw new Error('Logic error')
@@ -57,14 +60,20 @@ export default class EntityField extends BaseField implements FieldInterface {
     }
     return this.em._createProxyByCacheKey(cacheKey, cb)
   }
-  link(value: any): any {
+  link(value: any): ModelData | null {
+    console.log('link', value)
+    if (value === null) {
+      return null
+    }
     const pk = this.convertValueToPk(value)
     const cacheKey = this.em.getStorageModel(this.targetModel.$getName())[pk]
+
+    console.log('link2', value)
     if (typeof cacheKey === 'undefined') {
       return this.em.setStorageValue(this.targetModel, pk, {
         [this.targetModel.$getPkName()]: pk
       })
     }
-    return this.em.storageCache.get(cacheKey)
+    return this.em.storageCache.get(cacheKey)!
   }
 }

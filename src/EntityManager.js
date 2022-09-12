@@ -70,7 +70,7 @@ export default class EntityManager {
         };
     }
     setHooks(hooks) {
-        this.hooks = hooks;
+        this.hooks = Object.assign(Object.assign({}, this.hooks), hooks);
     }
     setModel(getModelInit, repositories) {
         const baseModel = getBaseModel(this);
@@ -171,7 +171,7 @@ export default class EntityManager {
         };
         const diffs = diff(cacheValue, Object.assign(Object.assign({}, cacheValue), convertValue(value)));
         if (typeof diffs === 'undefined') {
-            return;
+            return target;
         }
         this.commits.push({
             cacheKey,

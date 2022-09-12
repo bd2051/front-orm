@@ -73,14 +73,14 @@ interface Commit {
 
 interface Hooks {
   preFlush: (commits: Array<Commit>) => Array<Commit>
-  create: (data: ModelData, value: any, commit?: Commit) => Promise<string | number>
-  update: (data: ModelData, value: any, commit?: Commit) => Promise<string | number>
+  create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
+  update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
 }
 
 interface HooksInit {
   preFlush?: (commits: Array<Commit>) => Array<Commit>
-  create: (data: ModelData, value: any, commit?: Commit) => Promise<string | number>
-  update: (data: ModelData, value: any, commit?: Commit) => Promise<string | number>
+  create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
+  update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
 }
 
 interface FirstLevelStorage {
@@ -228,7 +228,7 @@ export default class EntityManager {
       return acc
     }, {})
   }
-  put(value: PutValue, target: ModelView | Model) {
+  put(value: PutValue, target: ModelView | Model): ModelView {
     let cacheKey = {}
     let cacheValue = {}
     if (typeof target._target !== 'undefined') {
@@ -273,7 +273,7 @@ export default class EntityManager {
     })
 
     if (typeof diffs === 'undefined') {
-      return
+      return target as ModelView
     }
 
     this.commits.push({
