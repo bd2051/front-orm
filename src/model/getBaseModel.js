@@ -49,7 +49,6 @@ export default (em) => Object.create({}, {
         value() {
             if (this._pkName === null) {
                 let pkName = Object.keys(this).find((key) => this[key] instanceof PrimaryKey);
-                console.log('pkName', pkName);
                 if (typeof pkName !== 'string') {
                     pkName = Object.keys(Object.getPrototypeOf(this)).find((key) => this[key] instanceof PrimaryKey);
                     if (typeof pkName !== 'string') {

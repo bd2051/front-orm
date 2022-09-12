@@ -14,6 +14,7 @@ _chai.should();
   private SUT: EntityManager;
   private findAuthor: (value: any) => any
   private findStory: (value: any) => any
+  private checkingId: number
 
   before() {
     this.SUT = em;
@@ -82,6 +83,7 @@ _chai.should();
         }, author)
         expect(author.age).to.be.equal(50)
         expect(author.stories[2].name).to.be.equal('123 Story')
+        await this.SUT.flush()
         done()
       } catch (e) {
         done(e)
@@ -102,6 +104,7 @@ _chai.should();
         }, this.SUT.models['Author']!)
         expect(authorNew!['stories'][0].name).to.be.equal('Great story')
         expect(authorNew!['name']).to.be.equal('Name')
+        await this.SUT.flush()
         done()
       } catch (e) {
         done(e)
@@ -110,4 +113,27 @@ _chai.should();
     test();
   }
 
+  @test 'check flush' (done) {
+    const test = async () => {
+      try {
+        const storyNew = this.SUT.put({
+            name: 'qwe Story',
+            author: null
+        }, this.SUT.models['Story']!)
+        expect(storyNew['name']).to.be.equal('qwe Story')
+        await this.SUT.flush()
+        setTimeout(() => {
+          this.checkingId = storyNew['id']
+          expect(typeof this.checkingId).to.be.equal('number')
+          const cacheKey = this.SUT.reverseStorageCache.get(storyNew._target)!
+          expect(cacheKey.pk).to.be.equal(this.checkingId)
+          expect(this.SUT.commits.length).to.be.equal(0)
+          done()
+        }, 200)
+      } catch (e) {
+        done(e)
+      }
+    }
+    test();
+  }
 }

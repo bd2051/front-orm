@@ -61,14 +61,12 @@ export default class EntityField extends BaseField implements FieldInterface {
     return this.em._createProxyByCacheKey(cacheKey, cb)
   }
   link(value: any): ModelData | null {
-    console.log('link', value)
     if (value === null) {
       return null
     }
     const pk = this.convertValueToPk(value)
     const cacheKey = this.em.getStorageModel(this.targetModel.$getName())[pk]
 
-    console.log('link2', value)
     if (typeof cacheKey === 'undefined') {
       return this.em.setStorageValue(this.targetModel, pk, {
         [this.targetModel.$getPkName()]: pk

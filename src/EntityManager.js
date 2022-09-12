@@ -227,7 +227,7 @@ export default class EntityManager {
             //   }
             //   return priority
             // }
-            map.forEach((commit, cacheKey) => {
+            for (const [cacheKey, commit] of Array.from(map)) {
                 const item = {};
                 commit.diffs.forEach(function (change) {
                     applyChange(item, true, change);
@@ -241,12 +241,12 @@ export default class EntityManager {
                 else {
                     promise = cacheValue.$update(item, commit);
                 }
-                promise.then((pk) => {
+                yield promise.then((pk) => {
                     cacheKey.pk = pk;
                     cacheValue[cacheValue.$getPkName()] = pk;
                     this.getStorageModel(cacheValue.$getName())[pk] = cacheKey;
                 });
-            });
+            }
             this.commits = [];
         });
     }

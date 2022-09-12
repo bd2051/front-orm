@@ -1,6 +1,7 @@
 import Author from "./model/Author";
 import Story from "./model/Story";
 import {Collection, Entity, EntityManager} from "../src";
+import {ModelData} from "../src/types";
 
 console.log('start')
 
@@ -11,6 +12,23 @@ declare global {
 }
 
 const em = new EntityManager()
+
+const serializeData = (data: ModelData) => {
+  const q =  Object.entries(data).reduce((acc: any, [key, value]) => {
+    if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      acc[key] = value
+      return acc
+    }
+    if (Array.isArray(value)) {
+      acc[key] = value.map(el => el.id)
+      return acc
+    }
+    acc[key] = (value as ModelData)['id']
+    return acc
+  }, {})
+  console.log('data2', JSON.stringify(q))
+  return q
+}
 
 em.setModel(Author, {
   find: new Entity(em,(pk: number) => {
@@ -76,11 +94,11 @@ em.setHooks({
         headers: {
           'Content-Type': 'application/json;charset=utf-8'
         },
-        body: JSON.stringify(value)
+        body: JSON.stringify(serializeData(value))
       }
     ).then(response => response.json())
     .then((result) => {
-      console.log(result)
+      console.log('result', result)
       return result.id as number | string
     })
   },
@@ -91,7 +109,7 @@ em.setHooks({
         headers: {
           'Content-Type': 'application/json;charset=utf-8'
         },
-        body: JSON.stringify({...data})
+        body: JSON.stringify(serializeData({...data}))
       }
     ).then(response => response.json())
     .then((result) => {

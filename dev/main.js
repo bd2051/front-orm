@@ -3,6 +3,22 @@ import Story from "./model/Story";
 import { Collection, Entity, EntityManager } from "../src";
 console.log('start');
 const em = new EntityManager();
+const serializeData = (data) => {
+    const q = Object.entries(data).reduce((acc, [key, value]) => {
+        if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+            acc[key] = value;
+            return acc;
+        }
+        if (Array.isArray(value)) {
+            acc[key] = value.map(el => el.id);
+            return acc;
+        }
+        acc[key] = value['id'];
+        return acc;
+    }, {});
+    console.log('data2', JSON.stringify(q));
+    return q;
+};
 em.setModel(Author, {
     find: new Entity(em, (pk) => {
         return fetch(`http://localhost:8000/api/authors/${pk}`).then(response => response.json())
@@ -64,10 +80,10 @@ em.setHooks({
             headers: {
                 'Content-Type': 'application/json;charset=utf-8'
             },
-            body: JSON.stringify(value)
+            body: JSON.stringify(serializeData(value))
         }).then(response => response.json())
             .then((result) => {
-            console.log(result);
+            console.log('result', result);
             return result.id;
         });
     },
@@ -77,7 +93,7 @@ em.setHooks({
             headers: {
                 'Content-Type': 'application/json;charset=utf-8'
             },
-            body: JSON.stringify(Object.assign({}, data))
+            body: JSON.stringify(serializeData(Object.assign({}, data)))
         }).then(response => response.json())
             .then((result) => {
             console.log(result);
