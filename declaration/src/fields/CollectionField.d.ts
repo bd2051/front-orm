@@ -8,5 +8,5 @@ export default class CollectionField extends BaseField implements FieldInterface
     constructor(em: EntityManager, targetModelName: string, convertValueToPk?: (value: any) => number | string);
     get targetModel(): Model;
     view(values: Array<ModelData>): Array<ModelView>;
-    link(values: any): any;
+    link(values: any): Array<ModelData>;
 }

@@ -98,7 +98,7 @@ export default class EntityManager {
   cache: Cache
   commits: Array<Commit>
   storageCache: WeakMap<CacheKey, ModelData>
-  reverseStorageCache: WeakMap<ModelData, CacheKey>
+  reverseStorageCache: WeakMap<ModelData, WeakRef<CacheKey>>
   hooks: Hooks
   pending: any
   defaultClasses: Classes
@@ -110,10 +110,10 @@ export default class EntityManager {
     this.reverseStorageCache = new WeakMap()
     const reverseStorageCache = this.reverseStorageCache
     this.storageCache = new Proxy(new WeakMap(), {
-      get(target: WeakMap<any, any>, prop: string | symbol, receiver: any): any {
+      get(target: WeakMap<CacheKey, ModelData>, prop: string | symbol, receiver: any): any {
         if (prop === 'set') {
-          return (key: any, value: any) => {
-            reverseStorageCache.set(value, key)
+          return (key: CacheKey, value: ModelData) => {
+            reverseStorageCache.set(value, new WeakRef<CacheKey>(key))
             return target.set.call(target, key, value)
           }
         }
@@ -229,11 +229,15 @@ export default class EntityManager {
     }, {})
   }
   put(value: PutValue, target: ModelView | Model): ModelView {
-    let cacheKey = {}
+    let cacheKey: CacheKey | undefined = {}
     let cacheValue = {}
     if (typeof target._target !== 'undefined') {
       const modelView = target as ModelView
-      cacheKey = this.reverseStorageCache.get(modelView._target)!
+      const weakCacheKey = this.reverseStorageCache.get(modelView._target)!
+      cacheKey = weakCacheKey.deref()
+      if (typeof cacheKey === 'undefined') {
+        throw new Error('Unexpected use of WeakRef')
+      }
       cacheValue = {...target._target}
     }
 

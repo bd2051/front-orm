@@ -41,9 +41,13 @@ export default class EntityField extends BaseField {
         if (value === null) {
             return value;
         }
-        const cacheKey = this.em.reverseStorageCache.get(value);
-        if (typeof cacheKey === 'undefined') {
+        const weakCacheKey = this.em.reverseStorageCache.get(value);
+        if (typeof weakCacheKey === 'undefined') {
             throw new Error('Logic error');
+        }
+        const cacheKey = weakCacheKey.deref();
+        if (typeof cacheKey === 'undefined') {
+            throw new Error('Unexpected use of WeakRef');
         }
         const pk = cacheKey.pk;
         let cb = (done) => __awaiter(this, void 0, void 0, function* () { done(); });

@@ -20,7 +20,7 @@ export default class EntityManager {
             get(target, prop, receiver) {
                 if (prop === 'set') {
                     return (key, value) => {
-                        reverseStorageCache.set(value, key);
+                        reverseStorageCache.set(value, new WeakRef(key));
                         return target.set.call(target, key, value);
                     };
                 }
@@ -137,7 +137,11 @@ export default class EntityManager {
         let cacheValue = {};
         if (typeof target._target !== 'undefined') {
             const modelView = target;
-            cacheKey = this.reverseStorageCache.get(modelView._target);
+            const weakCacheKey = this.reverseStorageCache.get(modelView._target);
+            cacheKey = weakCacheKey.deref();
+            if (typeof cacheKey === 'undefined') {
+                throw new Error('Unexpected use of WeakRef');
+            }
             cacheValue = Object.assign({}, target._target);
         }
         const convertValue = (value) => {

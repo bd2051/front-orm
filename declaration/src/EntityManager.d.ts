@@ -64,7 +64,7 @@ export default class EntityManager {
     cache: Cache;
     commits: Array<Commit>;
     storageCache: WeakMap<CacheKey, ModelData>;
-    reverseStorageCache: WeakMap<ModelData, CacheKey>;
+    reverseStorageCache: WeakMap<ModelData, WeakRef<CacheKey>>;
     hooks: Hooks;
     pending: any;
     defaultClasses: Classes;

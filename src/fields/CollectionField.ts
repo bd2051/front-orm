@@ -39,9 +39,13 @@ export default class CollectionField extends BaseField implements FieldInterface
   // }
   view(values: Array<ModelData>): Array<ModelView> {
     return new Proxy(values.map((value) => {
-      const cacheKey = this.em.reverseStorageCache.get(value)
-      if (typeof cacheKey === 'undefined') {
+      const weakCacheKey = this.em.reverseStorageCache.get(value)
+      if (typeof weakCacheKey === 'undefined') {
         throw new Error('Logic error')
+      }
+      const cacheKey = weakCacheKey.deref()
+      if (typeof cacheKey === 'undefined') {
+        throw new Error('Unexpected use of WeakRef')
       }
       const pk = cacheKey.pk
       let cb = async (done: () => void) => {
@@ -66,7 +70,7 @@ export default class CollectionField extends BaseField implements FieldInterface
       }
     })
   }
-  link(values: any): any {
+  link(values: any): Array<ModelData> {
     return values.map((value: any) => {
       const pk = this.convertValueToPk(value)
       const cacheKey = this.em.getStorageModel(this.targetModel.$getName())[pk]
