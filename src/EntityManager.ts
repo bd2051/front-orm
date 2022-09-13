@@ -12,7 +12,7 @@ import {
   StringField,
   CollectionField
 } from "./index";
-import {applyChange, diff, Diff} from "deep-diff";
+import {applyChange, diff, Diff, revertChange} from "deep-diff";
 import {BaseModel, Model, ModelData, ModelInit, ModelView} from "./types";
 
 interface Models {
@@ -353,6 +353,18 @@ export default class EntityManager {
     }
 
     this.commits = []
+  }
+  revert(count: number = 1) {
+    const revertCommits = this.commits.splice(-1, count)
+    revertCommits.forEach(({cacheKey, diffs}) => {
+      const cacheValue = this.storageCache.get(cacheKey)!
+      diffs.forEach((change) => {
+        revertChange(cacheValue, true, change)
+      })
+    })
+  }
+  revertAll() {
+    this.revert(this.commits.length)
   }
   _createProxyByCacheKey(
     cacheKey: CacheKey,

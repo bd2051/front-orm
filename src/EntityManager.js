@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Repository, getBaseModel, BaseField, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField } from "./index";
-import { applyChange, diff } from "deep-diff";
+import { applyChange, diff, revertChange } from "deep-diff";
 export default class EntityManager {
     constructor() {
         this.models = {};
@@ -249,6 +249,18 @@ export default class EntityManager {
             }
             this.commits = [];
         });
+    }
+    revert(count = 1) {
+        const revertCommits = this.commits.splice(-1, count);
+        revertCommits.forEach(({ cacheKey, diffs }) => {
+            const cacheValue = this.storageCache.get(cacheKey);
+            diffs.forEach((change) => {
+                revertChange(cacheValue, true, change);
+            });
+        });
+    }
+    revertAll() {
+        this.revert(this.commits.length);
     }
     _createProxyByCacheKey(cacheKey, cb = (done) => { done(); }, done = () => { }) {
         const em = this;
