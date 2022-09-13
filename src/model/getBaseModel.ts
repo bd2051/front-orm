@@ -59,7 +59,12 @@ export default (em: EntityManager) : BaseModel => Object.create({}, {
             throw new Error('Add PrimaryKey')
           }
         }
-        this._pkName = pkName
+        Object.defineProperty(this, '_pkName', {
+          writable: false,
+          configurable: false,
+          enumerable: false,
+          value: pkName
+        })
       }
       return this._pkName
     }
