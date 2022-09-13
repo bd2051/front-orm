@@ -1,6 +1,6 @@
 {
   "name": "front-orm",
-  "version": "0.1.0",
+  "version": "0.2.0-alfa.0",
   "description": "",
   "scripts": {
     "test:unit": "nyc ./node_modules/.bin/_mocha 'test/**/*.unit.test.ts'",
