@@ -96,5 +96,13 @@ export default (em) => Object.create({}, {
         value(value, commit) {
             return this.$em.hooks.update(this, value, commit);
         }
+    },
+    $delete: {
+        writable: false,
+        configurable: false,
+        enumerable: false,
+        value(pk, commit) {
+            return this.$em.hooks.delete(this, pk, commit);
+        }
     }
 });

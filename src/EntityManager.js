@@ -45,7 +45,13 @@ export default class EntityManager {
             }),
             update: (value, commit, data) => __awaiter(this, void 0, void 0, function* () {
                 if (value && commit && data) {
-                    throw new Error('Add create hook');
+                    throw new Error('Add update hook');
+                }
+                return '';
+            }),
+            delete: (value, pk, data) => __awaiter(this, void 0, void 0, function* () {
+                if (value && pk && data) {
+                    throw new Error('Add delete hook');
                 }
                 return '';
             })
@@ -125,7 +131,7 @@ export default class EntityManager {
         return entries.reduce((acc, [key, value]) => {
             acc[key] = {
                 enumerable: true,
-                configurable: false,
+                configurable: true,
                 writable: true,
                 value: value
             };
@@ -173,7 +179,11 @@ export default class EntityManager {
                 return acc;
             }, {});
         };
-        const diffs = diff(cacheValue, Object.assign(Object.assign({}, cacheValue), convertValue(value)));
+        let changedValue = value;
+        if (Object.keys(changedValue).length) {
+            changedValue = Object.assign(Object.assign({}, cacheValue), convertValue(value));
+        }
+        const diffs = diff(cacheValue, changedValue);
         if (typeof diffs === 'undefined') {
             return target;
         }
@@ -191,6 +201,12 @@ export default class EntityManager {
         });
         this.storageCache.set(cacheKey, changingTarget);
         return this._createProxyByCacheKey(cacheKey);
+    }
+    post(value, model) {
+        return this.put(value, model);
+    }
+    remove(modelView) {
+        return this.put({}, modelView);
     }
     flush() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -242,13 +258,22 @@ export default class EntityManager {
                 if (typeof cacheKey.pk === 'undefined') {
                     promise = cacheValue.$create(item, commit);
                 }
+                else if (Object.keys(cacheValue).length === 0) {
+                    promise = cacheValue.$delete(cacheKey.pk, commit);
+                }
                 else {
                     promise = cacheValue.$update(item, commit);
                 }
                 yield promise.then((pk) => {
-                    cacheKey.pk = pk;
-                    cacheValue[cacheValue.$getPkName()] = pk;
-                    this.getStorageModel(cacheValue.$getName())[pk] = cacheKey;
+                    if (Object.keys(cacheValue).length === 0) {
+                        delete cacheKey.pk;
+                        delete this.getStorageModel(cacheValue.$getName())[pk];
+                    }
+                    else {
+                        cacheKey.pk = pk;
+                        cacheValue[cacheValue.$getPkName()] = pk;
+                        this.getStorageModel(cacheValue.$getName())[pk] = cacheKey;
+                    }
                 });
             }
             this.commits = [];

@@ -117,6 +117,21 @@ em.setHooks({
       return data['id'] as number | string
     })
   },
+  delete(data, pk) {
+    return fetch(
+      `http://localhost:8000/api/${apiNameMap[data.$getName() as 'Author' | 'Story']}/${pk}`,{
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json;charset=utf-8'
+        },
+        body: JSON.stringify(serializeData({...data}))
+      }
+    ).then(response => response.json())
+    .then((result) => {
+      console.log(result)
+      return pk
+    })
+  },
 })
 
 try {

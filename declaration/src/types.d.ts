@@ -13,6 +13,7 @@ export declare type BaseModel = {
     $getRepository: () => Repository;
     $create: (value: any, commit: any) => Promise<number | string>;
     $update: (value: any, commit: any) => Promise<number | string>;
+    $delete: (pk: number | string, commit: any) => Promise<number | string>;
 };
 export declare type ModelData = BaseModel & {
     [key: string]: string | number | null | boolean | Array<any> | object;

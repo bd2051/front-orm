@@ -100,5 +100,13 @@ export default (em: EntityManager) : BaseModel => Object.create({}, {
     value(value: any, commit: any) {
       return this.$em.hooks.update(this, value, commit)
     }
+  },
+  $delete: {
+    writable: false,
+    configurable: false,
+    enumerable: false,
+    value(pk: number | string, commit: any) {
+      return this.$em.hooks.delete(this, pk, commit)
+    }
   }
 })

@@ -20,6 +20,7 @@ export type BaseModel = {
   $getRepository: () => Repository
   $create: (value: any, commit: any) => Promise<number | string>,
   $update: (value: any, commit: any) => Promise<number | string>,
+  $delete: (pk: number | string, commit: any) => Promise<number | string>,
 
 }
 

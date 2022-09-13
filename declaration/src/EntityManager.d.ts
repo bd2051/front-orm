@@ -45,11 +45,13 @@ interface Hooks {
     preFlush: (commits: Array<Commit>) => Array<Commit>;
     create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
     update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
+    delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>;
 }
 interface HooksInit {
     preFlush?: (commits: Array<Commit>) => Array<Commit>;
     create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
     update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
+    delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>;
 }
 interface FirstLevelStorage {
     [key: string | number]: CacheKey;
@@ -77,6 +79,8 @@ export default class EntityManager {
     setStorageValue(model: Model, pk: number | string, value: StorageItem): ModelData;
     _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>): PropertyDescriptorMap;
     put(value: PutValue, target: ModelView | Model): ModelView;
+    post(value: PutValue, model: Model): ModelView;
+    remove(modelView: ModelView): ModelView;
     flush(): Promise<void>;
     revert(count?: number): void;
     revertAll(): void;

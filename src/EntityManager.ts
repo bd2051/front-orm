@@ -75,12 +75,14 @@ interface Hooks {
   preFlush: (commits: Array<Commit>) => Array<Commit>
   create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
   update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
+  delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>
 }
 
 interface HooksInit {
   preFlush?: (commits: Array<Commit>) => Array<Commit>
   create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
   update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
+  delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>
 }
 
 interface FirstLevelStorage {
@@ -138,7 +140,13 @@ export default class EntityManager {
       },
       update: async (value, commit, data) => {
         if (value && commit && data) {
-          throw new Error('Add create hook')
+          throw new Error('Add update hook')
+        }
+        return ''
+      },
+      delete: async (value, pk, data) => {
+        if (value && pk && data) {
+          throw new Error('Add delete hook')
         }
         return ''
       }
@@ -221,7 +229,7 @@ export default class EntityManager {
     return entries.reduce((acc: PropertyDescriptorMap, [key, value]) => {
       acc[key] = {
         enumerable: true,
-        configurable: false,
+        configurable: true,
         writable: true,
         value: value
       }
@@ -271,10 +279,15 @@ export default class EntityManager {
       }, {})
     }
 
-    const diffs = diff(cacheValue, {
-      ...cacheValue,
-      ...convertValue(value)
-    })
+    let changedValue = value
+    if (Object.keys(changedValue).length) {
+      changedValue = {
+        ...cacheValue,
+        ...convertValue(value)
+      }
+    }
+
+    const diffs = diff(cacheValue, changedValue)
 
     if (typeof diffs === 'undefined') {
       return target as ModelView
@@ -296,6 +309,12 @@ export default class EntityManager {
     this.storageCache.set(cacheKey, changingTarget!)
 
     return this._createProxyByCacheKey(cacheKey)
+  }
+  post(value: PutValue, model: Model) {
+    return this.put(value, model)
+  }
+  remove(modelView: ModelView) {
+    return this.put({}, modelView)
   }
   async flush() {
     const commits = this.hooks.preFlush(this.commits)
@@ -346,13 +365,20 @@ export default class EntityManager {
       let promise
       if (typeof cacheKey.pk === 'undefined') {
         promise = cacheValue.$create(item, commit)
+      } else if (Object.keys(cacheValue).length === 0) {
+        promise = cacheValue.$delete(cacheKey.pk, commit)
       } else {
         promise = cacheValue.$update(item, commit)
       }
       await promise.then((pk) => {
-        cacheKey.pk = pk
-        cacheValue[cacheValue.$getPkName()] = pk
-        this.getStorageModel(cacheValue.$getName())[pk] = cacheKey
+        if (Object.keys(cacheValue).length === 0) {
+          delete cacheKey.pk
+          delete this.getStorageModel(cacheValue.$getName())[pk]
+        } else {
+          cacheKey.pk = pk
+          cacheValue[cacheValue.$getPkName()] = pk
+          this.getStorageModel(cacheValue.$getName())[pk] = cacheKey
+        }
       })
     }
 

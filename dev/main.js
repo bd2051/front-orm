@@ -100,6 +100,19 @@ em.setHooks({
             return data['id'];
         });
     },
+    delete(data, pk) {
+        return fetch(`http://localhost:8000/api/${apiNameMap[data.$getName()]}/${pk}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(serializeData(Object.assign({}, data)))
+        }).then(response => response.json())
+            .then((result) => {
+            console.log(result);
+            return pk;
+        });
+    },
 });
 try {
     if (window) {
