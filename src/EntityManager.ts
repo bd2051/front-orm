@@ -105,18 +105,19 @@ export default class EntityManager {
   pending: any
   defaultClasses: Classes
 
-  constructor(storageCache: WeakMap<CacheKey, ModelData> = new WeakMap()) {
+  constructor(setReactivity: (v: any) => any = (v) => v) {
     this.models = {}
     this.repositories = {}
     this.storage = {}
     this.reverseStorageCache = new WeakMap()
     const reverseStorageCache = this.reverseStorageCache
-    this.storageCache = new Proxy(storageCache, {
+    this.storageCache = new Proxy(new WeakMap<CacheKey, ModelData>(), {
       get(target: WeakMap<CacheKey, ModelData>, prop: string | symbol, receiver: any): any {
         if (prop === 'set') {
           return (key: CacheKey, value: ModelData) => {
-            reverseStorageCache.set(value, new WeakRef<CacheKey>(key))
-            return target.set.call(target, key, value)
+            const reactivityValue = setReactivity(value)
+            reverseStorageCache.set(reactivityValue, new WeakRef<CacheKey>(key))
+            return target.set.call(target, key, reactivityValue)
           }
         }
         if (prop === 'get') {

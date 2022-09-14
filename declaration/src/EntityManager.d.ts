@@ -70,7 +70,7 @@ export default class EntityManager {
     hooks: Hooks;
     pending: any;
     defaultClasses: Classes;
-    constructor(storageCache?: WeakMap<CacheKey, ModelData>);
+    constructor(setReactivity?: (v: any) => any);
     setHooks(hooks: HooksInit): void;
     setModel(getModelInit: (em: EntityManager) => ModelInit, repositories: RepositoryInit): void;
     getModel(modelName: string): Model;
