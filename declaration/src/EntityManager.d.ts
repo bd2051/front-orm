@@ -34,6 +34,9 @@ interface Classes {
 interface PutValue {
     [key: string]: string | number | null | Array<ModelView> | ModelView | boolean;
 }
+interface ConvertedPutValue {
+    [key: string]: string | number | null | Array<ModelData> | ModelData | boolean;
+}
 interface CacheKey {
     pk?: string | number;
 }
@@ -77,7 +80,9 @@ export default class EntityManager {
     getRepository(modelName: string): Repository;
     getStorageModel(modelName: string): FirstLevelStorage;
     setStorageValue(model: Model, pk: number | string, value: StorageItem): ModelData;
-    _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>): PropertyDescriptorMap;
+    _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>, onlyReadKey?: string | null): PropertyDescriptorMap;
+    _convertValue(value: PutValue): ConvertedPutValue;
+    _linkChangingData(d: Diff<any>, target: ModelData, changedValue: any): void;
     put(value: PutValue, target: ModelView | Model): ModelView;
     post(value: PutValue, model: Model): ModelView;
     remove(modelView: ModelView): ModelView;

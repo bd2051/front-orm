@@ -222,35 +222,22 @@ export default class EntityManager {
       }
       return acc
     }, {})
-    const property = this._convertValueToPropertyDescriptorMap(Object.entries(linkedValue))
+    const property = this._convertValueToPropertyDescriptorMap(Object.entries(linkedValue), model.$getPkName())
     this.storageCache.set(storageCacheKey, Object.create(model, property))
     return this.storageCache.get(storageCacheKey)!
   }
-  _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>) {
+  _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>, onlyReadKey: string | null = null) {
     return entries.reduce((acc: PropertyDescriptorMap, [key, value]) => {
       acc[key] = {
         enumerable: true,
         configurable: true,
-        writable: true,
+        writable: true || onlyReadKey !== key,
         value: value
       }
       return acc
     }, {})
   }
-  put(value: PutValue, target: ModelView | Model): ModelView {
-    let cacheKey: CacheKey | undefined = {}
-    let cacheValue = {}
-    if (typeof target._target !== 'undefined') {
-      const modelView = target as ModelView
-      const weakCacheKey = this.reverseStorageCache.get(modelView._target)!
-      cacheKey = weakCacheKey.deref()
-      if (typeof cacheKey === 'undefined') {
-        throw new Error('Unexpected use of WeakRef')
-      }
-      cacheValue = {...target._target}
-    }
-
-    const convertValue = (value: PutValue) => {
+  _convertValue(value: PutValue) {
       return Object.entries(value).reduce((acc: ConvertedPutValue, [key, value]) => {
         if (typeof value === 'string') {
           acc[key] = value
@@ -278,13 +265,52 @@ export default class EntityManager {
         }
         return acc
       }, {})
+  }
+  _linkChangingData(d: Diff<any>, target: ModelData, changedValue: any): void {
+    if (d.path?.length! > 1) {
+      const path = [...d.path!]
+      path.pop()
+      const targetProp = path?.reduce((acc: any, curr: string) => {
+        return acc[curr]
+      }, target) || {}
+      if (typeof targetProp.$getPkName !== 'undefined') {
+        const cachePkValue = targetProp[targetProp.$getPkName()]
+        const changedValueProp = path?.reduce((acc: any, curr: string) => {
+          return acc[curr]
+        }, changedValue) || {}
+        const changedPkValue = changedValueProp[targetProp.$getPkName()]
+        if (typeof changedPkValue !== 'undefined' && (cachePkValue != changedPkValue)) {
+          const prop = path.pop()
+          const tempTarget = path?.reduce((acc: any, curr: string) => {
+            return acc[curr]
+          }, target) || {}
+          const tempChangedValue = path?.reduce((acc: any, curr: string) => {
+            return acc[curr]
+          }, changedValue) || {}
+          console.log(tempTarget, prop, tempChangedValue)
+          tempTarget[prop] = tempChangedValue[prop]
+        }
+      }
+    }
+  }
+  put(value: PutValue, target: ModelView | Model): ModelView {
+    let cacheKey: CacheKey | undefined = {}
+    let cacheValue = {}
+    if (typeof target._target !== 'undefined') {
+      const modelView = target as ModelView
+      const weakCacheKey = this.reverseStorageCache.get(modelView._target)!
+      cacheKey = weakCacheKey.deref()
+      if (typeof cacheKey === 'undefined') {
+        throw new Error('Unexpected use of WeakRef')
+      }
+      cacheValue = {...target._target}
     }
 
     let changedValue = value
     if (Object.keys(changedValue).length) {
       changedValue = {
         ...cacheValue,
-        ...convertValue(value)
+        ...this._convertValue(value)
       }
     }
 
@@ -304,7 +330,8 @@ export default class EntityManager {
       this.storageCache.set(cacheKey, Object.create(target))
       changingTarget = this.storageCache.get(cacheKey)
     }
-    diffs.forEach(function (change: Diff<any, any>) {
+    diffs.forEach((change: Diff<any, any>) => {
+      this._linkChangingData(change, changingTarget!, changedValue)
       applyChange(changingTarget, true, change);
     });
     this.storageCache.set(cacheKey, changingTarget!)

@@ -124,20 +124,77 @@ export default class EntityManager {
             }
             return acc;
         }, {});
-        const property = this._convertValueToPropertyDescriptorMap(Object.entries(linkedValue));
+        const property = this._convertValueToPropertyDescriptorMap(Object.entries(linkedValue), model.$getPkName());
         this.storageCache.set(storageCacheKey, Object.create(model, property));
         return this.storageCache.get(storageCacheKey);
     }
-    _convertValueToPropertyDescriptorMap(entries) {
+    _convertValueToPropertyDescriptorMap(entries, onlyReadKey = null) {
         return entries.reduce((acc, [key, value]) => {
             acc[key] = {
                 enumerable: true,
                 configurable: true,
-                writable: true,
+                writable: true || onlyReadKey !== key,
                 value: value
             };
             return acc;
         }, {});
+    }
+    _convertValue(value) {
+        return Object.entries(value).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+                acc[key] = value;
+                return acc;
+            }
+            if (typeof value === 'number') {
+                acc[key] = value;
+                return acc;
+            }
+            if (typeof value === 'boolean') {
+                acc[key] = value;
+                return acc;
+            }
+            if (value === null) {
+                acc[key] = value;
+                return acc;
+            }
+            if (Array.isArray(value)) {
+                acc[key] = value.map((item) => item._target);
+                return acc;
+            }
+            if (typeof value._target !== 'undefined') {
+                acc[key] = value._target;
+                return acc;
+            }
+            return acc;
+        }, {});
+    }
+    _linkChangingData(d, target, changedValue) {
+        var _a;
+        if (((_a = d.path) === null || _a === void 0 ? void 0 : _a.length) > 1) {
+            const path = [...d.path];
+            path.pop();
+            const targetProp = (path === null || path === void 0 ? void 0 : path.reduce((acc, curr) => {
+                return acc[curr];
+            }, target)) || {};
+            if (typeof targetProp.$getPkName !== 'undefined') {
+                const cachePkValue = targetProp[targetProp.$getPkName()];
+                const changedValueProp = (path === null || path === void 0 ? void 0 : path.reduce((acc, curr) => {
+                    return acc[curr];
+                }, changedValue)) || {};
+                const changedPkValue = changedValueProp[targetProp.$getPkName()];
+                if (typeof changedPkValue !== 'undefined' && (cachePkValue != changedPkValue)) {
+                    const prop = path.pop();
+                    const tempTarget = (path === null || path === void 0 ? void 0 : path.reduce((acc, curr) => {
+                        return acc[curr];
+                    }, target)) || {};
+                    const tempChangedValue = (path === null || path === void 0 ? void 0 : path.reduce((acc, curr) => {
+                        return acc[curr];
+                    }, changedValue)) || {};
+                    console.log(tempTarget, prop, tempChangedValue);
+                    tempTarget[prop] = tempChangedValue[prop];
+                }
+            }
+        }
     }
     put(value, target) {
         let cacheKey = {};
@@ -151,38 +208,9 @@ export default class EntityManager {
             }
             cacheValue = Object.assign({}, target._target);
         }
-        const convertValue = (value) => {
-            return Object.entries(value).reduce((acc, [key, value]) => {
-                if (typeof value === 'string') {
-                    acc[key] = value;
-                    return acc;
-                }
-                if (typeof value === 'number') {
-                    acc[key] = value;
-                    return acc;
-                }
-                if (typeof value === 'boolean') {
-                    acc[key] = value;
-                    return acc;
-                }
-                if (value === null) {
-                    acc[key] = value;
-                    return acc;
-                }
-                if (Array.isArray(value)) {
-                    acc[key] = value.map((item) => item._target);
-                    return acc;
-                }
-                if (typeof value._target !== 'undefined') {
-                    acc[key] = value._target;
-                    return acc;
-                }
-                return acc;
-            }, {});
-        };
         let changedValue = value;
         if (Object.keys(changedValue).length) {
-            changedValue = Object.assign(Object.assign({}, cacheValue), convertValue(value));
+            changedValue = Object.assign(Object.assign({}, cacheValue), this._convertValue(value));
         }
         const diffs = diff(cacheValue, changedValue);
         if (typeof diffs === 'undefined') {
@@ -197,7 +225,8 @@ export default class EntityManager {
             this.storageCache.set(cacheKey, Object.create(target));
             changingTarget = this.storageCache.get(cacheKey);
         }
-        diffs.forEach(function (change) {
+        diffs.forEach((change) => {
+            this._linkChangingData(change, changingTarget, changedValue);
             applyChange(changingTarget, true, change);
         });
         this.storageCache.set(cacheKey, changingTarget);
