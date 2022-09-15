@@ -386,7 +386,7 @@ export default class EntityManager {
     this.commits = []
   }
   revert(count: number = 1) {
-    const revertCommits = this.commits.splice(-1, count)
+    const revertCommits = this.commits.splice(-count)
     revertCommits.forEach(({cacheKey, diffs}) => {
       const cacheValue = this.storageCache.get(cacheKey)!
       diffs.forEach((change) => {
