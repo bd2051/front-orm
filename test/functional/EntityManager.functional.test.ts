@@ -125,7 +125,10 @@ _chai.should();
         setTimeout(() => {
           this.checkingId = storyNew['id']
           expect(typeof this.checkingId).to.be.equal('number')
-          const cacheKey = this.SUT.reverseStorageCache.get(storyNew._target)!
+          const cacheKey = this.SUT.reverseStorageCache.get(storyNew._target)!.deref()
+          if (typeof cacheKey === 'undefined') {
+            throw new Error('Logic error')
+          }
           expect(cacheKey.pk).to.be.equal(this.checkingId)
           expect(this.SUT.commits.length).to.be.equal(0)
           done()

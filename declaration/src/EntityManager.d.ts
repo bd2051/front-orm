@@ -80,7 +80,7 @@ export default class EntityManager {
     getRepository(modelName: string): Repository;
     getStorageModel(modelName: string): FirstLevelStorage;
     setStorageValue(model: Model, pk: number | string, value: StorageItem): ModelData;
-    _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>, onlyReadKey?: string | null): PropertyDescriptorMap;
+    _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>): PropertyDescriptorMap;
     _convertValue(value: PutValue): ConvertedPutValue;
     put(value: PutValue, target: ModelView | Model): ModelView;
     post(value: PutValue, model: Model): ModelView;
