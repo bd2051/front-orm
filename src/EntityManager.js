@@ -31,7 +31,6 @@ export default class EntityManager {
                 return Reflect.get(target, prop, receiver);
             }
         });
-        this.cache = {};
         this.commits = [];
         this.pending = null;
         this.hooks = {

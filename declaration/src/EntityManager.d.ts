@@ -14,9 +14,6 @@ interface Repositories {
 interface StorageItem {
     [key: string]: any;
 }
-interface Cache {
-    [key: string]: object;
-}
 interface CommonClasses {
     [key: string]: typeof getBaseModel | typeof Repository;
 }
@@ -66,7 +63,6 @@ export default class EntityManager {
     models: Models;
     repositories: Repositories;
     storage: Storage;
-    cache: Cache;
     commits: Array<Commit>;
     storageCache: WeakMap<CacheKey, ModelData>;
     reverseStorageCache: WeakMap<ModelData, WeakRef<CacheKey>>;

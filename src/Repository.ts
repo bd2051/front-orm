@@ -1,5 +1,4 @@
 import BaseType from "./types/BaseType";
-import getUuidByString from "uuid-by-string";
 import EntityManager from "./EntityManager";
 import {Model} from "./types";
 
@@ -26,7 +25,7 @@ export default class Repository {
     }
     Object.entries(repositories).forEach(([methodName, repository]) => {
       repository.setEntityManager(em)
-      this[methodName] = (values: any) => this._methodsHandler(values, repository, methodName)
+      this[methodName] = (values: any) => this._methodsHandler(values, repository)
       this.methodsCb[methodName] = repository.findCb
     })
   }
@@ -38,12 +37,7 @@ export default class Repository {
       return JSON.stringify(obj, Array.from(allKeys).sort());
   }
 
-  async _methodsHandler(values: any, methodRepository: BaseType, methodName: string) {
-    const uuid = getUuidByString(methodName + this._sortJsonStringify(values))
-    const cache = this.em.cache
-    if (typeof cache[uuid] === 'undefined') {
-      cache[uuid] = await methodRepository.find(values, this.model)
-    }
-    return cache[uuid]
+  async _methodsHandler(values: any, methodRepository: BaseType) {
+    return methodRepository.find(values, this.model)
   }
 }
