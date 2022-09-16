@@ -82,7 +82,6 @@ export default class EntityManager {
     setStorageValue(model: Model, pk: number | string, value: StorageItem): ModelData;
     _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>, onlyReadKey?: string | null): PropertyDescriptorMap;
     _convertValue(value: PutValue): ConvertedPutValue;
-    _linkChangingData(d: Diff<any>, target: ModelData, changedValue: any): void;
     put(value: PutValue, target: ModelView | Model): ModelView;
     post(value: PutValue, model: Model): ModelView;
     remove(modelView: ModelView): ModelView;

@@ -34,7 +34,7 @@
     "webpack-dev-server": "^4.9.3"
   },
   "dependencies": {
-    "deep-diff": "^1.0.2",
+    "deep-diff": "git+https://github.com/bd2051/diff.git",
     "uuid-by-string": "^3.0.7"
   }
 }

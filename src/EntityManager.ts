@@ -12,7 +12,7 @@ import {
   StringField,
   CollectionField
 } from "./index";
-import {applyChange, diff, Diff, revertChange} from "deep-diff";
+import {applyChange, Diff, DiffEdit, observableDiff, revertChange} from "deep-diff";
 import {BaseModel, Model, ModelData, ModelInit, ModelView} from "./types";
 
 interface Models {
@@ -231,7 +231,7 @@ export default class EntityManager {
       acc[key] = {
         enumerable: true,
         configurable: true,
-        writable: true || onlyReadKey !== key,
+        writable: onlyReadKey !== key,
         value: value
       }
       return acc
@@ -266,33 +266,33 @@ export default class EntityManager {
         return acc
       }, {})
   }
-  _linkChangingData(d: Diff<any>, target: ModelData, changedValue: any): void {
-    if (d.path?.length! > 1) {
-      const path = [...d.path!]
-      path.pop()
-      const targetProp = path?.reduce((acc: any, curr: string) => {
-        return acc[curr]
-      }, target) || {}
-      if (typeof targetProp.$getPkName !== 'undefined') {
-        const cachePkValue = targetProp[targetProp.$getPkName()]
-        const changedValueProp = path?.reduce((acc: any, curr: string) => {
-          return acc[curr]
-        }, changedValue) || {}
-        const changedPkValue = changedValueProp[targetProp.$getPkName()]
-        if (typeof changedPkValue !== 'undefined' && (cachePkValue != changedPkValue)) {
-          const prop = path.pop()
-          const tempTarget = path?.reduce((acc: any, curr: string) => {
-            return acc[curr]
-          }, target) || {}
-          const tempChangedValue = path?.reduce((acc: any, curr: string) => {
-            return acc[curr]
-          }, changedValue) || {}
-          console.log(tempTarget, prop, tempChangedValue)
-          tempTarget[prop] = tempChangedValue[prop]
-        }
-      }
-    }
-  }
+  // _linkChangingData(d: Diff<any>, target: ModelData, changedValue: any): void {
+  //   if (d.path?.length! > 1) {
+  //     const path = [...d.path!]
+  //     path.pop()
+  //     const targetProp = path?.reduce((acc: any, curr: string) => {
+  //       return acc[curr]
+  //     }, target) || {}
+  //     if (typeof targetProp.$getPkName !== 'undefined') {
+  //       const cachePkValue = targetProp[targetProp.$getPkName()]
+  //       const changedValueProp = path?.reduce((acc: any, curr: string) => {
+  //         return acc[curr]
+  //       }, changedValue) || {}
+  //       const changedPkValue = changedValueProp[targetProp.$getPkName()]
+  //       if (typeof changedPkValue !== 'undefined' && (cachePkValue != changedPkValue)) {
+  //         const prop = path.pop()
+  //         const tempTarget = path?.reduce((acc: any, curr: string) => {
+  //           return acc[curr]
+  //         }, target) || {}
+  //         const tempChangedValue = path?.reduce((acc: any, curr: string) => {
+  //           return acc[curr]
+  //         }, changedValue) || {}
+  //         console.log(tempTarget, prop, tempChangedValue)
+  //         tempTarget[prop] = tempChangedValue[prop]
+  //       }
+  //     }
+  //   }
+  // }
   put(value: PutValue, target: ModelView | Model): ModelView {
     let cacheKey: CacheKey | undefined = {}
     let cacheValue = {}
@@ -314,7 +314,39 @@ export default class EntityManager {
       }
     }
 
-    const diffs = diff(cacheValue, changedValue)
+    const diffs = observableDiff(cacheValue, changedValue, (change) => {
+      if ('lhs' in change && 'rhs' in change) {
+        const path = [...change.path!]
+        const prop = path.pop()
+        const modelData = path?.reduce((acc: any, curr: string) => {
+          return acc[curr]
+        }, cacheValue) || {}
+        const diff = change as DiffEdit<any>
+        if (
+          typeof modelData.$getPkName !== 'undefined'
+          && prop === modelData.$getPkName()
+          && diff.lhs != diff.rhs
+        ) {
+          Object.defineProperty(change, 'path', {
+            value: path,
+            enumerable: true,
+            configurable: true
+          })
+          Object.defineProperty(change, 'lhs', {
+            value: modelData,
+            enumerable: true,
+            configurable: true,
+          })
+          Object.defineProperty(change, 'rhs', {
+            value: path?.reduce((acc: any, curr: string) => {
+              return acc[curr]
+            }, changedValue) || {},
+            enumerable: true,
+            configurable: true,
+          })
+        }
+      }
+    })
 
     if (typeof diffs === 'undefined') {
       return target as ModelView
@@ -331,7 +363,7 @@ export default class EntityManager {
       changingTarget = this.storageCache.get(cacheKey)
     }
     diffs.forEach((change: Diff<any, any>) => {
-      this._linkChangingData(change, changingTarget!, changedValue)
+      // this._linkChangingData(change, changingTarget!)
       applyChange(changingTarget, true, change);
     });
     this.storageCache.set(cacheKey, changingTarget!)
@@ -417,6 +449,7 @@ export default class EntityManager {
     revertCommits.forEach(({cacheKey, diffs}) => {
       const cacheValue = this.storageCache.get(cacheKey)!
       diffs.forEach((change) => {
+        // this._linkChangingData(change, changingTarget!, changedValue)
         revertChange(cacheValue, true, change)
       })
     })

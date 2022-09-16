@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Repository, getBaseModel, BaseField, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField } from "./index";
-import { applyChange, diff, revertChange } from "deep-diff";
+import { applyChange, observableDiff, revertChange } from "deep-diff";
 export default class EntityManager {
     constructor(storageCache = new WeakMap()) {
         this.models = {};
@@ -133,7 +133,7 @@ export default class EntityManager {
             acc[key] = {
                 enumerable: true,
                 configurable: true,
-                writable: true || onlyReadKey !== key,
+                writable: onlyReadKey !== key,
                 value: value
             };
             return acc;
@@ -168,34 +168,33 @@ export default class EntityManager {
             return acc;
         }, {});
     }
-    _linkChangingData(d, target, changedValue) {
-        var _a;
-        if (((_a = d.path) === null || _a === void 0 ? void 0 : _a.length) > 1) {
-            const path = [...d.path];
-            path.pop();
-            const targetProp = (path === null || path === void 0 ? void 0 : path.reduce((acc, curr) => {
-                return acc[curr];
-            }, target)) || {};
-            if (typeof targetProp.$getPkName !== 'undefined') {
-                const cachePkValue = targetProp[targetProp.$getPkName()];
-                const changedValueProp = (path === null || path === void 0 ? void 0 : path.reduce((acc, curr) => {
-                    return acc[curr];
-                }, changedValue)) || {};
-                const changedPkValue = changedValueProp[targetProp.$getPkName()];
-                if (typeof changedPkValue !== 'undefined' && (cachePkValue != changedPkValue)) {
-                    const prop = path.pop();
-                    const tempTarget = (path === null || path === void 0 ? void 0 : path.reduce((acc, curr) => {
-                        return acc[curr];
-                    }, target)) || {};
-                    const tempChangedValue = (path === null || path === void 0 ? void 0 : path.reduce((acc, curr) => {
-                        return acc[curr];
-                    }, changedValue)) || {};
-                    console.log(tempTarget, prop, tempChangedValue);
-                    tempTarget[prop] = tempChangedValue[prop];
-                }
-            }
-        }
-    }
+    // _linkChangingData(d: Diff<any>, target: ModelData, changedValue: any): void {
+    //   if (d.path?.length! > 1) {
+    //     const path = [...d.path!]
+    //     path.pop()
+    //     const targetProp = path?.reduce((acc: any, curr: string) => {
+    //       return acc[curr]
+    //     }, target) || {}
+    //     if (typeof targetProp.$getPkName !== 'undefined') {
+    //       const cachePkValue = targetProp[targetProp.$getPkName()]
+    //       const changedValueProp = path?.reduce((acc: any, curr: string) => {
+    //         return acc[curr]
+    //       }, changedValue) || {}
+    //       const changedPkValue = changedValueProp[targetProp.$getPkName()]
+    //       if (typeof changedPkValue !== 'undefined' && (cachePkValue != changedPkValue)) {
+    //         const prop = path.pop()
+    //         const tempTarget = path?.reduce((acc: any, curr: string) => {
+    //           return acc[curr]
+    //         }, target) || {}
+    //         const tempChangedValue = path?.reduce((acc: any, curr: string) => {
+    //           return acc[curr]
+    //         }, changedValue) || {}
+    //         console.log(tempTarget, prop, tempChangedValue)
+    //         tempTarget[prop] = tempChangedValue[prop]
+    //       }
+    //     }
+    //   }
+    // }
     put(value, target) {
         let cacheKey = {};
         let cacheValue = {};
@@ -212,7 +211,37 @@ export default class EntityManager {
         if (Object.keys(changedValue).length) {
             changedValue = Object.assign(Object.assign({}, cacheValue), this._convertValue(value));
         }
-        const diffs = diff(cacheValue, changedValue);
+        const diffs = observableDiff(cacheValue, changedValue, (change) => {
+            if ('lhs' in change && 'rhs' in change) {
+                const path = [...change.path];
+                const prop = path.pop();
+                const modelData = (path === null || path === void 0 ? void 0 : path.reduce((acc, curr) => {
+                    return acc[curr];
+                }, cacheValue)) || {};
+                const diff = change;
+                if (typeof modelData.$getPkName !== 'undefined'
+                    && prop === modelData.$getPkName()
+                    && diff.lhs != diff.rhs) {
+                    Object.defineProperty(change, 'path', {
+                        value: path,
+                        enumerable: true,
+                        configurable: true
+                    });
+                    Object.defineProperty(change, 'lhs', {
+                        value: modelData,
+                        enumerable: true,
+                        configurable: true,
+                    });
+                    Object.defineProperty(change, 'rhs', {
+                        value: (path === null || path === void 0 ? void 0 : path.reduce((acc, curr) => {
+                            return acc[curr];
+                        }, changedValue)) || {},
+                        enumerable: true,
+                        configurable: true,
+                    });
+                }
+            }
+        });
         if (typeof diffs === 'undefined') {
             return target;
         }
@@ -226,7 +255,7 @@ export default class EntityManager {
             changingTarget = this.storageCache.get(cacheKey);
         }
         diffs.forEach((change) => {
-            this._linkChangingData(change, changingTarget, changedValue);
+            // this._linkChangingData(change, changingTarget!)
             applyChange(changingTarget, true, change);
         });
         this.storageCache.set(cacheKey, changingTarget);
@@ -314,6 +343,7 @@ export default class EntityManager {
         revertCommits.forEach(({ cacheKey, diffs }) => {
             const cacheValue = this.storageCache.get(cacheKey);
             diffs.forEach((change) => {
+                // this._linkChangingData(change, changingTarget!, changedValue)
                 revertChange(cacheValue, true, change);
             });
         });
