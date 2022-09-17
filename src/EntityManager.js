@@ -329,6 +329,25 @@ export default class EntityManager {
     revertAll() {
         this.revert(this.commits.length);
     }
+    _updateDataByCommits(model, pk, data) {
+        const item = data;
+        const cacheKey = this.getStorageModel(model.$getName())[pk];
+        if (typeof cacheKey === 'undefined') {
+            return item;
+        }
+        const commits = this.commits.filter((commit) => {
+            return commit.cacheKey.pk === pk;
+        });
+        if (commits.length === 0) {
+            return item;
+        }
+        commits.forEach(({ diffs }) => {
+            diffs.forEach((change) => {
+                applyChange(item, true, change);
+            });
+        });
+        return item;
+    }
     _createProxyByCacheKey(cacheKey, cb = (done) => { done(); }, done = () => { }) {
         const em = this;
         const modelData = this.storageCache.get(cacheKey);
