@@ -21,10 +21,10 @@ export default class BaseType {
         console.warn(result, model, 'add convertResult method')
       return new Proxy({}, {})
   }
-  getModelView(model: Model, value: number | string): ModelView {
-    return this.em._createProxy(model, value, async (done) => {
-      const result = await model.$getRepository().methodsCb.findByPk(value)
-      this.em.setStorageValue(model, value, result)
+  getModelView(model: Model, pk: number | string): ModelView {
+    return this.em._createProxy(model, pk, async (done) => {
+      const result = await model.$get(pk)
+      this.em.setStorageValue(model, pk, result)
       done()
     })
   }

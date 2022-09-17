@@ -33,10 +33,17 @@ export default class EntityManager {
         });
         this.commits = [];
         this.pending = null;
+        this.onAddModelData = () => { };
         this.hooks = {
             preFlush: (commits) => {
                 return commits;
             },
+            get: (value, pk) => __awaiter(this, void 0, void 0, function* () {
+                if (value && pk) {
+                    throw new Error('Add get hook');
+                }
+                return '';
+            }),
             create: (value, commit, data) => __awaiter(this, void 0, void 0, function* () {
                 if (value && commit && data) {
                     throw new Error('Add create hook');
@@ -116,6 +123,7 @@ export default class EntityManager {
                 pk
             };
             storageCacheKey = storageModel[pk];
+            this.onAddModelData(model, pk);
         }
         const linkedValue = Object.entries(value).reduce((acc, [key, subValue]) => {
             if (typeof model[key] !== 'undefined') {

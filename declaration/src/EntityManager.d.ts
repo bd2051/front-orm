@@ -1,11 +1,10 @@
-import { Repository, getBaseModel, BaseType, BaseField, Entity, EntityField, CollectionField } from "./index";
+import { Repository, getBaseModel, BaseType, BaseField, EntityField, CollectionField } from "./index";
 import { Diff } from "deep-diff";
 import { Model, ModelData, ModelInit, ModelView } from "./types";
 interface Models {
     [key: string]: Model;
 }
 interface RepositoryInit {
-    findByPk: Entity;
     [key: string]: BaseType;
 }
 interface Repositories {
@@ -43,12 +42,14 @@ interface Commit {
 }
 interface Hooks {
     preFlush: (commits: Array<Commit>) => Array<Commit>;
+    get: (data: Model, pk: string | number) => Promise<any>;
     create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
     update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
     delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>;
 }
 interface HooksInit {
     preFlush?: (commits: Array<Commit>) => Array<Commit>;
+    get: (data: Model, pk: string | number) => Promise<any>;
     create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
     update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
     delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>;
@@ -69,6 +70,7 @@ export default class EntityManager {
     hooks: Hooks;
     pending: any;
     defaultClasses: Classes;
+    onAddModelData: (model?: Model, pk?: number | string) => void;
     constructor(storageCache?: WeakMap<CacheKey, ModelData>);
     setHooks(hooks: HooksInit): void;
     setModel(getModelInit: (em: EntityManager) => ModelInit, repositories: RepositoryInit): void;

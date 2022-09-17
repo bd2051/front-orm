@@ -19,24 +19,6 @@ export default class CollectionField extends BaseField implements FieldInterface
   get targetModel(): Model {
     return this.em.getModel(this.targetModelName)
   }
-  // validate(value: any) {
-  //   if (!Array.isArray(value)) {
-  //     return false
-  //   }
-  //   // return value.every((element) => this.targetModel.getPkField().validate(this.convertValueToPk(element)))
-  //   return true
-  // }
-  // convert(data: any, key: string) {
-  //   const value = data[key]
-  //   if (!Array.isArray(value)) {
-  //     return false
-  //   }
-  //   return this.em._createArrayProxy(
-  //     value,
-  //     this.targetModel,
-  //     this.convertValueToPk
-  //   )
-  // }
   view(values: Array<ModelData>): Array<ModelView> {
     return new Proxy(values.map((value) => {
       const weakCacheKey = this.em.reverseStorageCache.get(value)
@@ -53,9 +35,8 @@ export default class CollectionField extends BaseField implements FieldInterface
       }
       if (typeof pk !== 'undefined') {
         const model = this.targetModel
-        const findByPk = model.$getRepository().methodsCb.findByPk
         cb = async (done: () => void) => {
-          const result = await findByPk(pk)
+          const result = await model.$get(pk)
           this.em.setStorageValue(model, pk, result)
           done()
         }

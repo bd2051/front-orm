@@ -1,6 +1,5 @@
 import EntityManager from "../EntityManager";
 import PrimaryKey from "../fields/PrimaryKey";
-import Repository from "../Repository";
 import {BaseModel} from "../types";
 
 export default (em: EntityManager) : BaseModel => Object.create({}, {
@@ -69,20 +68,12 @@ export default (em: EntityManager) : BaseModel => Object.create({}, {
       return this._pkName
     }
   },
-  $getPkField: {
+  $get: {
     writable: false,
     configurable: false,
     enumerable: false,
-    value(): PrimaryKey {
-      return this[this.getPkName()]
-    }
-  },
-  $getRepository: {
-    writable: false,
-    configurable: false,
-    enumerable: false,
-    value(): Repository {
-      return this.$em.getRepository(this.$getName())
+    value(pk: number | string) {
+      return this.$em.hooks.get(this, pk)
     }
   },
   $create: {

@@ -11,19 +11,10 @@ export default class Repository {
     constructor(em, model, repositories) {
         this.model = model;
         this.em = em;
-        this.methodsCb = {
-            findByPk: (value) => value // TODO em.hooks
-        };
         Object.entries(repositories).forEach(([methodName, repository]) => {
             repository.setEntityManager(em);
             this[methodName] = (values) => this._methodsHandler(values, repository);
-            this.methodsCb[methodName] = repository.findCb;
         });
-    }
-    _sortJsonStringify(obj) {
-        const allKeys = new Set();
-        JSON.stringify(obj, (key) => allKeys.add(key));
-        return JSON.stringify(obj, Array.from(allKeys).sort());
     }
     _methodsHandler(values, methodRepository) {
         return __awaiter(this, void 0, void 0, function* () {

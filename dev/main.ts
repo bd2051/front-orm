@@ -87,6 +87,14 @@ em.setHooks({
     console.log(commits)
     return commits
   },
+  get(data, pk: number | string) {
+    return fetch(`http://localhost:8000/api/${apiNameMap[data.$getName() as 'Author' | 'Story']}/${pk}`)
+      .then(response => response.json())
+      .then((data) => {
+        console.log(data)
+        return data
+      })
+  },
   create(data, value) {
     return fetch(
       `http://localhost:8000/api/${apiNameMap[data.$getName() as 'Author' | 'Story']}`,{

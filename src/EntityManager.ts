@@ -20,7 +20,6 @@ interface Models {
 }
 
 interface RepositoryInit {
-  findByPk: Entity
   [key: string]: BaseType
 }
 
@@ -69,6 +68,7 @@ interface Commit {
 
 interface Hooks {
   preFlush: (commits: Array<Commit>) => Array<Commit>
+  get: (data: Model, pk: string | number) => Promise<any>
   create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
   update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
   delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>
@@ -76,6 +76,7 @@ interface Hooks {
 
 interface HooksInit {
   preFlush?: (commits: Array<Commit>) => Array<Commit>
+  get: (data: Model, pk: string | number) => Promise<any>
   create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
   update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
   delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>
@@ -99,6 +100,7 @@ export default class EntityManager {
   hooks: Hooks
   pending: any
   defaultClasses: Classes
+  onAddModelData: (model?: Model, pk?: number|string) => void
 
   constructor(storageCache: WeakMap<CacheKey, ModelData> = new WeakMap()) {
     this.models = {}
@@ -123,9 +125,16 @@ export default class EntityManager {
     })
     this.commits = []
     this.pending = null
+    this.onAddModelData = () => {}
     this.hooks = {
       preFlush: (commits) => {
         return commits
+      },
+      get: async (value, pk) => {
+        if (value && pk) {
+          throw new Error('Add get hook')
+        }
+        return ''
       },
       create: async (value, commit, data) => {
         if (value && commit && data) {
@@ -209,6 +218,7 @@ export default class EntityManager {
         pk
       }
       storageCacheKey = storageModel[pk]!
+      this.onAddModelData(model, pk)
     }
     const linkedValue = Object.entries(value).reduce((acc: StorageItem, [key, subValue]) => {
       if (typeof model[key] !== 'undefined') {

@@ -1,27 +1,18 @@
 import BaseField from "./fields/BaseField";
 import EntityManager from "./EntityManager";
-import PrimaryKey from "./fields/PrimaryKey";
-import Repository from "./Repository";
-
-// interface Fields {
-//   [key: string]: any
-// }
 
 export type BaseModel = {
   $em: EntityManager
   _pkName: string | null
   $getPkName: () => string
-  $getPkField: () => PrimaryKey
   _name: string | null
   $setName: (value: string) => void
   $getName: () => string
-  // $validateFields: (data: Fields) => BaseModel
-  // $convertFields: (data: Fields) => any
-  $getRepository: () => Repository
+  $get: (pk: number | string) => Promise<any>
   $create: (value: any, commit: any) => Promise<number | string>,
   $update: (value: any, commit: any) => Promise<number | string>,
   $delete: (pk: number | string, commit: any) => Promise<number | string>,
-
+  $refresh: (pk: number | string) => void
 }
 
 export type ModelData = BaseModel & {

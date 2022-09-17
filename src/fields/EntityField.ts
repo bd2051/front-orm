@@ -19,26 +19,6 @@ export default class EntityField extends BaseField implements FieldInterface {
   get targetModel(): Model {
     return this.em.getModel(this.targetModelName)
   }
-  // validate(value: any) {
-  //   if (value === null) {
-  //     return true
-  //   }
-  //   return this.targetModel.$getPkField().validate(this.convertValueToPk(value))
-  // }
-  // convert(data: any, key: string) {
-  //   const value = data[key]
-  //   if (value === null) {
-  //     return null
-  //   }
-  //   const pk = this.convertValueToPk(value)
-  //   const model = this.targetModel
-  //   const findByPk = model.$getRepository().methodsCb.findByPk
-  //   return this.em._createProxy(model, pk, async (done) => {
-  //     const result = await findByPk(pk)
-  //     this.em.setStorageValue(model, pk, result)
-  //     done()
-  //   })
-  // }
   view(value: ModelData | null): ModelView | null {
     if (value === null) {
       return value
@@ -55,9 +35,8 @@ export default class EntityField extends BaseField implements FieldInterface {
     let cb = async (done: () => void) => { done() }
     if (typeof pk !== 'undefined') {
       const model = this.targetModel
-      const findByPk = model.$getRepository().methodsCb.findByPk
       cb = async (done: () => void) => {
-        const result = await findByPk(pk)
+        const result = await model.$get(pk)
         this.em.setStorageValue(model, pk, result)
         done()
       }

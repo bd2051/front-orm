@@ -26,7 +26,6 @@ function Story(em: EntityManager): ModelInit {
     this.SUT.models.should.to.not.be.undefined
     this.SUT.storage.should.to.not.be.undefined
     this.SUT.repositories.should.to.not.be.undefined
-    this.SUT.cache.should.to.not.be.undefined
     this.SUT.hooks.should.to.not.be.undefined
   }
 
@@ -50,17 +49,30 @@ function Story(em: EntityManager): ModelInit {
   }
 
   @test 'create proxy' (done) {
-    this.SUT.setModel(this.model, {
-      findByPk: new Entity(this.SUT, (pk) => {
+    this.SUT.setModel(this.model, {})
+    this.SUT.setHooks({
+      async get(model,pk) {
+        console.log(model.$getName())
         return new Promise((resolve) => {
           setTimeout(() => resolve({
             id: pk,
             name: 'story'
           }), 0)
         })
-      })
+      },
+      async create(data, value) {
+        console.log(data, value)
+        return value
+      },
+      async update(data, value) {
+        console.log(data, value)
+        return value
+      },
+      async delete(data, pk) {
+        console.log(data, pk)
+        return pk
+      }
     })
-    this.SUT.setHooks({})
 
 
     let proxy;
@@ -70,7 +82,7 @@ function Story(em: EntityManager): ModelInit {
         this.SUT.getModel('Story'),
         pk,
         async (done) => {
-          const data = await this.SUT.getRepository('Story').methodsCb.findByPk(pk)
+          const data = await this.SUT.getModel('Story').$get(pk)
           this.SUT.setStorageValue(this.SUT.getModel('Story'), pk, data)
           done()
         }
@@ -109,7 +121,24 @@ function Story(em: EntityManager): ModelInit {
         }
       })
     })
-    this.SUT.setHooks({})
+    this.SUT.setHooks({
+      async get(data, pk) {
+        console.log(data, pk)
+        return data
+      },
+      async create(data, value) {
+        console.log(data, value)
+        return value
+      },
+      async update(data, value) {
+        console.log(data, value)
+        return value
+      },
+      async delete(data, pk) {
+        console.log(data, pk)
+        return pk
+      }
+    })
     const test = async () => {
       let proxy;
       try {
@@ -126,13 +155,6 @@ function Story(em: EntityManager): ModelInit {
     }
     test().then(proxy => {
       let name = proxy.name
-      assert.equal(name, 'find')
-
-      Object.keys(this.SUT.cache).forEach(key => {
-        delete this.SUT.cache[key]
-      })
-
-      name = proxy.name
       assert.equal(name, 'find')
       done()
     }).catch(done)

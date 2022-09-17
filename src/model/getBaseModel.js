@@ -65,20 +65,12 @@ export default (em) => Object.create({}, {
             return this._pkName;
         }
     },
-    $getPkField: {
+    $get: {
         writable: false,
         configurable: false,
         enumerable: false,
-        value() {
-            return this[this.getPkName()];
-        }
-    },
-    $getRepository: {
-        writable: false,
-        configurable: false,
-        enumerable: false,
-        value() {
-            return this.$em.getRepository(this.$getName());
+        value(pk) {
+            return this.$em.hooks.get(this, pk);
         }
     },
     $create: {

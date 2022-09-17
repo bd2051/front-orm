@@ -17,26 +17,6 @@ export default class EntityField extends BaseField {
     get targetModel() {
         return this.em.getModel(this.targetModelName);
     }
-    // validate(value: any) {
-    //   if (value === null) {
-    //     return true
-    //   }
-    //   return this.targetModel.$getPkField().validate(this.convertValueToPk(value))
-    // }
-    // convert(data: any, key: string) {
-    //   const value = data[key]
-    //   if (value === null) {
-    //     return null
-    //   }
-    //   const pk = this.convertValueToPk(value)
-    //   const model = this.targetModel
-    //   const findByPk = model.$getRepository().methodsCb.findByPk
-    //   return this.em._createProxy(model, pk, async (done) => {
-    //     const result = await findByPk(pk)
-    //     this.em.setStorageValue(model, pk, result)
-    //     done()
-    //   })
-    // }
     view(value) {
         if (value === null) {
             return value;
@@ -53,9 +33,8 @@ export default class EntityField extends BaseField {
         let cb = (done) => __awaiter(this, void 0, void 0, function* () { done(); });
         if (typeof pk !== 'undefined') {
             const model = this.targetModel;
-            const findByPk = model.$getRepository().methodsCb.findByPk;
             cb = (done) => __awaiter(this, void 0, void 0, function* () {
-                const result = yield findByPk(pk);
+                const result = yield model.$get(pk);
                 this.em.setStorageValue(model, pk, result);
                 done();
             });

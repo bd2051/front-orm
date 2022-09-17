@@ -7,5 +7,5 @@ export default class BaseType {
     constructor(em: EntityManager, findCb: (values: any) => object);
     setEntityManager(em: EntityManager): void;
     convertResult(result: object, model: Model): any;
-    getModelView(model: Model, value: number | string): ModelView;
+    getModelView(model: Model, pk: number | string): ModelView;
 }

@@ -23,10 +23,10 @@ export default class BaseType {
         console.warn(result, model, 'add convertResult method');
         return new Proxy({}, {});
     }
-    getModelView(model, value) {
-        return this.em._createProxy(model, value, (done) => __awaiter(this, void 0, void 0, function* () {
-            const result = yield model.$getRepository().methodsCb.findByPk(value);
-            this.em.setStorageValue(model, value, result);
+    getModelView(model, pk) {
+        return this.em._createProxy(model, pk, (done) => __awaiter(this, void 0, void 0, function* () {
+            const result = yield model.$get(pk);
+            this.em.setStorageValue(model, pk, result);
             done();
         }));
     }
