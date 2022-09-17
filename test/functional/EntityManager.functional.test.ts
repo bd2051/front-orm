@@ -45,7 +45,6 @@ _chai.should();
     this.SUT.models.should.to.not.be.undefined
     this.SUT.storage.should.to.not.be.undefined
     this.SUT.repositories.should.to.not.be.undefined
-    this.SUT.cache.should.to.not.be.undefined
     this.SUT.hooks.should.to.not.be.undefined
   }
 
