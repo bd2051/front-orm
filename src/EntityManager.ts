@@ -61,6 +61,12 @@ interface CacheKey {
   pk?: string | number
 }
 
+interface Meta {
+  options: any
+  method: (v: any, model: Model) => Promise<any>
+  repository: Repository
+}
+
 interface Commit {
   cacheKey: CacheKey,
   diffs: Array<Diff<any, any>>
@@ -96,18 +102,24 @@ export default class EntityManager {
   storage: Storage
   commits: Array<Commit>
   storageCache: WeakMap<CacheKey, ModelData>
+  collectionCache: WeakMap<Array<any>, Meta>
   reverseStorageCache: WeakMap<ModelData, WeakRef<CacheKey>>
   hooks: Hooks
   pending: any
   defaultClasses: Classes
   onAddModelData: (model?: Model, pk?: number|string) => void
+  onAddCollection: (repository?: Repository, collection?: WeakRef<Array<any>>) => void
 
-  constructor(storageCache: WeakMap<CacheKey, ModelData> = new WeakMap()) {
+  constructor(
+    storageCache: WeakMap<CacheKey, ModelData> = new WeakMap(),
+    collectionCache: WeakMap<Array<any>, Meta> = new WeakMap()
+  ) {
     this.models = {}
     this.repositories = {}
     this.storage = {}
     this.reverseStorageCache = new WeakMap()
     const reverseStorageCache = this.reverseStorageCache
+    this.collectionCache = collectionCache
     this.storageCache = new Proxy(storageCache, {
       get(target: WeakMap<CacheKey, ModelData>, prop: string | symbol, receiver: any): any {
         if (prop === 'set') {
@@ -126,6 +138,7 @@ export default class EntityManager {
     this.commits = []
     this.pending = null
     this.onAddModelData = () => {}
+    this.onAddCollection = () => {}
     this.hooks = {
       preFlush: (commits) => {
         return commits

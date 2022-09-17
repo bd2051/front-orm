@@ -9,6 +9,7 @@ export default class Repository {
     model: Model;
     em: EntityManager;
     constructor(em: EntityManager, model: Model, repositories: Repositories);
+    refreshCollection(collection: Array<any>): Promise<void>;
     _methodsHandler(values: any, methodRepository: BaseType): Promise<any>;
 }
 export {};

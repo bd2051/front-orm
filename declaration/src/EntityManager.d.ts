@@ -36,6 +36,11 @@ interface ConvertedPutValue {
 interface CacheKey {
     pk?: string | number;
 }
+interface Meta {
+    options: any;
+    method: (v: any, model: Model) => Promise<any>;
+    repository: Repository;
+}
 interface Commit {
     cacheKey: CacheKey;
     diffs: Array<Diff<any, any>>;
@@ -66,12 +71,14 @@ export default class EntityManager {
     storage: Storage;
     commits: Array<Commit>;
     storageCache: WeakMap<CacheKey, ModelData>;
+    collectionCache: WeakMap<Array<any>, Meta>;
     reverseStorageCache: WeakMap<ModelData, WeakRef<CacheKey>>;
     hooks: Hooks;
     pending: any;
     defaultClasses: Classes;
     onAddModelData: (model?: Model, pk?: number | string) => void;
-    constructor(storageCache?: WeakMap<CacheKey, ModelData>);
+    onAddCollection: (repository?: Repository, collection?: WeakRef<Array<any>>) => void;
+    constructor(storageCache?: WeakMap<CacheKey, ModelData>, collectionCache?: WeakMap<Array<any>, Meta>);
     setHooks(hooks: HooksInit): void;
     setModel(getModelInit: (em: EntityManager) => ModelInit, repositories: RepositoryInit): void;
     getModel(modelName: string): Model;

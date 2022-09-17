@@ -20,7 +20,26 @@ export default class Repository {
     })
   }
 
+  async refreshCollection(collection: Array<any>) {
+    const meta = this.em.collectionCache.get(collection)
+    if (typeof meta === 'undefined') {
+      return
+    }
+    const result = await meta.method(meta.options, this.model)
+    collection.splice(0, collection.length)
+    result.forEach((el: any) => {
+      collection.push(el)
+    })
+  }
+
   async _methodsHandler(values: any, methodRepository: BaseType) {
-    return methodRepository.find(values, this.model)
+    const result = await methodRepository.find(values, this.model)
+    this.em.collectionCache.set(result, {
+      options: values,
+      method: methodRepository.find,
+      repository: this
+    })
+    this.em.onAddCollection(this, new WeakRef<Array<any>>(result))
+    return result
   }
 }

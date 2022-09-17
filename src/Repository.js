@@ -16,9 +16,29 @@ export default class Repository {
             this[methodName] = (values) => this._methodsHandler(values, repository);
         });
     }
+    refreshCollection(collection) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const meta = this.em.collectionCache.get(collection);
+            if (typeof meta === 'undefined') {
+                return;
+            }
+            const result = yield meta.method(meta.options, this.model);
+            collection.splice(0, collection.length);
+            result.forEach((el) => {
+                collection.push(el);
+            });
+        });
+    }
     _methodsHandler(values, methodRepository) {
         return __awaiter(this, void 0, void 0, function* () {
-            return methodRepository.find(values, this.model);
+            const result = yield methodRepository.find(values, this.model);
+            this.em.collectionCache.set(result, {
+                options: values,
+                method: methodRepository.find,
+                repository: this
+            });
+            this.em.onAddCollection(this, new WeakRef(result));
+            return result;
         });
     }
 }
