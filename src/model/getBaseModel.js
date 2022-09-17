@@ -1,3 +1,12 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import PrimaryKey from "../fields/PrimaryKey";
 export default (em) => Object.create({}, {
     $em: {
@@ -102,9 +111,15 @@ export default (em) => Object.create({}, {
         configurable: false,
         enumerable: false,
         value(pk) {
-            const data = this.$get(pk);
-            const updatedData = this.$em._updateDataByCommits(this, pk, data);
-            this.$em.setStorageValue(this, pk, updatedData);
+            return __awaiter(this, void 0, void 0, function* () {
+                const data = yield this.$get(pk);
+                const updatedData = this.$em._updateDataByCommits(this, pk, data);
+                let model = this;
+                if (!(model[model.$getPkName] instanceof PrimaryKey)) {
+                    model = Object.getPrototypeOf(this);
+                }
+                this.$em.setStorageValue(model, pk, updatedData);
+            });
         }
     }
 });

@@ -227,7 +227,15 @@ export default class EntityManager {
       return acc
     }, {})
     const property = this._convertValueToPropertyDescriptorMap(Object.entries(linkedValue))
-    this.storageCache.set(storageCacheKey, Object.create(model, property))
+    const storageCacheValue = this.storageCache.get(storageCacheKey)
+    if (typeof storageCacheValue === 'undefined') {
+      this.storageCache.set(storageCacheKey, Object.create(model, property))
+    } else {
+
+      Object.entries(property).forEach(([prop, propValue]) => {
+        Object.defineProperty(storageCacheValue, prop, propValue)
+      })
+    }
     return this.storageCache.get(storageCacheKey)!
   }
   _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>) {
