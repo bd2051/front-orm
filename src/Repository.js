@@ -32,13 +32,14 @@ export default class Repository {
     _methodsHandler(values, methodRepository) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield methodRepository.find(values, this.model);
-            this.em.collectionCache.set(result, {
+            const data = this.em._setCollectionReactivity(result);
+            this.em.collectionCache.set(data, {
                 options: values,
                 method: methodRepository.find,
                 repository: this
             });
-            this.em.onAddCollection(this, new WeakRef(result));
-            return result;
+            this.em.onAddCollection(this, new WeakRef(data));
+            return data;
         });
     }
 }
