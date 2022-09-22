@@ -107,11 +107,8 @@ export default (em: EntityManager) : BaseModel => Object.create({}, {
     async value(pk: number | string) {
       const data = await this.$get(pk)
       const updatedData = this.$em._updateDataByCommits(this, pk, data)
-      let model = this
-      if (!(model[model.$getPkName] instanceof PrimaryKey)) {
-        model = Object.getPrototypeOf(this)
-      }
-      this.$em.setStorageValue(model, pk, updatedData)
+      let modelName = this.$getName
+      this.$em.setStorageValue(this.$em.getModel(modelName), pk, updatedData)
     }
   }
 })

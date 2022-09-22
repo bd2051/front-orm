@@ -114,11 +114,8 @@ export default (em) => Object.create({}, {
             return __awaiter(this, void 0, void 0, function* () {
                 const data = yield this.$get(pk);
                 const updatedData = this.$em._updateDataByCommits(this, pk, data);
-                let model = this;
-                if (!(model[model.$getPkName] instanceof PrimaryKey)) {
-                    model = Object.getPrototypeOf(this);
-                }
-                this.$em.setStorageValue(model, pk, updatedData);
+                let modelName = this.$getName;
+                this.$em.setStorageValue(this.$em.getModel(modelName), pk, updatedData);
             });
         }
     }
