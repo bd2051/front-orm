@@ -34,12 +34,13 @@ export default class Repository {
 
   async _methodsHandler(values: any, methodRepository: BaseType) {
     const result = await methodRepository.find(values, this.model)
-    this.em.collectionCache.set(result, {
+    const data = this.em._setCollectionReactivity(result)
+    this.em.collectionCache.set(data, {
       options: values,
       method: methodRepository.find,
       repository: this
     })
-    this.em.onAddCollection(this, new WeakRef<Array<any>>(result))
-    return result
+    this.em.onAddCollection(this, new WeakRef<Array<any>>(data))
+    return data
   }
 }
