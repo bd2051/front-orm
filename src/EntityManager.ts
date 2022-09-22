@@ -247,7 +247,7 @@ export default class EntityManager {
     } else {
 
       Object.entries(property).forEach(([prop, propValue]) => {
-        Object.defineProperty(storageCacheValue, prop, propValue)
+        storageCacheValue[prop] = propValue.value
       })
     }
     return this.storageCache.get(storageCacheKey)!
