@@ -103,7 +103,7 @@ export default class EntityManager {
   commits: Array<Commit>
   storageCache: WeakMap<CacheKey, ModelData>
   collectionCache: WeakMap<Array<any>, Meta>
-  _setCollectionReactivity: (collection: Array<ModelView>) => Array<ModelView>
+  _setReactivity: <Type>(value: Type) => Type
   reverseStorageCache: WeakMap<ModelData, WeakRef<CacheKey>>
   hooks: Hooks
   pending: any
@@ -112,22 +112,21 @@ export default class EntityManager {
   onAddCollection: (repository?: Repository, collection?: WeakRef<Array<any>>) => void
 
   constructor(
-    storageCache: WeakMap<CacheKey, ModelData> = new WeakMap(),
-    setCollectionReactivity: (collection: Array<ModelView>) => Array<ModelView> = collection => collection
+    setReactivity: <Type>(value: Type) => Type = value => value
   ) {
     this.models = {}
     this.repositories = {}
     this.storage = {}
     this.collectionCache = new WeakMap<Array<any>, Meta>()
-    this._setCollectionReactivity = setCollectionReactivity
+    this._setReactivity = setReactivity
     this.reverseStorageCache = new WeakMap()
-    const reverseStorageCache = this.reverseStorageCache
-    this.storageCache = new Proxy(storageCache, {
+    const em = this
+    this.storageCache = new Proxy(new WeakMap<CacheKey, ModelData>(), {
       get(target: WeakMap<CacheKey, ModelData>, prop: string | symbol, receiver: any): any {
         if (prop === 'set') {
           return (key: CacheKey, value: ModelData) => {
-            const setResult = target.set.call(target, key, value)
-            reverseStorageCache.set(target.get.call(target, key)!, new WeakRef<CacheKey>(key))
+            const setResult = target.set.call(target, key, em._setReactivity(value))
+            em.reverseStorageCache.set(target.get.call(target, key)!, new WeakRef<CacheKey>(key))
             return setResult
           }
         }

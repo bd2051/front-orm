@@ -10,20 +10,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 import { Repository, getBaseModel, BaseField, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField } from "./index";
 import { applyChange, observableDiff, revertChange } from "deep-diff";
 export default class EntityManager {
-    constructor(storageCache = new WeakMap(), setCollectionReactivity = collection => collection) {
+    constructor(setReactivity = value => value) {
         this.models = {};
         this.repositories = {};
         this.storage = {};
         this.collectionCache = new WeakMap();
-        this._setCollectionReactivity = setCollectionReactivity;
+        this._setReactivity = setReactivity;
         this.reverseStorageCache = new WeakMap();
-        const reverseStorageCache = this.reverseStorageCache;
-        this.storageCache = new Proxy(storageCache, {
+        const em = this;
+        this.storageCache = new Proxy(new WeakMap(), {
             get(target, prop, receiver) {
                 if (prop === 'set') {
                     return (key, value) => {
-                        const setResult = target.set.call(target, key, value);
-                        reverseStorageCache.set(target.get.call(target, key), new WeakRef(key));
+                        const setResult = target.set.call(target, key, em._setReactivity(value));
+                        em.reverseStorageCache.set(target.get.call(target, key), new WeakRef(key));
                         return setResult;
                     };
                 }

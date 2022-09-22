@@ -72,14 +72,14 @@ export default class EntityManager {
     commits: Array<Commit>;
     storageCache: WeakMap<CacheKey, ModelData>;
     collectionCache: WeakMap<Array<any>, Meta>;
-    _setCollectionReactivity: (collection: Array<ModelView>) => Array<ModelView>;
+    _setReactivity: <Type>(value: Type) => Type;
     reverseStorageCache: WeakMap<ModelData, WeakRef<CacheKey>>;
     hooks: Hooks;
     pending: any;
     defaultClasses: Classes;
     onAddModelData: (model?: Model, pk?: number | string) => void;
     onAddCollection: (repository?: Repository, collection?: WeakRef<Array<any>>) => void;
-    constructor(storageCache?: WeakMap<CacheKey, ModelData>, setCollectionReactivity?: (collection: Array<ModelView>) => Array<ModelView>);
+    constructor(setReactivity?: <Type>(value: Type) => Type);
     setHooks(hooks: HooksInit): void;
     setModel(getModelInit: (em: EntityManager) => ModelInit, repositories: RepositoryInit): void;
     getModel(modelName: string): Model;

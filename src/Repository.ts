@@ -34,7 +34,7 @@ export default class Repository {
 
   async _methodsHandler(values: any, methodRepository: BaseType) {
     const result = await methodRepository.find(values, this.model)
-    const data = this.em._setCollectionReactivity(result)
+    const data = this.em._setReactivity(result)
     this.em.collectionCache.set(data, {
       options: values,
       method: methodRepository.find,

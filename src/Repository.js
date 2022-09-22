@@ -32,7 +32,7 @@ export default class Repository {
     _methodsHandler(values, methodRepository) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield methodRepository.find(values, this.model);
-            const data = this.em._setCollectionReactivity(result);
+            const data = this.em._setReactivity(result);
             this.em.collectionCache.set(data, {
                 options: values,
                 method: methodRepository.find,
