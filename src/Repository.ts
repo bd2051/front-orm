@@ -1,6 +1,7 @@
 import BaseType from "./types/BaseType";
 import EntityManager from "./EntityManager";
 import {Model} from "./types";
+import Collection from "./types/Collection";
 
 interface Repositories {
   [key: string]: BaseType
@@ -35,12 +36,14 @@ export default class Repository {
   async _methodsHandler(values: any, methodRepository: BaseType) {
     const result = await methodRepository.find(values, this.model)
     const data = this.em._setReactivity(result)
-    this.em.collectionCache.set(data, {
-      options: values,
-      method: methodRepository.find,
-      repository: this
-    })
-    this.em.onAddCollection(this, new WeakRef<Array<any>>(data))
+    if (methodRepository instanceof Collection) {
+      this.em.collectionCache.set(data, {
+        options: values,
+        method: methodRepository.find,
+        repository: this
+      })
+      this.em.onAddCollection(this, new WeakRef<Array<any>>(data))
+    }
     return data
   }
 }
