@@ -38,8 +38,9 @@ export default (em: EntityManager, model: Model) : BaseRepository => Object.crea
     enumerable: false,
     async value(values: any, methodRepository: BaseType) {
       const result = await methodRepository.find(values, this.$model)
-      const data = this.$em._setReactivity(result)
+      let data = result
       if (methodRepository instanceof Collection) {
+        data = this.$em._setReactivity(result)
         this.$em.collectionCache.set(data, {
           options: values,
           method: methodRepository.find,

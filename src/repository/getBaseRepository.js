@@ -46,8 +46,9 @@ export default (em, model) => Object.create({}, {
         value(values, methodRepository) {
             return __awaiter(this, void 0, void 0, function* () {
                 const result = yield methodRepository.find(values, this.$model);
-                const data = this.$em._setReactivity(result);
+                let data = result;
                 if (methodRepository instanceof Collection) {
+                    data = this.$em._setReactivity(result);
                     this.$em.collectionCache.set(data, {
                         options: values,
                         method: methodRepository.find,
