@@ -38,7 +38,7 @@ export type BaseRepository = {
 }
 
 export type RepositoryInit = {
-  [key: string]: BaseType
+  [key: string]: (v: any) => any
 }
 
 export type Repository = BaseRepository & RepositoryInit

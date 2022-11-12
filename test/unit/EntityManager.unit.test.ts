@@ -144,7 +144,7 @@ function Story(em: EntityManager): ModelInit {
       try {
         const pk = 1
         const find = this.SUT.getRepository('Story')['find']
-        if (typeof find !== 'function') {
+        if (typeof find === 'undefined') {
           throw new Error('Logic error')
         }
         proxy = await find(pk)
