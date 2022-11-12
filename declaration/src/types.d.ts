@@ -31,6 +31,6 @@ export declare type BaseRepository = {
     _methodsHandler: (values: any, methodRepository: BaseType) => any;
 };
 export declare type RepositoryInit = {
-    [key: string]: BaseType;
+    [key: string]: (v: any) => any;
 };
 export declare type Repository = BaseRepository & RepositoryInit;
