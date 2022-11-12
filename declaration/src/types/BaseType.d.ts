@@ -5,7 +5,6 @@ export default class BaseType {
     findCb: (values: any) => object;
     find: (values: any, model: Model) => Promise<any>;
     constructor(em: EntityManager, findCb: (values: any) => object);
-    setEntityManager(em: EntityManager): void;
     convertResult(result: object, model: Model): any;
     getModelView(model: Model, pk: number | string): ModelView;
 }

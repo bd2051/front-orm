@@ -1,5 +1,4 @@
 import {
-  Repository,
   getBaseModel,
   BaseType,
   BaseField,
@@ -13,7 +12,8 @@ import {
   CollectionField
 } from "./index";
 import {applyChange, Diff, DiffEdit, observableDiff, revertChange} from "deep-diff";
-import {BaseModel, Model, ModelData, ModelInit, ModelView} from "./types";
+import {BaseModel, BaseRepository, Model, ModelData, ModelInit, ModelView, Repository} from "./types";
+import getBaseRepository from "./repository/getBaseRepository";
 
 interface Models {
   [key: string]: Model
@@ -32,7 +32,7 @@ interface StorageItem {
 }
 
 interface CommonClasses {
-  [key: string]: typeof getBaseModel | typeof Repository
+  [key: string]: typeof getBaseModel | typeof getBaseRepository
 }
 
 interface FieldsClass {
@@ -172,7 +172,7 @@ export default class EntityManager {
     this.defaultClasses = {
       common: {
         getBaseModel,
-        Repository,
+        getBaseRepository,
       },
       fields: {
         BooleanField,
@@ -201,7 +201,18 @@ export default class EntityManager {
     model.$setName(getModelInit.name)
     this.storage[model.$getName()] = {}
     this.models[model.$getName()] = model
-    this.repositories[model.$getName()] = new Repository(this, model, repositories)
+    const baseRepository: BaseRepository = getBaseRepository(this, model)
+    const repository: Repository = Object.create(
+      baseRepository,
+      this._convertValueToPropertyDescriptorMap(
+        Object.entries(repositories)
+          .map(([methodName, baseType]) => [
+            methodName,
+            (values: any) => baseRepository._methodsHandler(values, baseType)
+          ])
+      )
+    )
+    this.repositories[model.$getName()] = repository
   }
   getModel(modelName: string): Model {
     const model = this.models[modelName]

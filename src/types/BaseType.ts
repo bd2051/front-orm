@@ -14,12 +14,9 @@ export default class BaseType {
       return this.convertResult(result, model)
     }
   }
-  setEntityManager(em: EntityManager) {
-    this.em = em
-  }
   convertResult(result: object, model: Model): any {
-        console.warn(result, model, 'add convertResult method')
-      return new Proxy({}, {})
+    console.warn(result, model, 'add convertResult method')
+    return new Proxy({}, {})
   }
   getModelView(model: Model, pk: number | string): ModelView {
     return this.em._createProxy(model, pk, async (done) => {

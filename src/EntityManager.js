@@ -7,8 +7,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { Repository, getBaseModel, BaseField, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField } from "./index";
+import { getBaseModel, BaseField, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField } from "./index";
 import { applyChange, observableDiff, revertChange } from "deep-diff";
+import getBaseRepository from "./repository/getBaseRepository";
 export default class EntityManager {
     constructor(setReactivity = value => value) {
         this.models = {};
@@ -69,7 +70,7 @@ export default class EntityManager {
         this.defaultClasses = {
             common: {
                 getBaseModel,
-                Repository,
+                getBaseRepository,
             },
             fields: {
                 BooleanField,
@@ -95,7 +96,13 @@ export default class EntityManager {
         model.$setName(getModelInit.name);
         this.storage[model.$getName()] = {};
         this.models[model.$getName()] = model;
-        this.repositories[model.$getName()] = new Repository(this, model, repositories);
+        const baseRepository = getBaseRepository(this, model);
+        const repository = Object.create(baseRepository, this._convertValueToPropertyDescriptorMap(Object.entries(repositories)
+            .map(([methodName, baseType]) => [
+            methodName,
+            (values) => baseRepository._methodsHandler(values, baseType)
+        ])));
+        this.repositories[model.$getName()] = repository;
     }
     getModel(modelName) {
         const model = this.models[modelName];

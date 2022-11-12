@@ -1,5 +1,6 @@
 import BaseField from "./fields/BaseField";
 import EntityManager from "./EntityManager";
+import BaseType from "./types/BaseType";
 export declare type BaseModel = {
     $em: EntityManager;
     _pkName: string | null;
@@ -23,3 +24,13 @@ export declare type ModelInit = {
     [key: string]: BaseField;
 };
 export declare type Model = BaseModel & ModelInit;
+export declare type BaseRepository = {
+    $em: EntityManager;
+    $model: Model;
+    $refreshCollection: (collection: Array<any>) => void;
+    _methodsHandler: (values: any, methodRepository: BaseType) => any;
+};
+export declare type RepositoryInit = {
+    [key: string]: BaseType;
+};
+export declare type Repository = BaseRepository & RepositoryInit;

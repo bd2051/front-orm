@@ -16,9 +16,6 @@ export default class BaseType {
             return this.convertResult(result, model);
         });
     }
-    setEntityManager(em) {
-        this.em = em;
-    }
     convertResult(result, model) {
         console.warn(result, model, 'add convertResult method');
         return new Proxy({}, {});

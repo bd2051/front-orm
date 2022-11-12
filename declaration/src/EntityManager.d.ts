@@ -1,6 +1,7 @@
-import { Repository, getBaseModel, BaseType, BaseField, EntityField, CollectionField } from "./index";
+import { getBaseModel, BaseType, BaseField, EntityField, CollectionField } from "./index";
 import { Diff } from "deep-diff";
-import { Model, ModelData, ModelInit, ModelView } from "./types";
+import { Model, ModelData, ModelInit, ModelView, Repository } from "./types";
+import getBaseRepository from "./repository/getBaseRepository";
 interface Models {
     [key: string]: Model;
 }
@@ -14,7 +15,7 @@ interface StorageItem {
     [key: string]: any;
 }
 interface CommonClasses {
-    [key: string]: typeof getBaseModel | typeof Repository;
+    [key: string]: typeof getBaseModel | typeof getBaseRepository;
 }
 interface FieldsClass {
     [key: string]: typeof BaseField | typeof EntityField | typeof CollectionField;
