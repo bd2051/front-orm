@@ -86,6 +86,7 @@ export default class EntityManager {
     getModel(modelName: string): Model;
     getRepository(modelName: string): Repository;
     getStorageModel(modelName: string): FirstLevelStorage;
+    _createEmptyModelData(model: Model): ModelData;
     setStorageValue(model: Model, pk: number | string, value: StorageItem): ModelData;
     _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>): PropertyDescriptorMap;
     _convertValue(value: PutValue): ConvertedPutValue;

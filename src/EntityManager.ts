@@ -236,6 +236,10 @@ export default class EntityManager {
     }
     return storageModel
   }
+  _createEmptyModelData(model: Model): ModelData {
+    const emptyProperty = Object.entries(model).map(([name]) => [name, new Empty()])
+    return Object.create(model, this._convertValueToPropertyDescriptorMap(emptyProperty))
+  }
   setStorageValue(model: Model, pk: number | string, value: StorageItem): ModelData {
     const storageModel = this.getStorageModel(model.$getName())
     let storageCacheKey = storageModel[pk]
@@ -255,10 +259,9 @@ export default class EntityManager {
     const property = this._convertValueToPropertyDescriptorMap(Object.entries(linkedValue))
     let storageCacheValue = this.storageCache.get(storageCacheKey)
     if (typeof storageCacheValue === 'undefined') {
-      const emptyProperty = Object.entries(model).map(([name]) => [name, new Empty()])
       this.storageCache.set(
         storageCacheKey,
-        Object.create(model, this._convertValueToPropertyDescriptorMap(emptyProperty))
+        this._createEmptyModelData(model)
       )
       storageCacheValue = this.storageCache.get(storageCacheKey)
     }
@@ -373,7 +376,7 @@ export default class EntityManager {
 
     let changingTarget = this.storageCache.get(cacheKey)
     if (typeof changingTarget === 'undefined') {
-      this.storageCache.set(cacheKey, Object.create(target))
+      this.storageCache.set(cacheKey, this._createEmptyModelData(target as Model))
       changingTarget = this.storageCache.get(cacheKey)
     }
     diffs.forEach((change: Diff<any, any>) => {
