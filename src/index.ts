@@ -11,8 +11,10 @@ import BaseType from "./types/BaseType";
 import Collection from "./types/Collection";
 import Entity from "./types/Entity";
 import CollectionField from "./fields/CollectionField";
+import Empty from "./fields/Empty";
 
 export {
+  Empty,
   BaseField,
   BooleanField,
   EntityField,

@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { getBaseModel, BaseField, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField } from "./index";
+import { getBaseModel, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField, Empty } from "./index";
 import { applyChange, observableDiff, revertChange } from "deep-diff";
 import getBaseRepository from "./repository/getBaseRepository";
 export default class EntityManager {
@@ -142,15 +142,15 @@ export default class EntityManager {
             return acc;
         }, {});
         const property = this._convertValueToPropertyDescriptorMap(Object.entries(linkedValue));
-        const storageCacheValue = this.storageCache.get(storageCacheKey);
+        let storageCacheValue = this.storageCache.get(storageCacheKey);
         if (typeof storageCacheValue === 'undefined') {
-            this.storageCache.set(storageCacheKey, Object.create(model, property));
+            const emptyProperty = Object.entries(model).map(([name]) => [name, new Empty()]);
+            this.storageCache.set(storageCacheKey, Object.create(model, this._convertValueToPropertyDescriptorMap(emptyProperty)));
+            storageCacheValue = this.storageCache.get(storageCacheKey);
         }
-        else {
-            Object.entries(property).forEach(([prop, propValue]) => {
-                storageCacheValue[prop] = propValue.value;
-            });
-        }
+        Object.entries(property).forEach(([prop, propValue]) => {
+            storageCacheValue[prop] = propValue.value;
+        });
         return this.storageCache.get(storageCacheKey);
     }
     _convertValueToPropertyDescriptorMap(entries) {
@@ -379,7 +379,7 @@ export default class EntityManager {
                     if (typeof storageCacheValue === 'undefined') {
                         throw new Error('Logic error');
                     }
-                    if (!(storageCacheValue[prop] instanceof BaseField)) {
+                    if (!(storageCacheValue[prop] instanceof Empty)) {
                         const model = Object.getPrototypeOf(target);
                         return model[prop].view(storageCacheValue[prop]);
                     }

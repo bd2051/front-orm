@@ -9,7 +9,8 @@ import {
   NumberField,
   PrimaryKey,
   StringField,
-  CollectionField
+  CollectionField,
+  Empty
 } from "./index";
 import {applyChange, Diff, DiffEdit, observableDiff, revertChange} from "deep-diff";
 import {BaseModel, BaseRepository, Model, ModelData, ModelInit, ModelView, Repository} from "./types";
@@ -252,15 +253,18 @@ export default class EntityManager {
       return acc
     }, {})
     const property = this._convertValueToPropertyDescriptorMap(Object.entries(linkedValue))
-    const storageCacheValue = this.storageCache.get(storageCacheKey)
+    let storageCacheValue = this.storageCache.get(storageCacheKey)
     if (typeof storageCacheValue === 'undefined') {
-      this.storageCache.set(storageCacheKey, Object.create(model, property))
-    } else {
-
-      Object.entries(property).forEach(([prop, propValue]) => {
-        storageCacheValue[prop] = propValue.value
-      })
+      const emptyProperty = Object.entries(model).map(([name]) => [name, new Empty()])
+      this.storageCache.set(
+        storageCacheKey,
+        Object.create(model, this._convertValueToPropertyDescriptorMap(emptyProperty))
+      )
+      storageCacheValue = this.storageCache.get(storageCacheKey)
     }
+    Object.entries(property).forEach(([prop, propValue]) => {
+      storageCacheValue![prop] = propValue.value
+    })
     return this.storageCache.get(storageCacheKey)!
   }
   _convertValueToPropertyDescriptorMap(entries: Array<Array<any>>) {
@@ -501,7 +505,7 @@ export default class EntityManager {
           if (typeof storageCacheValue === 'undefined') {
             throw new Error('Logic error')
           }
-          if (!(storageCacheValue[prop] as any instanceof BaseField)) {
+          if (!(storageCacheValue[prop] instanceof Empty)) {
             const model = Object.getPrototypeOf(target) as Model
             return model[prop]!.view(storageCacheValue[prop])
           }
