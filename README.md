@@ -11,262 +11,556 @@ npm install front-orm
 ## Quick Start
 
 ```bash
-npm install deep-diff
+npm install front-orm
 ```
 
-### Importing
-
-#### nodejs
+#### Importing
 
 ```javascript
-var diff = require('deep-diff')
-// or:
-// const diff = require('deep-diff');
-// const { diff } = require('deep-diff');
-// or:
-// const DeepDiff = require('deep-diff');
-// const { DeepDiff } = require('deep-diff');
-// es6+:
-// import diff from 'deep-diff';
-// import { diff } from 'deep-diff';
-// es6+:
-// import DeepDiff from 'deep-diff';
-// import { DeepDiff } from 'deep-diff';
+import {EntityManager} from "front-orm";
 ```
 
-#### browser
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/deep-diff@1/dist/deep-diff.min.js"></script>
-```
-
-> In a browser, `deep-diff` defines a global variable `DeepDiff`. If there is a conflict in the global namespace you can restore the conflicting definition and assign `deep-diff` to another variable like this: `var deep = DeepDiff.noConflict();`.
-
-## Simple Examples
-
-In order to describe differences, change revolves around an `origin` object. For consistency, the `origin` object is always the operand on the `left-hand-side` of operations. The `comparand`, which may contain changes, is always on the `right-hand-side` of operations.
-
-``` javascript
-var diff = require('deep-diff').diff;
-
-var lhs = {
-  name: 'my object',
-  description: 'it\'s an object!',
-  details: {
-    it: 'has',
-    an: 'array',
-    with: ['a', 'few', 'elements']
-  }
-};
-
-var rhs = {
-  name: 'updated object',
-  description: 'it\'s an object!',
-  details: {
-    it: 'has',
-    an: 'array',
-    with: ['a', 'few', 'more', 'elements', { than: 'before' }]
-  }
-};
-
-var differences = diff(lhs, rhs);
-```
-
-*v 0.2.0 and above* The code snippet above would result in the following structure describing the differences:
-
-``` javascript
-[ { kind: 'E',
-    path: [ 'name' ],
-    lhs: 'my object',
-    rhs: 'updated object' },
-  { kind: 'E',
-    path: [ 'details', 'with', 2 ],
-    lhs: 'elements',
-    rhs: 'more' },
-  { kind: 'A',
-    path: [ 'details', 'with' ],
-    index: 3,
-    item: { kind: 'N', rhs: 'elements' } },
-  { kind: 'A',
-    path: [ 'details', 'with' ],
-    index: 4,
-    item: { kind: 'N', rhs: { than: 'before' } } } ]
-```
-
-### Differences
-
-Differences are reported as one or more change records. Change records have the following structure:
-
-* `kind` - indicates the kind of change; will be one of the following:
-  * `N` - indicates a newly added property/element
-  * `D` - indicates a property/element was deleted
-  * `E` - indicates a property/element was edited
-  * `A` - indicates a change occurred within an array
-* `path` - the property path (from the left-hand-side root)
-* `lhs` - the value on the left-hand-side of the comparison (undefined if kind === 'N')
-* `rhs` - the value on the right-hand-side of the comparison (undefined if kind === 'D')
-* `index` - when kind === 'A', indicates the array index where the change occurred
-* `item` - when kind === 'A', contains a nested change record indicating the change that occurred at the array index
-
-Change records are generated for all structural differences between `origin` and `comparand`. The methods only consider an object's own properties and array elements; those inherited from an object's prototype chain are not considered.
-
-Changes to arrays are recorded simplistically. We care most about the shape of the structure; therefore we don't take the time to determine if an object moved from one slot in the array to another. Instead, we only record the structural
-differences. If the structural differences are applied from the `comparand` to the `origin` then the two objects will compare as "deep equal" using most `isEqual` implementations such as found in [lodash](https://github.com/bestiejs/lodash) or [underscore](http://underscorejs.org/).
-
-### Changes
-
-When two objects differ, you can observe the differences as they are calculated and selectively apply those changes to the origin object (left-hand-side).
-
-``` javascript
-var observableDiff = require('deep-diff').observableDiff;
-var applyChange = require('deep-diff').applyChange;
-
-var lhs = {
-  name: 'my object',
-  description: 'it\'s an object!',
-  details: {
-    it: 'has',
-    an: 'array',
-    with: ['a', 'few', 'elements']
-  }
-};
-
-var rhs = {
-  name: 'updated object',
-  description: 'it\'s an object!',
-  details: {
-    it: 'has',
-    an: 'array',
-    with: ['a', 'few', 'more', 'elements', { than: 'before' }]
-  }
-};
-
-observableDiff(lhs, rhs, function (d) {
-  // Apply all changes except to the name property...
-  if (d.path[d.path.length - 1] !== 'name') {
-    applyChange(lhs, rhs, d);
-  }
-});
-```
-
-## API Documentation
-
-A standard import of `var diff = require('deep-diff')` is assumed in all of the code examples. The import results in an object having the following public properties:
-
-* `diff(lhs, rhs[, options, acc])` &mdash; calculates the differences between two objects, optionally using the specified accumulator.
-* `observableDiff(lhs, rhs, observer[, options])` &mdash; calculates the differences between two objects and reports each to an observer function.
-* `applyDiff(target, source, filter)` &mdash; applies any structural differences from a source object to a target object, optionally filtering each difference.
-* `applyChange(target, source, change)` &mdash; applies a single change record to a target object. NOTE: `source` is unused and may be removed.
-* `revertChange(target, source, change)` reverts a single change record to a target object. NOTE: `source` is unused and may be removed.
-
-### `diff`
-
-The `diff` function calculates the difference between two objects.
-
-
-#### Arguments
-
-* `lhs` - the left-hand operand; the origin object.
-* `rhs` - the right-hand operand; the object being compared structurally with the origin object.
-* `options` - A configuration object that can have the following properties:
-  - `prefilter`: function that determines whether difference analysis should continue down the object graph. This function can also replace the `options` object in the parameters for backward compatibility.
-  - `normalize`: function that pre-processes every _leaf_ of the tree.
-* `acc` - an optional accumulator/array (requirement is that it have a `push` function). Each difference is pushed to the specified accumulator.
-
-Returns either an array of changes or, if there are no changes, `undefined`. This was originally chosen so the result would be pass a truthy test:
+#### Create entity manager
 
 ```javascript
-var changes = diff(obja, objb);
-if (changes) {
-  // do something with the changes.
+const em = new EntityManager(/* setReactivity */)
+```
+
+You can add object tracking or a reactivity creation function. For example, use watch-object
+
+```bash
+npm install watch-object
+```
+
+```javascript
+import {watch} from "watch-object";
+
+const setReactivity = (data) => {
+  if (!Array.isArray(data)) {
+    watch(data, 'name', (newVal, oldVal) => {
+      console.log('obj name set', newVal, ' oldVal:', oldVal)
+    })
+  }
+  return data
 }
 ```
 
-#### Pre-filtering Object Properties
-
-The `prefilter`'s signature should be `function(path, key)` and it should return a truthy value for any `path`-`key` combination that should be filtered. If filtered, the difference analysis does no further analysis of on the identified object-property path.
+#### Create models
 
 ```javascript
-const diff = require('deep-diff');
-const assert = require('assert');
+// You can also import fields classes
+const PrimaryKey = em.defaultClasses.fields.PrimaryKey
+const StringField = em.defaultClasses.fields.StringField
+const NumberField = em.defaultClasses.fields.NumberField
+const CollectionField = em.defaultClasses.fields.CollectionField
+const EntityField = em.defaultClasses.fields.EntityField
 
-const data = {
-  issue: 126,
-  submittedBy: 'abuzarhamza',
-  title: 'readme.md need some additional example prefilter',
-  posts: [
-    {
-      date: '2018-04-16',
-      text: `additional example for prefilter for deep-diff would be great.
-      https://stackoverflow.com/questions/38364639/pre-filter-condition-deep-diff-node-js`
-    }
-  ]
-};
+function Author(em) {
+  return {
+    id: new PrimaryKey(em),
+    name: new StringField(em),
+    age: new NumberField(em),
+    books: new CollectionField(em, 'Book')
+  };
+}
 
-const clone = JSON.parse(JSON.stringify(data));
-clone.title = 'README.MD needs additional example illustrating how to prefilter';
-clone.disposition = 'completed';
-
-const two = diff(data, clone);
-const none = diff(data, clone,
-  (path, key) => path.length === 0 && ~['title', 'disposition'].indexOf(key)
-);
-
-assert.equal(two.length, 2, 'should reflect two differences');
-assert.ok(typeof none === 'undefined', 'should reflect no differences');
+function Book(em) {
+  return {
+    id: new PrimaryKey(em),
+    name: new StringField(em),
+    author: new EntityField(em, Author.name),
+  };
+}
 ```
-#### Normalizing object properties
 
-The `normalize`'s signature should be `function(path, key, lhs, rhs)` and it should return either a falsy value if no normalization has occured, or a `[lhs, rhs]` array to replace the original values. This step doesn't occur if the path was filtered out in the `prefilter` phase.
+#### Add a model to the Entity manager
 
 ```javascript
-const diff = require('deep-diff');
-const assert = require('assert');
+// You can also import classes
+const Collection = em.defaultClasses.types.Collection
+const Entity = em.defaultClasses.types.Entity
 
-const data = {
-  pull: 149,
-  submittedBy: 'saveman71',
-};
+em.setModel(Author, {
+  find: new Entity(em, (value) => {
+    // Your request to the server
+    return responseData
+  }),
+})
+em.setModel(Book, {
+  findSomeThing: new Collection(em, (value) => {
+    // Your request to the server
+    return responseData
+  }),
+})
+```
 
-const clone = JSON.parse(JSON.stringify(data));
-clone.issue = 42;
+#### Add hooks that will be used for all models
 
-const two = diff(data, clone);
-const none = diff(data, clone, {
-  normalize: (path, key, lhs, rhs) => {
-    if (lhs === 149) {
-      lhs = 42;
-    }
-    if (rhs === 149) {
-      rhs = 42;
-    }
-    return [lsh, rhs];
+```javascript
+em.setHooks({
+  get(model, pk) {
+    /*
+     Your request to the server
+     return the data corresponding to the model  
+    */
+  },
+  create(modelData, value) {
+    /*
+     Your request to the server
+     return the primary key
+    */
+  },
+  update(modelData, value) {
+    /*
+     Your request to the server
+     return the primary key
+    */
+  },
+  delete(modelData, pk) {
+    /*
+     Your request to the server
+     return the primary key
+    */
+  },
+})
+```
+
+#### Use package api
+
+```javascript
+const author = await em.repositories.Author.find(authorParams)
+const booksCollection = await em.repositories.Book.findSome(bookParams)
+const book = booksCollection[0]
+
+const newAuthor = em.post(someNewValue, em.models.Author)
+em.put(someUpdatingValue, book)
+em.flush()
+```
+
+## Demo
+
+## Overview
+
+The main goal of the library is to quickly create a data processing system from a server with Restful API. 
+The library is suitable for small applications and prototypes.
+
+The data storage uses an ORM design. When calling the missing property, data is requested from the server.
+
+The library implies the use of data reactivity but does not contain it.
+
+For full implementation, signals from the server about updating data are required.
+Use websockets, sse or long/short polling.
+
+The scheme of the library is shown in the figure
+
+![plot](./readme/front-orm-main-scheme.drawio.png)
+
+### Model
+
+To initialize the model, you need to create a model function that returns a set of model fields
+
+```javascript
+function Book(em) {
+  return {
+    id: new PrimaryKey(em),
+    name: new StringField(em),
+    page: new NumberField(em),
+    stories: new CollectionField(em, 'Story', (value) => value.id),
+    author: new EntityField(em, 'Author', (value) => value.id)
+  };
+}
+```
+
+The function name is used as the model name.
+
+#### Fields classes
+
+For all fields, the first parameter is an instance of the entity manager.
+
+***PrimaryKey*** is a required field. Used for identification and requests.
+
+***StringField*** is used for a regular string field.
+
+***NumberField*** is used for a regular number field. Currently, no different from StringField.
+
+***BooleanField*** is used for a boolean field. Currently, no different from StringField. See [Why beta](#why-beta-version)
+
+***CollectionField*** is used to associate OneToMany or ManyToMany with another entity.
+
+The second parameter is the name of the associated entity.
+
+The third parameter is a function for bringing an entity object to the primary key.
+By default 
+```javascript
+(pk) => pk
+```
+
+Example:
+
+Data received from the server for the entity Book
+```javascript
+const book = {
+  id: 1,
+  stories: [{id: 1}, {id: 10}, {id: 11}],
+  ...otherFields  
+}
+```
+Then the function should look like this
+```javascript
+const convertValueToPk = (value) => value.id
+```
+
+If the data from the server looks like this
+
+```javascript
+const book = {
+  id: 1,
+  stories: [1, 10, 11],
+  ...otherFields  
+}
+```
+you can use the default function 
+```javascript
+(pk) => pk
+```
+
+***EntityField*** is used to associate OneToOne or ManyToOne with another entity. The parameters are similar to ***CollectionField***.
+
+#### Model initializing
+
+To initialize the model, there is a ***setModel*** method
+
+```javascript
+em.setModel(Book, {
+  find: new Entity(em, (value) => {
+    // Your request to the server
+    return responseData
+  }),
+  findAll: new Collection(em, (value) => {
+    // Your request to the server
+    return responseData
+  }),
+})
+```
+
+The first parameter is a [model function](#model)
+
+The second parameter is needed to create a model repository. It is an object with the ***Entity*** and ***Collection*** classes
+
+***Entity*** and ***Collection*** are classes for determining the response from the server.
+
+For both classes, the first parameter is an instance of the entity manager,
+and the second is a *callback* with custom requests to the server. The *callback* parameter can be any.
+
+*Callback* response:
+
+- for ***Entity***, an object with model fields must be returned
+- for ***Collection***, an array of objects with model fields must be returned
+
+#### Data storage
+
+The main interaction with data occurs through the ***ModelView*** and the ***ModelView collection***.
+
+The structure of the data storage object is shown in the figure.
+
+![plot](./readme/front-orm-data-structure.drawio.png)
+
+The ***BaseModel*** contains methods used at higher levels.
+
+- **$em** is an instance of the entity manager
+- **$getName** is a function that returns the model name
+- **$getPkName** is a function that returns the name of the primary key
+- **$refresh** is a function for refreshing data from the server
+- **$get**, **$create**, **$update**, **$delete** calls the corresponding entity manager hook
+
+The ***Model*** object is created when initializing the [model function](#model) based on the prototype ***BaseModel***.
+Contains the same fields as the model function.
+
+The ***ModelData*** object is the main data storage element.
+Based on the prototype ***Model***. Filled with data from the server based on the model fields.
+A link to the corresponding ***ModelData*** is placed in the relationship field.
+If there is no data, an instance of the class Empty is assigned to the field.
+
+***ModelView*** is based on the Proxy class with the ***ModelData*** target object.
+When accessing properties, either the value of the target object field or the ModelView of the associated object is returned.
+If the value of the target object field is equal to an instance of the Empty class, the 'get' hook is called.
+The assignment operation does not work, use the **put** method of the entity manager to change the data.
+
+***ModelView collection*** is an array of ModelView objects.
+Using the methods 'push', 'pop', 'shift', 'unshift' will cause an error.
+To change the data, the **put** method of the entity manager is used
+
+###### Repository
+
+The ***Repository*** stores all methods of getting data from the server added during initialization of the model.
+
+Getting access to the ***Repository***
+```javascript
+const repository = em.repositories[modelName]
+```
+or
+```javascript
+const repository = em.getRepository(modelName)
+```
+
+Public properties and methods:
+- $em - instance of the entity manager
+- $model - instance of ***Model***
+- $refreshCollection - a method for getting refreshed data from the server
+
+###### Garbage collection
+
+Memory is freed automatically by the garbage collector and does not require additional actions from the programmer.
+To do this, most of the internal relationships between data are implemented on the basis of WeakSet, WeakMap and WeakRef.
+Thus, the only live references to the data are ***ModelView*** and ***ModelView collection*** obtained using the entity manager.
+Excluding them from memory is a condition for starting the garbage collector for this data.
+
+**<u>Note:</u>** The js garbage collector has a complex logic of operation, so even without live references, the object can continue to be in memory for some unspecified time.
+
+#### Hooks
+
+list of hooks used:
+
+- preFlush
+- get
+- create
+- update
+- delete
+
+All hooks except 'get' are triggered during the execution of the 'flush' method.
+'Get' is run in all cases when the Data Storage did not have the necessary data.
+
+***preFlush*** is designed for manipulating commits before launching the rest of the hooks. Read more about commits below.
+- The input parameter is an array of commits.
+- Waiting for the return of an array of commits or an empty array
+
+***get*** is used to get missing data in ***ModelData***
+- Input parameters:
+  - ***Model***
+  - primary key
+- Waits for the return of an object with fields similar to the ***Model***
+
+***create*** is designed to send information about the creation of new data.
+- Input parameters:
+  - ***ModelData***
+  - generalized value obtained from the commits for a given modelData
+- Waiting for the primary key to be returned
+
+***update*** is designed to send information about the updating of data. Similar to ***create***
+
+***delete*** is designed to send information about data deletion
+- Input parameters:
+  - ***ModelData***
+  - primary key
+- Waiting for the primary key to be returned
+
+###### Commits
+
+All up-to-date information about changes in model data is stored in commits. 
+This allows you to roll back changes within certain limits. 
+Updating of the model data with server data occurs by the 'flush' method.
+At the same time, all commits are overwritten.
+During execution, heuristic logic determines the use of appropriate hooks for commits.
+Depending on the specifics of data processing by the server, you may need to change the logic.
+There is a ***preFlash*** hook for this. It can also be used to create batch requests.
+Returning an empty array will result in the remaining hooks not being started.
+
+
+#### Entity Manager
+
+The main element of the api library is the entity manager
+
+Creating:
+```javascript
+const em = new EntityManager(setReactivity);
+```
+
+The input parameter is optional and is intended to create ***ModelData*** reactivity.
+Read more about reactivity below.
+
+Public properties of the EntityManager:
+- models
+- repositories
+- pending
+- defaultClasses
+
+***models*** contains instances of all available ***Models***. Needed for some methods
+
+***repositories*** contains all the methods added during initialization of the ***Model***.
+It has a tree-like structure. At the first level, the names of the models. On the second methods
+
+The ***pending*** value is substituted for the waiting time for a response from the server. By default, null.
+
+***defaultClasses*** contains all public classes available in the library.
+These classes can be imported from the library.
+
+Public methods of the EntityManager:
+- setHooks
+- setModel
+- getModel
+- getRepository
+- onAddModelData
+- onAddCollection
+- put
+- post
+- remove
+- flush
+- revert
+- revertAll
+
+***setHooks*** is designed to add all entity manager hooks. Read more [here](#hooks)
+
+***setModel*** is designed to add models to the entity manager. Read more [here](#model-initializing)
+
+***getModel*** and ***getRepository*** return the Model and repository of the Model, respectively.
+Input parameter model name.
+
+***onAddModelData*** and ***onAddCollection*** are handlers designed to organize messaging with the server.
+Read more [here](#real-time-update)
+
+***put*** is the main method for changing model data
+- Input parameters:
+  - an object with properties that need to be changed
+  - ***ModelView*** or ***Model*** (To create the input parameter ***Model***)
+- ***ModelView*** is returned
+
+Example:
+```javascript
+const book = em.repositories.Book.find(1)
+
+console.log(book.name) // 'Old book name'
+em.put({
+  name: 'New book name'
+}, book)
+
+console.log(book.name) // 'New book name'
+```
+
+***post*** wrapper over the ***put*** method. Intended only for creating.
+- Input parameters:
+  - an object with properties similar to the Model
+  - ***Model***
+- ***ModelView*** is returned
+
+Example:
+```javascript
+const newBook = em.post({
+  name: 'Created book',
+  ...otherProperties
+}, em.models.Book)
+
+console.log(newBook.name) // 'Created book'
+```
+
+***remove*** wrapper over the ***put*** method. Intended only for deleting.
+- The only input parameter is ModelView
+- ***ModelView*** is returned
+
+***flush*** starts the processes for sending data to the server. Read more [here](#hooks)
+
+***revert*** rolls back model data changes.
+The only input parameter is the number of commits being rolled back. By default, one. Read more [here](#commits)
+
+***revertAll*** this wrapper over the ***revert*** method. Designed to roll back all changes.
+
+###### Reactivity
+
+The library implies the use of reactivity, but it does not have it itself.
+To add reactivity as an input parameter when creating an entity manager, add the function.
+The function will be called every time ***ModelData*** is created
+
+```javascript
+const setReactivity = (modelData) => {
+  // do something to make the data reactive
+  return reactiveModelData
+}
+
+const em = new EntityManager(setReactivity);
+```
+
+At the moment, reactivity works exactly when using Vue 3. See [Why beta](#why-beta-version)
+
+Example with Vue 3
+
+```javascript
+import { EntityManager } from 'front-orm';
+import { ref } from 'vue';
+
+const em = new EntityManager((modelData) => ref(modelData).value);
+```
+
+###### Real-time update
+
+For a full real-time update, you need to establish negative feedback with the server.
+This is especially true for collections.
+You can use websockets, server events, or long/short polling for this.
+
+Example based on websockets
+```javascript
+const ws = new WebSocket(URL)
+const em = new EntityManager()
+
+em.onAddModelData = (model, pk) => {
+  ws.send(JSON.stringify({
+    model: model.$getName(),
+    id: pk
+  }))
+}
+
+const collectionsMap = new Map()
+
+em.onAddCollection = (repository, weakCollection) => {
+  ws.send(JSON.stringify({
+    model: repository.model.$getName(),
+    isCollection: true
+  }))
+  if (typeof collectionsMap.get(name) === 'undefined') {
+    collectionsMap.set(name, []);
   }
-});
+  collectionsMap.get(name).push({weakCollection, repository});
+}
+  
+ws.addEventListener('message', (message) => {
+  const { model: modelName, id } = JSON.parse(wsMessage.data);
+  const updatingCollections = collectionsMap.get(modelName) || [];
+  updatingCollections.forEach(({weakCollection, repository}) => {
+    const collection = weakCollection.deref();
+    if (typeof collection === 'undefined') {
+      return;
+    }
+    repository?.$refreshCollection(collection);
+  });
+  em.getModel(modelName).$refresh(id)
+})
 
-assert.equal(two.length, 1, 'should reflect one difference');
-assert.ok(typeof none === 'undefined', 'should reflect no difference');
 ```
 
-### `observableDiff`
+***onAddModelData*** is called when ***ModelData*** is created
+- Input parameters:
+  - ***Model***
+  - primary key
 
-The `observableDiff` function calculates the difference between two objects and reports each to an observer function.
+***ModelData*** is not passed so as not to break the logic of garbage collection. Read more [here](#garbage-collection)
 
-#### Argmuments
+***onAddCollection*** is called when collection is created
+- Input parameters:
+  - ***Repository***. Read more [here](#repository)
+  - ***WeakCollection***. It is WeakRef with collection target
 
-* `lhs` - the left-hand operand; the origin object.
-* `rhs` - the right-hand operand; the object being compared structurally with the origin object.
-* `observer` - The observer to report to.
-* `options` - A configuration object that can have the following properties:
-  - `prefilter`: function that determines whether difference analysis should continue down the object graph. This function can also replace the `options` object in the parameters for backward compatibility.
-  - `normalize`: function that pre-processes every _leaf_ of the tree.
+Use the 'deref' method to interact with the collection.
 
-## Contributing
+When receiving a message from the server about data changes,
+use the ***$refresh*** method of the ***Model*** and ***$refreshCollection*** of the ***Repository***
 
-When contributing, keep in mind that it is an objective of `deep-diff` to have no package dependencies. This may change in the future, but for now, no-dependencies.
 
-Please run the unit tests before submitting your PR: `npm test`. Hopefully your PR includes additional unit tests to illustrate your change/modification!
+## Why beta version
 
-When you run `npm test`, linting will be performed and any linting errors will fail the tests... this includes code formatting.
+Even though the idea of the library is simple, the implementation revealed certain difficulties.
+For the stable version, there is not enough experience in the practical use of the library.
 
-> Thanks to all those who have contributed so far!
+Using the library with frameworks other than vue 3 may result in structure changes.
+Some of the solutions applied are not final.
+For example, the StringField, Number Field, and BooleanField classes all look the same.
+Perhaps they will be replaced by a single field.
+
+I intend to support the project and hope for feedback from using the library.
