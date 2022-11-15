@@ -467,12 +467,12 @@ The only input parameter is the number of commits being rolled back. By default,
 
 The library implies the use of reactivity, but it does not have it itself.
 To add reactivity as an input parameter when creating an entity manager, add the function.
-The function will be called every time ***ModelData*** is created
+The function will be called every time ***ModelData*** or ***ModelView collection*** is created
 
 ```javascript
-const setReactivity = (modelData) => {
+const setReactivity = (data) => {
   // do something to make the data reactive
-  return reactiveModelData
+  return reactiveData
 }
 
 const em = new EntityManager(setReactivity);
