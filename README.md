@@ -139,6 +139,13 @@ em.flush()
 
 ## Demo
 
+```bash
+git clone https://github.com/bd2051/front-orm-quick-example.git
+cd front-orm-quick-example
+npm install
+npm run serve
+```
+
 ## Overview
 
 The main goal of the library is to quickly create a data processing system from a server with Restful API. 
