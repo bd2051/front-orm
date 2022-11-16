@@ -518,7 +518,7 @@ const collectionsMap = new Map()
 
 em.onAddCollection = (repository, weakCollection) => {
   ws.send(JSON.stringify({
-    model: repository.model.$getName(),
+    model: repository.$model.$getName(),
     isCollection: true
   }))
   if (typeof collectionsMap.get(name) === 'undefined') {
