@@ -108,6 +108,7 @@ export default class EntityManager {
   reverseStorageCache: WeakMap<ModelData, WeakRef<CacheKey>>
   hooks: Hooks
   pending: any
+  removed: any
   defaultClasses: Classes
   onAddModelData: (model?: Model, pk?: number|string) => void
   onAddCollection: (repository?: Repository, collection?: WeakRef<Array<any>>) => void
@@ -139,6 +140,7 @@ export default class EntityManager {
     })
     this.commits = []
     this.pending = null
+    this.removed = 'removed'
     this.onAddModelData = () => {}
     this.onAddCollection = () => {}
     this.hooks = {
@@ -509,6 +511,9 @@ export default class EntityManager {
             throw new Error('Logic error')
           }
           if (!(storageCacheValue[prop] instanceof Empty)) {
+            if (storageCacheValue[prop] instanceof BaseField) {
+              return em.removed
+            }
             const model = Object.getPrototypeOf(target) as Model
             return model[prop]!.view(storageCacheValue[prop])
           }

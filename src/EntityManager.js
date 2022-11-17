@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { getBaseModel, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField, Empty } from "./index";
+import { getBaseModel, BaseField, Entity, BooleanField, Collection, EntityField, NumberField, PrimaryKey, StringField, CollectionField, Empty } from "./index";
 import { applyChange, observableDiff, revertChange } from "deep-diff";
 import getBaseRepository from "./repository/getBaseRepository";
 export default class EntityManager {
@@ -36,6 +36,7 @@ export default class EntityManager {
         });
         this.commits = [];
         this.pending = null;
+        this.removed = 'removed';
         this.onAddModelData = () => { };
         this.onAddCollection = () => { };
         this.hooks = {
@@ -383,6 +384,9 @@ export default class EntityManager {
                         throw new Error('Logic error');
                     }
                     if (!(storageCacheValue[prop] instanceof Empty)) {
+                        if (storageCacheValue[prop] instanceof BaseField) {
+                            return em.removed;
+                        }
                         const model = Object.getPrototypeOf(target);
                         return model[prop].view(storageCacheValue[prop]);
                     }

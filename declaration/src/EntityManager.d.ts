@@ -77,6 +77,7 @@ export default class EntityManager {
     reverseStorageCache: WeakMap<ModelData, WeakRef<CacheKey>>;
     hooks: Hooks;
     pending: any;
+    removed: any;
     defaultClasses: Classes;
     onAddModelData: (model?: Model, pk?: number | string) => void;
     onAddCollection: (repository?: Repository, collection?: WeakRef<Array<any>>) => void;
