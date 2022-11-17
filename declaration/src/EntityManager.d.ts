@@ -49,16 +49,16 @@ interface Commit {
 interface Hooks {
     preFlush: (commits: Array<Commit>) => Array<Commit>;
     get: (data: Model, pk: string | number) => Promise<any>;
-    create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
-    update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
-    delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>;
+    create: (modelData: ModelData, value: any) => Promise<string | number>;
+    update: (modelData: ModelData, value: any) => Promise<string | number>;
+    delete: (modelData: ModelData, pk: string | number) => Promise<string | number>;
 }
 interface HooksInit {
     preFlush?: (commits: Array<Commit>) => Array<Commit>;
     get: (data: Model, pk: string | number) => Promise<any>;
-    create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
-    update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>;
-    delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>;
+    create: (data: ModelData, value: any) => Promise<string | number>;
+    update: (data: ModelData, value: any) => Promise<string | number>;
+    delete: (data: ModelData, pk: string | number) => Promise<string | number>;
 }
 interface FirstLevelStorage {
     [key: string | number]: CacheKey;

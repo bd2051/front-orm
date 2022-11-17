@@ -76,17 +76,17 @@ interface Commit {
 interface Hooks {
   preFlush: (commits: Array<Commit>) => Array<Commit>
   get: (data: Model, pk: string | number) => Promise<any>
-  create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
-  update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
-  delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>
+  create: (modelData: ModelData, value: any) => Promise<string | number>
+  update: (modelData: ModelData, value: any) => Promise<string | number>
+  delete: (modelData: ModelData, pk: string | number) => Promise<string | number>
 }
 
 interface HooksInit {
   preFlush?: (commits: Array<Commit>) => Array<Commit>
   get: (data: Model, pk: string | number) => Promise<any>
-  create: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
-  update: (data: ModelData, value: any, commit: Commit) => Promise<string | number>
-  delete: (data: ModelData, pk: string | number, commit: Commit) => Promise<string | number>
+  create: (data: ModelData, value: any) => Promise<string | number>
+  update: (data: ModelData, value: any) => Promise<string | number>
+  delete: (data: ModelData, pk: string | number) => Promise<string | number>
 }
 
 interface FirstLevelStorage {
@@ -124,7 +124,7 @@ export default class EntityManager {
     this.reverseStorageCache = new WeakMap()
     const em = this
     this.storageCache = new Proxy(new WeakMap<CacheKey, ModelData>(), {
-      get(target: WeakMap<CacheKey, ModelData>, prop: string | symbol, receiver: any): any {
+      get(target: WeakMap<CacheKey, ModelData>, prop: string | symbol): any {
         if (prop === 'set') {
           return (key: CacheKey, value: ModelData) => {
             const setResult = target.set.call(target, key, em._setReactivity(value))
@@ -135,7 +135,6 @@ export default class EntityManager {
         if (prop === 'get') {
           return target.get.bind(target)
         }
-        return Reflect.get(target, prop, receiver)
       }
     })
     this.commits = []
@@ -153,20 +152,20 @@ export default class EntityManager {
         }
         return ''
       },
-      create: async (value, commit, data) => {
-        if (value && commit && data) {
+      create: async (value, commit) => {
+        if (value && commit) {
           throw new Error('Add create hook')
         }
         return ''
       },
-      update: async (value, commit, data) => {
-        if (value && commit && data) {
+      update: async (value, commit) => {
+        if (value && commit) {
           throw new Error('Add update hook')
         }
         return ''
       },
-      delete: async (value, pk, data) => {
-        if (value && pk && data) {
+      delete: async (value, pk) => {
+        if (value && pk) {
           throw new Error('Add delete hook')
         }
         return ''
@@ -285,29 +284,16 @@ export default class EntityManager {
   }
   _convertValue(value: PutValue) {
       return Object.entries(value).reduce((acc: ConvertedPutValue, [key, value]) => {
-        if (typeof value === 'string') {
+        if (typeof value === 'string'
+          || typeof value === 'number'
+          || typeof value === 'boolean'
+          || value === null
+        ) {
           acc[key] = value
-          return acc
-        }
-        if (typeof value === 'number') {
-          acc[key] = value
-          return acc
-        }
-        if (typeof value === 'boolean') {
-          acc[key] = value
-          return acc
-        }
-        if (value === null) {
-          acc[key] = value
-          return acc
-        }
-        if (Array.isArray(value)) {
+        } else if (Array.isArray(value)) {
           acc[key] = value.map((item) => item._target)
-          return acc
-        }
-        if (typeof value._target !== 'undefined') {
+        } else if (typeof value._target !== 'undefined') {
           acc[key] = value._target
-          return acc
         }
         return acc
       }, {})

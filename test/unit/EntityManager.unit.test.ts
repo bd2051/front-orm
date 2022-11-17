@@ -2,7 +2,7 @@ import { suite, test } from '@testdeck/mocha';
 import * as _chai from 'chai';
 import {assert, expect} from 'chai';
 import {Entity, EntityManager, PrimaryKey, StringField} from "../../src";
-import {ModelInit} from "../../src/types";
+import {Model, ModelData, ModelInit, ModelView} from "../../src/types";
 
 _chai.should();
 
@@ -106,7 +106,7 @@ function Story(em: EntityManager): ModelInit {
     }, 200)
   }
 
-  @test 'create cache proxy' (done) {
+  @test 'create cache proxy and check create, update, delete' (done) {
     this.SUT.setModel(this.model, {
       findByPk: new Entity(this.SUT, (pk) => {
         return {
@@ -127,16 +127,18 @@ function Story(em: EntityManager): ModelInit {
         return data
       },
       async create(data, value) {
-        console.log(data, value)
-        return value
+        assert.equal(data['name'], 'new name')
+        assert.equal(value.name, 'new name')
+        return new Promise((resolve) => resolve(2))
       },
       async update(data, value) {
-        console.log(data, value)
-        return value
+        assert.equal(value.name, 'updated name')
+        return new Promise((resolve) => resolve(data['id'] as number | string))
       },
       async delete(data, pk) {
-        console.log(data, pk)
-        return pk
+        assert.instanceOf(data['id'], PrimaryKey)
+        assert.equal(pk, 2)
+        return new Promise((resolve) => resolve(pk))
       }
     })
     const test = async () => {
@@ -156,7 +158,75 @@ function Story(em: EntityManager): ModelInit {
     test().then(proxy => {
       let name = proxy.name
       assert.equal(name, 'find')
-      done()
+
+      this.SUT.put({
+        name: 'wrong name'
+      }, proxy)
+      assert.equal(proxy.name, 'wrong name')
+      this.SUT.revertAll()
+      assert.equal(proxy.name, 'find')
+      this.SUT.put({
+        name: 'updated name'
+      }, proxy)
+      assert.equal(proxy.name, 'updated name')
+      const newElement = this.SUT.post({
+        name: 'new name'
+      }, this.SUT.models['Story']!)
+      assert.equal(newElement['name'], 'new name')
+      this.SUT.flush().then(() => {
+        assert.equal(newElement['id'], 2)
+        this.SUT.remove(newElement)
+        this.SUT.flush().then(() => {
+          done()
+        })
+      })
     }).catch(done)
+  }
+
+  @test 'check default hooks' (done) {
+    const arr = []
+    const preFlushResult = this.SUT.hooks.preFlush(arr)
+    assert.equal(preFlushResult, arr)
+
+    const checkError = async (cb, message) => {
+      let error = ''
+      try {
+        await cb()
+      } catch (e) {
+        assert.equal(e.message, message)
+      }
+    }
+
+    Promise.all([
+      checkError(() => this.SUT.hooks.get({} as Model, 'pk'), 'Add get hook'),
+      checkError(() => this.SUT.hooks.create({} as ModelData, {}), 'Add create hook'),
+      checkError(() => this.SUT.hooks.update({} as ModelData, {}), 'Add update hook'),
+      checkError(() => this.SUT.hooks.delete({} as ModelData, 'pk'), 'Add delete hook'),
+    ]).then(() => {
+      done()
+    })
+  }
+
+  @test 'convert value' () {
+    const testValue = {
+      string: 'string',
+      array: [
+        {
+          _target: 'target'
+        } as any as ModelView
+      ],
+      obj: {
+        _target: 'target'
+      } as any as ModelView,
+    }
+    const {string, array, obj} = this.SUT._convertValue(testValue)
+    assert.equal(string, 'string')
+    const arrElement = array![0]
+    assert.equal(arrElement, 'target')
+    assert.equal(obj, 'target')
+  }
+
+  @test 'check put' () {
+
   }
 }

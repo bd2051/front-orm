@@ -20,7 +20,7 @@ export default class EntityManager {
         this.reverseStorageCache = new WeakMap();
         const em = this;
         this.storageCache = new Proxy(new WeakMap(), {
-            get(target, prop, receiver) {
+            get(target, prop) {
                 if (prop === 'set') {
                     return (key, value) => {
                         const setResult = target.set.call(target, key, em._setReactivity(value));
@@ -31,7 +31,6 @@ export default class EntityManager {
                 if (prop === 'get') {
                     return target.get.bind(target);
                 }
-                return Reflect.get(target, prop, receiver);
             }
         });
         this.commits = [];
@@ -49,20 +48,20 @@ export default class EntityManager {
                 }
                 return '';
             }),
-            create: (value, commit, data) => __awaiter(this, void 0, void 0, function* () {
-                if (value && commit && data) {
+            create: (value, commit) => __awaiter(this, void 0, void 0, function* () {
+                if (value && commit) {
                     throw new Error('Add create hook');
                 }
                 return '';
             }),
-            update: (value, commit, data) => __awaiter(this, void 0, void 0, function* () {
-                if (value && commit && data) {
+            update: (value, commit) => __awaiter(this, void 0, void 0, function* () {
+                if (value && commit) {
                     throw new Error('Add update hook');
                 }
                 return '';
             }),
-            delete: (value, pk, data) => __awaiter(this, void 0, void 0, function* () {
-                if (value && pk && data) {
+            delete: (value, pk) => __awaiter(this, void 0, void 0, function* () {
+                if (value && pk) {
                     throw new Error('Add delete hook');
                 }
                 return '';
@@ -170,29 +169,17 @@ export default class EntityManager {
     }
     _convertValue(value) {
         return Object.entries(value).reduce((acc, [key, value]) => {
-            if (typeof value === 'string') {
+            if (typeof value === 'string'
+                || typeof value === 'number'
+                || typeof value === 'boolean'
+                || value === null) {
                 acc[key] = value;
-                return acc;
             }
-            if (typeof value === 'number') {
-                acc[key] = value;
-                return acc;
-            }
-            if (typeof value === 'boolean') {
-                acc[key] = value;
-                return acc;
-            }
-            if (value === null) {
-                acc[key] = value;
-                return acc;
-            }
-            if (Array.isArray(value)) {
+            else if (Array.isArray(value)) {
                 acc[key] = value.map((item) => item._target);
-                return acc;
             }
-            if (typeof value._target !== 'undefined') {
+            else if (typeof value._target !== 'undefined') {
                 acc[key] = value._target;
-                return acc;
             }
             return acc;
         }, {});
