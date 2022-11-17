@@ -389,6 +389,7 @@ Public properties of the EntityManager:
 - models
 - repositories
 - pending
+- removed
 - defaultClasses
 
 ***models*** contains instances of all available ***Models***. Needed for some methods
@@ -397,6 +398,8 @@ Public properties of the EntityManager:
 It has a tree-like structure. At the first level, the names of the models. On the second methods
 
 The ***pending*** value is substituted for the waiting time for a response from the server. By default, null.
+
+The ***removed*** value is substituted if the ***ModelData*** has been removed. By default, undefined.
 
 ***defaultClasses*** contains all public classes available in the library.
 These classes can be imported from the library.
