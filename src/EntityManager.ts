@@ -140,7 +140,7 @@ export default class EntityManager {
     })
     this.commits = []
     this.pending = null
-    this.removed = 'removed'
+    this.removed = undefined
     this.onAddModelData = () => {}
     this.onAddCollection = () => {}
     this.hooks = {
