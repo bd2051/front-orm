@@ -139,6 +139,10 @@ em.flush()
 
 ## Demo
 
+[Codesanbox example](https://codesandbox.io/s/polished-water-4ol75w)
+
+or
+
 ```bash
 git clone https://github.com/bd2051/front-orm-quick-example.git
 cd front-orm-quick-example
@@ -160,7 +164,7 @@ Use websockets, sse or long/short polling.
 
 The scheme of the library is shown in the figure
 
-![plot](./readme/front-orm-main-scheme.drawio.png)
+![plot](https://raw.githubusercontent.com/bd2051/front-orm/8acd96850c04b312a2e4fa7ef402fe19afd93014/readme/front-orm-main-scheme.drawio.png)
 
 ### Model
 
@@ -270,7 +274,7 @@ The main interaction with data occurs through the ***ModelView*** and the ***Mod
 
 The structure of the data storage object is shown in the figure.
 
-![plot](./readme/front-orm-data-structure.drawio.png)
+![plot](https://raw.githubusercontent.com/bd2051/front-orm/8acd96850c04b312a2e4fa7ef402fe19afd93014/readme/front-orm-data-structure.drawio.png)
 
 The ***BaseModel*** contains methods used at higher levels.
 
