@@ -252,7 +252,7 @@ em.setModel(Book, {
 
 The first parameter is a [model function](#model)
 
-The second parameter is needed to create a model repository. It is an object with the ***Entity*** and ***Collection*** classes
+The second parameter used to create a model repository. It is an object with the ***Entity*** and ***Collection*** classes
 
 ***Entity*** and ***Collection*** are classes for determining the response from the server.
 
@@ -566,7 +566,7 @@ Even though the idea of the library is simple, the implementation revealed certa
 For the stable version, there is not enough experience in the practical use of the library.
 
 Using the library with frameworks other than vue 3 may result in structure changes.
-Some of the solutions applied are not final.
+Some solutions applied are not final.
 For example, the StringField, Number Field, and BooleanField classes all look the same.
 Perhaps they will be replaced by a single field.
 
