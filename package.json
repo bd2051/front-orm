@@ -1,6 +1,6 @@
 {
   "name": "front-orm",
-  "version": "0.3.0-beta.2",
+  "version": "0.3.0-beta.3",
   "description": "Real-time updated front ORM",
   "scripts": {
     "test:unit": "nyc ./node_modules/.bin/_mocha 'test/**/*.unit.test.ts'",
@@ -20,6 +20,14 @@
     "orm",
     "js"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bd2051/front-orm"
+  },
+  "bugs": {
+    "url": "https://github.com/bd2051/front-orm/issues"
+  },
+  "homepage": "https://github.com/bd2051/front-orm#readme",
   "author": "bd2051 <bd2051work@mail.ru>",
   "license": "ISC",
   "devDependencies": {
