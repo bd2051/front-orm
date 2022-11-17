@@ -1,6 +1,6 @@
 {
   "name": "front-orm",
-  "version": "0.3.0-beta.1",
+  "version": "0.3.0-beta.2",
   "description": "Real-time updated front ORM",
   "scripts": {
     "test:unit": "nyc ./node_modules/.bin/_mocha 'test/**/*.unit.test.ts'",
@@ -12,7 +12,14 @@
   },
   "main": "dist/index.js",
   "types": "declaration/src/index.d.ts",
-  "keywords": [],
+  "keywords": [
+    "front",
+    "front-end",
+    "restful",
+    "rest",
+    "orm",
+    "js",
+  ],
   "author": "bd2051 <bd2051work@mail.ru>",
   "license": "ISC",
   "devDependencies": {
