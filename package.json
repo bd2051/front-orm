@@ -1,7 +1,7 @@
 {
   "name": "front-orm",
   "version": "0.3.0-beta.0",
-  "description": "",
+  "description": "Real-time updated front ORM",
   "scripts": {
     "test:unit": "nyc ./node_modules/.bin/_mocha 'test/**/*.unit.test.ts'",
     "test:func": "mocha --exit 'test/**/*.functional.test.ts'",
@@ -13,7 +13,7 @@
   "main": "dist/index.js",
   "types": "declaration/src/index.d.ts",
   "keywords": [],
-  "author": "",
+  "author": "bd2051 <bd2051work@mail.ru>",
   "license": "ISC",
   "devDependencies": {
     "@testdeck/mocha": "^0.2.0",
