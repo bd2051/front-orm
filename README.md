@@ -268,7 +268,25 @@ and the second is a *callback* with custom requests to the server. The *callback
 - for ***Entity***, an object with model fields must be returned
 - for ***Collection***, an array of objects with model fields must be returned
 
-#### Data storage
+#### Repository
+
+The ***Repository*** stores all methods of getting data from the server added during initialization of the model.
+
+Getting access to the ***Repository***
+```javascript
+const repository = em.repositories[modelName]
+```
+or
+```javascript
+const repository = em.getRepository(modelName)
+```
+
+Public properties and methods:
+- $em - instance of the entity manager
+- $model - instance of ***Model***
+- $refreshCollection - a method for getting refreshed data from the server
+
+### Data storage
 
 The main interaction with data occurs through the ***ModelView*** and the ***ModelView collection***.
 
@@ -301,25 +319,7 @@ The assignment operation does not work, use the **put** method of the entity man
 Using the methods 'push', 'pop', 'shift', 'unshift' will cause an error.
 To change the data, the **put** method of the entity manager is used
 
-###### Repository
-
-The ***Repository*** stores all methods of getting data from the server added during initialization of the model.
-
-Getting access to the ***Repository***
-```javascript
-const repository = em.repositories[modelName]
-```
-or
-```javascript
-const repository = em.getRepository(modelName)
-```
-
-Public properties and methods:
-- $em - instance of the entity manager
-- $model - instance of ***Model***
-- $refreshCollection - a method for getting refreshed data from the server
-
-###### Garbage collection
+#### Garbage collection
 
 Memory is freed automatically by the garbage collector and does not require additional actions from the programmer.
 To do this, most of the internal relationships between data are implemented on the basis of WeakSet, WeakMap and WeakRef.
@@ -328,7 +328,7 @@ Excluding them from memory is a condition for starting the garbage collector for
 
 **<u>Note:</u>** The js garbage collector has a complex logic of operation, so even without live references, the object can continue to be in memory for some unspecified time.
 
-#### Hooks
+### Hooks
 
 list of hooks used:
 
@@ -365,7 +365,7 @@ All hooks except 'get' are triggered during the execution of the 'flush' method.
   - primary key
 - Waiting for the primary key to be returned
 
-###### Commits
+#### Commits
 
 All up-to-date information about changes in model data is stored in commits. 
 This allows you to roll back changes within certain limits. 
@@ -377,7 +377,7 @@ There is a ***preFlash*** hook for this. It can also be used to create batch req
 Returning an empty array will result in the remaining hooks not being started.
 
 
-#### Entity Manager
+### Entity Manager
 
 The main element of the api library is the entity manager
 
@@ -477,7 +477,7 @@ The only input parameter is the number of commits being rolled back. By default,
 
 ***revertAll*** this wrapper over the ***revert*** method. Designed to roll back all changes.
 
-###### Reactivity
+#### Reactivity
 
 The library implies the use of reactivity, but it does not have it itself.
 To add reactivity as an input parameter when creating an entity manager, add the function.
@@ -503,7 +503,7 @@ import { ref } from 'vue';
 const em = new EntityManager((modelData) => ref(modelData).value);
 ```
 
-###### Real-time update
+#### Real-time update
 
 For a full real-time update, you need to establish negative feedback with the server.
 This is especially true for collections.
