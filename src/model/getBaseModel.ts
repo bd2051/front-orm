@@ -53,7 +53,8 @@ export default (em: EntityManager) : BaseModel => Object.create({}, {
       if (this._pkName === null) {
         let pkName = Object.keys(this).find((key) => this[key] instanceof PrimaryKey)
         if (typeof pkName !== 'string') {
-          pkName = Object.keys(Object.getPrototypeOf(this)).find((key) => this[key] instanceof PrimaryKey)
+          const prototype = Object.getPrototypeOf(this);
+          pkName = Object.keys(prototype).find((key) => prototype[key] instanceof PrimaryKey)
           if (typeof pkName !== 'string') {
             throw new Error('Add PrimaryKey')
           }

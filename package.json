@@ -1,6 +1,6 @@
 {
   "name": "front-orm",
-  "version": "0.3.0-beta.3",
+  "version": "0.3.0-beta.4",
   "description": "Real-time updated front ORM",
   "scripts": {
     "test:unit": "nyc ./node_modules/.bin/_mocha 'test/**/*.unit.test.ts'",
@@ -8,7 +8,8 @@
     "dev": "webpack-dev-server --history-api-fallback --progress",
     "build": "webpack --config webpack.config.prod.js",
     "mock": "node mock/mock-server.js",
-    "tsc:w": "tsc -w"
+    "tsc:w": "tsc -w",
+    "publish": "npm run build && npm publish"
   },
   "main": "dist/index.js",
   "types": "declaration/src/index.d.ts",
