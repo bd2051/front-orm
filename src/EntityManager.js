@@ -134,7 +134,7 @@ export default class EntityManager {
         let storageCacheKey = storageModel[pk];
         if (typeof storageCacheKey === 'undefined') {
             storageModel[pk] = {
-                pk
+                pk,
             };
             storageCacheKey = storageModel[pk];
             this.onAddModelData(model, pk);
@@ -384,7 +384,15 @@ export default class EntityManager {
                         const model = Object.getPrototypeOf(target);
                         return model[prop].view(storageCacheValue[prop]);
                     }
-                    cb(done);
+                    if (typeof cacheKey.promise === 'undefined') {
+                        cacheKey.promise = new Promise((resolve) => {
+                            cb(() => {
+                                done();
+                                resolve(null);
+                                delete cacheKey.promise;
+                            });
+                        });
+                    }
                     return em.pending;
                 }
                 else {

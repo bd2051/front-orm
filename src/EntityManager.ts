@@ -60,12 +60,14 @@ interface ConvertedPutValue {
 
 interface CacheKey {
   pk?: string | number
+  promise?: Promise<any>
 }
 
 interface Meta {
   options: any
   method: (v: any, model: Model) => Promise<any>
   repository: Repository
+  promise: null | Promise<any>
 }
 
 interface Commit {
@@ -246,7 +248,7 @@ export default class EntityManager {
     let storageCacheKey = storageModel[pk]
     if (typeof storageCacheKey === 'undefined') {
       storageModel[pk]  = {
-        pk
+        pk,
       }
       storageCacheKey = storageModel[pk]!
       this.onAddModelData(model, pk)
@@ -510,7 +512,15 @@ export default class EntityManager {
             const model = Object.getPrototypeOf(target) as Model
             return model[prop]!.view(storageCacheValue[prop])
           }
-          cb(done)
+          if (typeof cacheKey.promise === 'undefined') {
+            cacheKey.promise = new Promise((resolve) => {
+              cb(() => {
+                done()
+                resolve(null)
+                delete cacheKey.promise
+              })
+            })
+          }
           return em.pending
         } else {
           return Reflect.get(target, prop, receiver)

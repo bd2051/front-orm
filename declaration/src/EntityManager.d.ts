@@ -36,11 +36,13 @@ interface ConvertedPutValue {
 }
 interface CacheKey {
     pk?: string | number;
+    promise?: Promise<any>;
 }
 interface Meta {
     options: any;
     method: (v: any, model: Model) => Promise<any>;
     repository: Repository;
+    promise: null | Promise<any>;
 }
 interface Commit {
     cacheKey: CacheKey;

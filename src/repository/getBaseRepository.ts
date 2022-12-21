@@ -25,7 +25,14 @@ export default (em: EntityManager, model: Model) : BaseRepository => Object.crea
       if (typeof meta === 'undefined') {
         return
       }
-      const result = await meta.method(meta.options, this.$model)
+      if (meta.promise === null) {
+        meta.promise = new Promise(async (resolve) => {
+          const result = await meta.method(meta.options, this.$model)
+          resolve(result)
+          meta.promise = null
+        })
+      }
+      const result = await meta.promise
       collection.splice(0, collection.length)
       result.forEach((el: any) => {
         collection.push(el)
@@ -44,7 +51,8 @@ export default (em: EntityManager, model: Model) : BaseRepository => Object.crea
         this.$em.collectionCache.set(data, {
           options: values,
           method: methodRepository.find,
-          repository: this
+          repository: this,
+          promise: null
         })
         this.$em.onAddCollection(this, new WeakRef<Array<any>>(data))
       }

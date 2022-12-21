@@ -31,7 +31,14 @@ export default (em, model) => Object.create({}, {
                 if (typeof meta === 'undefined') {
                     return;
                 }
-                const result = yield meta.method(meta.options, this.$model);
+                if (meta.promise === null) {
+                    meta.promise = new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+                        const result = yield meta.method(meta.options, this.$model);
+                        resolve(result);
+                        meta.promise = null;
+                    }));
+                }
+                const result = yield meta.promise;
                 collection.splice(0, collection.length);
                 result.forEach((el) => {
                     collection.push(el);
@@ -52,7 +59,8 @@ export default (em, model) => Object.create({}, {
                     this.$em.collectionCache.set(data, {
                         options: values,
                         method: methodRepository.find,
-                        repository: this
+                        repository: this,
+                        promise: null
                     });
                     this.$em.onAddCollection(this, new WeakRef(data));
                 }
