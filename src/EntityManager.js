@@ -338,6 +338,13 @@ export default class EntityManager {
     revertAll() {
         this.revert(this.commits.length);
     }
+    checkModelDataByPk(model, pk) {
+        const cacheKey = this.getStorageModel(model.$getName())[pk];
+        if (typeof cacheKey === 'undefined') {
+            return false;
+        }
+        return typeof this.storageCache.get(cacheKey) !== 'undefined';
+    }
     _updateDataByCommits(model, pk, data) {
         const item = data;
         const cacheKey = this.getStorageModel(model.$getName())[pk];

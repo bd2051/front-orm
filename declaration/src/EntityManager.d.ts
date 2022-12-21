@@ -97,6 +97,7 @@ export default class EntityManager {
     flush(): Promise<void>;
     revert(count?: number): void;
     revertAll(): void;
+    checkModelDataByPk(model: Model, pk: string | number): Boolean;
     _updateDataByCommits(model: Model, pk: number | string, data: any): any;
     _createProxyByCacheKey(cacheKey: CacheKey, cb?: (done: () => void) => void, done?: () => void): ModelView;
     _createProxy(model: Model, pk: string | number, cb: (done: () => void) => void): ModelView;

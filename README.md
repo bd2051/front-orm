@@ -421,6 +421,7 @@ Public methods of the EntityManager:
 - flush
 - revert
 - revertAll
+- checkModelDataByPk
 
 ***setHooks*** is designed to add all entity manager hooks. Read more [here](#hooks)
 
@@ -476,6 +477,12 @@ console.log(newBook.name) // 'Created book'
 The only input parameter is the number of commits being rolled back. By default, one. Read more [here](#commits)
 
 ***revertAll*** this wrapper over the ***revert*** method. Designed to roll back all changes.
+
+***checkModelDataByPk*** is a method that checks ORM data exists by pk.
+- Input parameters:
+  - ***Model***
+  - Primary key
+- Boolean is returned
 
 #### Reactivity
 
