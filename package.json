@@ -9,7 +9,7 @@
     "build": "webpack --config webpack.config.prod.js",
     "mock": "node mock/mock-server.js",
     "tsc:w": "tsc -w",
-    "publish": "npm run build && npm publish"
+    "publish:package": "npm run build && npm publish"
   },
   "main": "dist/index.js",
   "types": "declaration/src/index.d.ts",

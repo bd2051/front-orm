@@ -372,7 +372,7 @@ export default class EntityManager {
                 if (prop === '_target') {
                     return target;
                 }
-                if (prop in target) {
+                if (Object.hasOwn(target, prop)) {
                     const storageCacheValue = em.storageCache.get(cacheKey);
                     if (typeof storageCacheValue === 'undefined') {
                         throw new Error('Logic error');
