@@ -5,7 +5,7 @@ console.log('start');
 const em = new EntityManager();
 const serializeData = (data) => {
     const q = Object.entries(data).reduce((acc, [key, value]) => {
-        if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || typeof value === 'undefined') {
             acc[key] = value;
             return acc;
         }

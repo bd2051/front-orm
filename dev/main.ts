@@ -15,7 +15,7 @@ const em = new EntityManager()
 
 const serializeData = (data: ModelData) => {
   const q =  Object.entries(data).reduce((acc: any, [key, value]) => {
-    if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || typeof value === 'undefined') {
       acc[key] = value
       return acc
     }

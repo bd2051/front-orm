@@ -51,11 +51,11 @@ interface Classes {
 }
 
 interface PutValue {
-  [key: string]: string | number | null | Array<ModelView> | ModelView | boolean
+  [key: string]: string | number | null | Array<ModelView> | ModelView | boolean | undefined
 }
 
 interface ConvertedPutValue {
-  [key: string]: string | number | null | Array<ModelData> | ModelData | boolean
+  [key: string]: string | number | null | Array<ModelData> | ModelData | boolean | undefined
 }
 
 interface CacheKey {
@@ -290,6 +290,7 @@ export default class EntityManager {
           || typeof value === 'number'
           || typeof value === 'boolean'
           || value === null
+          || typeof value === 'undefined'
         ) {
           acc[key] = value
         } else if (Array.isArray(value)) {

@@ -172,7 +172,8 @@ export default class EntityManager {
             if (typeof value === 'string'
                 || typeof value === 'number'
                 || typeof value === 'boolean'
-                || value === null) {
+                || value === null
+                || typeof value === 'undefined') {
                 acc[key] = value;
             }
             else if (Array.isArray(value)) {

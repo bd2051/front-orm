@@ -29,10 +29,10 @@ interface Classes {
     types: TypesClass;
 }
 interface PutValue {
-    [key: string]: string | number | null | Array<ModelView> | ModelView | boolean;
+    [key: string]: string | number | null | Array<ModelView> | ModelView | boolean | undefined;
 }
 interface ConvertedPutValue {
-    [key: string]: string | number | null | Array<ModelData> | ModelData | boolean;
+    [key: string]: string | number | null | Array<ModelData> | ModelData | boolean | undefined;
 }
 interface CacheKey {
     pk?: string | number;
