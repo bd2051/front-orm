@@ -1,6 +1,6 @@
 {
   "name": "front-orm",
-  "version": "0.3.0-beta.6",
+  "version": "0.3.0-beta.7",
   "description": "Real-time updated front ORM",
   "scripts": {
     "test:unit": "nyc ./node_modules/.bin/_mocha 'test/**/*.unit.test.ts'",
@@ -50,6 +50,6 @@
     "webpack-dev-server": "^4.9.3"
   },
   "dependencies": {
-    "deep-diff": "git+https://github.com/bd2051/diff.git"
+    "deep-diff": "https://github.com/bd2051/diff.git"
   }
 }
