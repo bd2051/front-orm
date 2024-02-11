@@ -130,13 +130,14 @@ export default class EntityManager {
         return Object.create(model, this._convertValueToPropertyDescriptorMap(emptyProperty));
     }
     setStorageValue(model, pk, value) {
+        var _a;
         const storageModel = this.getStorageModel(model.$getName());
-        let storageCacheKey = storageModel[pk];
+        let storageCacheKey = (_a = storageModel[pk]) === null || _a === void 0 ? void 0 : _a.deref();
         if (typeof storageCacheKey === 'undefined') {
-            storageModel[pk] = {
+            storageModel[pk] = new WeakRef({
                 pk,
-            };
-            storageCacheKey = storageModel[pk];
+            });
+            storageCacheKey = storageModel[pk].deref();
             this.onAddModelData(model, pk);
         }
         const linkedValue = Object.entries(value).reduce((acc, [key, subValue]) => {
@@ -320,7 +321,7 @@ export default class EntityManager {
                     else {
                         cacheKey.pk = pk;
                         cacheValue[cacheValue.$getPkName()] = pk;
-                        this.getStorageModel(cacheValue.$getName())[pk] = cacheKey;
+                        this.getStorageModel(cacheValue.$getName())[pk] = new WeakRef(cacheKey);
                     }
                 });
             }
@@ -340,7 +341,8 @@ export default class EntityManager {
         this.revert(this.commits.length);
     }
     checkModelDataByPk(model, pk) {
-        const cacheKey = this.getStorageModel(model.$getName())[pk];
+        var _a;
+        const cacheKey = (_a = this.getStorageModel(model.$getName())[pk]) === null || _a === void 0 ? void 0 : _a.deref();
         if (typeof cacheKey === 'undefined') {
             return false;
         }
@@ -412,13 +414,14 @@ export default class EntityManager {
         });
     }
     _createProxy(model, pk, cb) {
+        var _a;
         const storageModel = this.getStorageModel(model.$getName());
         const done = () => {
         };
-        let proxyTarget = storageModel[pk];
+        let proxyTarget = (_a = storageModel[pk]) === null || _a === void 0 ? void 0 : _a.deref();
         if (typeof proxyTarget === 'undefined') {
             this.setStorageValue(model, pk, {});
         }
-        return this._createProxyByCacheKey(storageModel[pk], cb, done);
+        return this._createProxyByCacheKey(storageModel[pk].deref(), cb, done);
     }
 }

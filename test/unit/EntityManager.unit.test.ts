@@ -96,7 +96,7 @@ function Story(em: EntityManager): ModelInit {
     setTimeout(() => {
       let name = proxy.name
       assert.equal(name, 'story')
-      const cacheKey = this.SUT.getStorageModel('Story')[1]!
+      const cacheKey = this.SUT.getStorageModel('Story')[1]!.deref()!
       assert.exists(cacheKey)
       const cacheValue = this.SUT.storageCache.get(cacheKey)!
       assert.exists(cacheValue)

@@ -63,7 +63,7 @@ interface HooksInit {
     delete: (data: ModelData, pk: string | number) => Promise<string | number>;
 }
 interface FirstLevelStorage {
-    [key: string | number]: CacheKey;
+    [key: string | number]: WeakRef<CacheKey>;
 }
 interface Storage {
     [key: string]: FirstLevelStorage;

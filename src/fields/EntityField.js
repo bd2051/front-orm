@@ -42,11 +42,12 @@ export default class EntityField extends BaseField {
         return this.em._createProxyByCacheKey(cacheKey, cb);
     }
     link(value) {
+        var _a;
         if (value === null) {
             return null;
         }
         const pk = this.convertValueToPk(value);
-        const cacheKey = this.em.getStorageModel(this.targetModel.$getName())[pk];
+        const cacheKey = (_a = this.em.getStorageModel(this.targetModel.$getName())[pk]) === null || _a === void 0 ? void 0 : _a.deref();
         if (typeof cacheKey === 'undefined') {
             return this.em.setStorageValue(this.targetModel, pk, {
                 [this.targetModel.$getPkName()]: pk
