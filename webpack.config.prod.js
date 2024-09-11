@@ -9,7 +9,8 @@ module.exports = {
       type: 'umd',
       name: 'FrontOrm',
       umdNamedDefine: true,
-    }
+    },
+    globalObject: 'this'
   },
   resolve: {
     extensions: ['.ts', '.js']

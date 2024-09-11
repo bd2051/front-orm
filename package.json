@@ -1,6 +1,6 @@
 {
   "name": "front-orm",
-  "version": "0.3.0-beta.7",
+  "version": "0.3.0-beta.8",
   "description": "Real-time updated front ORM",
   "scripts": {
     "test:unit": "nyc ./node_modules/.bin/_mocha 'test/**/*.unit.test.ts'",
