@@ -48,7 +48,7 @@ export default class EntityField extends BaseField implements FieldInterface {
       return null
     }
     const pk = this.convertValueToPk(value)
-    const cacheKey = this.em.getStorageModel(this.targetModel.$getName())[pk]?.deref()
+    const cacheKey = this.em.getStorageModel(this.targetModel.$getName())[pk]
 
     if (typeof cacheKey === 'undefined') {
       return this.em.setStorageValue(this.targetModel, pk, {

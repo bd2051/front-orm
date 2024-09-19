@@ -51,9 +51,8 @@ export default class CollectionField extends BaseField {
     }
     link(values) {
         return values.map((value) => {
-            var _a;
             const pk = this.convertValueToPk(value);
-            const cacheKey = (_a = this.em.getStorageModel(this.targetModel.$getName())[pk]) === null || _a === void 0 ? void 0 : _a.deref();
+            const cacheKey = this.em.getStorageModel(this.targetModel.$getName())[pk];
             if (typeof cacheKey === 'undefined') {
                 return this.em.setStorageValue(this.targetModel, pk, {
                     [this.targetModel.$getPkName()]: pk

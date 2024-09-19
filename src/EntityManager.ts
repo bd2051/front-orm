@@ -92,7 +92,7 @@ interface HooksInit {
 }
 
 interface FirstLevelStorage {
-  [key: string|number]: WeakRef<CacheKey>
+  [key: string|number]: CacheKey
 }
 
 interface Storage {
@@ -245,12 +245,12 @@ export default class EntityManager {
   }
   setStorageValue(model: Model, pk: number | string, value: StorageItem): ModelData {
     const storageModel = this.getStorageModel(model.$getName())
-    let storageCacheKey = storageModel[pk]?.deref()
+    let storageCacheKey = storageModel[pk]
     if (typeof storageCacheKey === 'undefined') {
-      storageModel[pk]  = new WeakRef({
+      storageModel[pk]  = {
         pk,
-      })
-      storageCacheKey = storageModel[pk]!.deref()!
+      }
+      storageCacheKey = storageModel[pk]!
       this.onAddModelData(model, pk)
     }
     const linkedValue = Object.entries(value).reduce((acc: StorageItem, [key, subValue]) => {
@@ -444,7 +444,7 @@ export default class EntityManager {
         } else {
           cacheKey.pk = pk
           cacheValue[cacheValue.$getPkName()] = pk
-          this.getStorageModel(cacheValue.$getName())[pk] = new WeakRef(cacheKey)
+          this.getStorageModel(cacheValue.$getName())[pk] = cacheKey
         }
       })
     }
@@ -464,7 +464,7 @@ export default class EntityManager {
     this.revert(this.commits.length)
   }
   checkModelDataByPk(model: Model, pk: string | number): Boolean {
-    const cacheKey = this.getStorageModel(model.$getName())[pk]?.deref()
+    const cacheKey = this.getStorageModel(model.$getName())[pk]
     if (typeof cacheKey === 'undefined') {
       return false
     }
@@ -541,12 +541,12 @@ export default class EntityManager {
     const storageModel = this.getStorageModel(model.$getName())
     const done = () => {
     }
-    let proxyTarget = storageModel[pk]?.deref();
+    let proxyTarget = storageModel[pk];
     if (typeof proxyTarget === 'undefined') {
       this.setStorageValue(model, pk, {})
     }
     return this._createProxyByCacheKey(
-      storageModel[pk]!.deref()!,
+      storageModel[pk]!,
       cb,
       done
     )

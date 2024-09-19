@@ -54,7 +54,7 @@ export default class CollectionField extends BaseField implements FieldInterface
   link(values: any): Array<ModelData> {
     return values.map((value: any) => {
       const pk = this.convertValueToPk(value)
-      const cacheKey = this.em.getStorageModel(this.targetModel.$getName())[pk]?.deref()
+      const cacheKey = this.em.getStorageModel(this.targetModel.$getName())[pk]
       if (typeof cacheKey === 'undefined') {
         return this.em.setStorageValue(this.targetModel, pk, {
           [this.targetModel.$getPkName()]: pk
